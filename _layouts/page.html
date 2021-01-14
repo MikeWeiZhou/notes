@@ -8,5 +8,6 @@ layout: default
   // Hack: Replace page-link with "Page Title"
   document.querySelectorAll(".markdown-body a[title]").forEach((a) => {
     a.innerText = a.title;
+    a.href = a.href.replace('.md', '');
   });
 </script>

@@ -3,6 +3,10 @@
 
 @import "{{ site.theme }}";
 
+h1:first-of-type {
+  display: none;
+}
+
 .markdown-body {
   max-width: 800px;
   font-size: 16px;

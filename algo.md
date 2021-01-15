@@ -1,5 +1,5 @@
 # Algorithms
-Algorithms, data structures, and re-usable patterns for solving problems.
+Algorithms and re-usable patterns for solving problems.
 
 ## Algorithms
 - [[algo-binary_search]]

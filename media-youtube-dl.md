@@ -31,3 +31,6 @@ sudo chmod a+rx /usr/local/bin/youtube-dl
 - `youtube-dl --list-formats`
   - `python3 $(which youtube-dl) --list-formats`
 - `youtube-dl --format bestvideo+bestaudio https://www.youtube.com/watch?v=7YM0KUYL-Xc`
+
+## Download Audio
+- `youtube-dl -x -f bestaudio --audio-format mp3 https://www.youtube.com/watch?v=7YM0KUYL-Xc`

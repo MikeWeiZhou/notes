@@ -1,4 +1,4 @@
-# ML: Setup WSL2 + GPU + Docker
+# P2501: Setup WSL2 + GPU + Docker
 > Taken directly from [this site](https://ocdevel.com/blog/20201207-wsl2-gpu-docker).
 
 Full details for this post at docs.nvidia.com/cuda/wsl-user-guide, this post expands links' instructions and distills just the essential commands without their about text.

@@ -1,4 +1,4 @@
-## AX Home Workout
+# AX Home Workout
 > [Watch exercise descriptions on YouTube](https://youtu.be/vc1E5CfRfos?t=220) (3:40 - 10:37)
 
 `1 minute per combo (rest/pause as needed), perform 2-3 rounds.`

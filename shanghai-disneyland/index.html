@@ -409,6 +409,10 @@ svg.pic{display:block;flex:none;width:16px;height:16px}
   width:40px;height:40px;margin-top:-6px;display:grid;place-items:center;border-radius:50%;color:var(--ink);text-decoration:none;
 }
 .st-open svg{width:18px;height:18px}
+/* play link at the end of a stop's title row: opens the place's first watch link. Small to look at, about 40px to tap */
+.st-watch{position:relative;flex:none;display:grid;place-items:center;width:24px;height:22px;margin:-1px -3px 0 0;border-radius:50%;color:var(--pine);text-decoration:none}
+.st-watch::after{content:"";position:absolute;inset:-9px -8px}
+.st-head .st-watch .pic{width:19px;height:19px;margin:0;color:inherit;stroke-width:1.8}
 .stop.sel{background:var(--good-bg);box-shadow:inset 3px 0 0 var(--pine)}
 .stop.sel .mk{box-shadow:0 0 0 3px var(--pine)}
 .stop.sel .ref{background:var(--surface)}
@@ -423,6 +427,8 @@ svg.pic{display:block;flex:none;width:16px;height:16px}
 .phase .ph-name{font:600 12px/1.3 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
 .phase .ph-meta{flex:1;min-width:0;font-variant-numeric:tabular-nums}
 .phase .ph-go{color:var(--pine);font-weight:600;white-space:nowrap}
+.phase.wide button{flex-wrap:wrap;row-gap:2px}                       /* a long heading sits above its times */
+.phase.wide .ph-name{flex:1 0 100%;white-space:normal}
 .phase button[aria-pressed="true"]{border-top-color:var(--pine)}
 .phase button[aria-pressed="true"] .ph-name{color:var(--pine)}
 .hard{
@@ -452,6 +458,19 @@ svg.pic{display:block;flex:none;width:16px;height:16px}
    two columns as the extra live links below instead of wrapping raggedly */
 .sh-btns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
 .sh-btns .pill{padding:0 10px}
+/* Watch: opens the first watch link. "Watch on YouTube · 2:45" does not fit half a 380px row on one line, so the
+   length sits under the name inside the pill. Search pages get a magnifier instead of the play mark. */
+.sh-btns .pill.watch{gap:7px;white-space:normal}
+.pill.watch .pic{width:18px;height:18px}
+.pill.watch .w-t{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left}
+.pill.watch .w-len{font:500 11.5px/1 var(--body);font-variant-numeric:tabular-nums;color:var(--muted)}
+/* the other ways to see the ride, as one muted line of small links, and one line of help under it */
+.sh-also{margin-top:6px;font-size:13px;line-height:24px;color:var(--muted)}
+.sh-also a{position:relative;color:var(--pine);font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums;text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--pine),transparent 50%);text-underline-offset:2px}
+.sh-also a::after{content:"";position:absolute;inset:-12px -5px}     /* about 40px to tap */
+.sh-also .w-tag{font-size:12.5px}
+.sh-help{font-size:12.5px;line-height:1.35;color:var(--muted)}
+.sh-help + .sh-live{margin-top:10px}
 .sh-live{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .sh-apx{margin-top:7px;font-size:13px;line-height:1.35;color:var(--muted)}
 .whereami p{font-size:14.5px;line-height:1.42}
@@ -722,6 +741,9 @@ var ICON = {
   out: '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h7v7M14 4L5 13"/></svg>',
   check: '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 7.5l3 3 6-7"/></svg>',
   close: '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l8 8M13 5l-8 8"/></svg>',
+  /* Watch and Search videos, in the pictogram style (24 x 24, round caps, currentColor) */
+  play: '<svg class="pic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path class="f" d="M10.4 8.6l5 3.4-5 3.4z"/></svg>',
+  search: '<svg class="pic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5l5 5"/></svg>',
   /* Locate: a target in the pictogram style (24 x 24, round caps, currentColor); the centre fills while tracking */
   locate: '<svg class="pic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="6.5"/><circle class="lc" cx="12" cy="12" r="2.3"/><path d="M12 2.5V6M12 18v3.5M2.5 12H6M18 12h3.5"/></svg>'
 };
@@ -858,6 +880,15 @@ function toggleKey(lk) { return lk === 'shows' ? 'winter' : lk; }
 function kindKey(k) { k = str(k); return KIND[k] ? k : 'buffer'; }
 function placeName(p) { return str(p.en) || str(p.zh) || String(p.id); }
 function placeHref(p) { return '#p-' + encodeURIComponent(String(p.id)); }
+/* place.watch: specific links (a video or the official page), best first. place.watch_search: search pages, never a
+   specific video, and worded as such. Links only: the page embeds nothing. Either field may be missing or malformed. */
+function linkRows(v) { return arr(v).filter(function (l) { return l && typeof l === 'object' && safeUrl(l.url); }); }
+function watchLinks(p) { return linkRows(p && p.watch); }
+function searchLinks(p) { return linkRows(p && p.watch_search); }
+function watchLabel(l) { return str(l.label) || 'Watch'; }
+function watchLen(l) { var m = /^0?(\d{1,3}:\d\d(?::\d\d)?)$/.exec(str(l.length)); return m ? m[1] : ''; }
+function watchTags(l) { return [l.full_ride === true ? 'shows the whole ride' : '', l.verified === false ? 'not checked' : ''].filter(Boolean); }
+function outLink(url, html, extra) { return '<a ' + (extra || '') + 'href="' + esc(safeUrl(url)) + '" target="_blank" rel="noopener">' + html + '</a>'; }
 /* "Show in Amap": the page cannot read the phone's location, so it hands the place to Amap (高德地图), which shows
    it beside the user's own blue dot. URI API marker call: position is lon,lat in GCJ-02 (coordinate=gaode);
    callnative=1 tries the installed app. Built only from a finite places[].gcj. */
@@ -878,7 +909,7 @@ function apxMetres(p) {
 }
 
 var PHASES = [
-  { id: 'early', label: 'Early', name: 'Early hour', from: 0, to: 510 },
+  { id: 'early', label: 'Arrive', name: 'Arrival · before 08:30 opening', wide: true, from: 0, to: 510 },   /* wide: the heading takes a line of its own */
   { id: 'morning', label: 'Morning', name: 'Morning', from: 510, to: 720 },
   { id: 'afternoon', label: 'Afternoon', name: 'Afternoon', from: 720, to: 1020 },
   { id: 'evening', label: 'Evening', name: 'Evening', from: 1020, to: 1e9 }
@@ -917,7 +948,7 @@ function routeInfo(route) {
   stops.forEach(function (st) { if (!st.phase) st.phase = firstKnown || 'morning'; });
   var phases = PHASES.map(function (ph) {
     var list = stops.filter(function (st) { return st.phase === ph.id; });
-    return list.length ? { id: ph.id, label: ph.label, name: ph.name, from: ph.from, to: ph.to, stops: list } : null;
+    return list.length ? { id: ph.id, label: ph.label, name: ph.name, wide: !!ph.wide, from: ph.from, to: ph.to, stops: list } : null;
   }).filter(Boolean);
   /* Legs join consecutive stops that have a pin. Same place twice in a row: no leg. A leg belongs to the phase it arrives in. */
   var legs = [], prev = null, pairUse = new Map();
@@ -2137,7 +2168,9 @@ function stopRowHtml(st, cls, toPlace) {
   h += '<div class="st-time">' + (st.tMin != null ? fmtClock(st.tMin) : esc(str(s.t))) + '</div>';
   h += '<div class="st-mark"><span class="mk">' + esc(st.label) + '</span></div>';
   h += '<div class="st-body" role="button" tabindex="0" aria-pressed="false" aria-label="Stop ' + esc(st.label) + ', ' + esc(st.title) + '. Show on map.">';
-  h += '<div class="st-head">' + (place ? picSvg(picName(place)) : '') + '<div class="st-title">' + esc(st.title) + '</div></div>';
+  var wt = place ? watchLinks(place)[0] : null;    /* a play link at the end of the title row; a link, so a tap on it does not select the row */
+  h += '<div class="st-head">' + (place ? picSvg(picName(place)) : '') + '<div class="st-title">' + esc(st.title) + '</div>' +
+    (wt ? outLink(wt.url, ICON.play, 'class="st-watch" aria-label="Watch ' + esc(placeName(place)) + '" ') : '') + '</div>';
   if (st.zh) h += '<div class="st-zh" lang="zh">' + esc(st.zh) + '</div>';
   h += '<div class="st-chips"><span class="chip kind">' + KIND[st.kind] + '</span>';
   if (dur) h += '<span class="dur">' + dur + (st.endMin != null ? ', to ' + fmtClock(st.endMin) : '') + '</span>';
@@ -2192,7 +2225,7 @@ function viewPlan() {
         seenPhase = st.phase;
         var ph = R.phases.filter(function (p) { return p.id === st.phase; })[0], a = null, b = null;
         ph.stops.forEach(function (x) { if (x.tMin != null) { if (a == null) a = x.tMin; b = x.endMin != null ? x.endMin : x.tMin; } });
-        h += '<li class="phase"><button type="button" data-act="phase" data-phase="' + ph.id + '" aria-pressed="false"><span class="ph-name">' + ph.name + '</span>' +
+        h += '<li class="phase' + (ph.wide ? ' wide' : '') + '"><button type="button" data-act="phase" data-phase="' + ph.id + '" aria-pressed="false"><span class="ph-name">' + ph.name + '</span>' +
           '<span class="ph-meta">' + (a != null ? fmtClock(a) + ' to ' + fmtClock(b) + ' · ' : '') + ph.stops.length + (ph.stops.length === 1 ? ' stop' : ' stops') + '</span><span class="ph-go">Show on map</span></button></li>';
       }
       if (i === 0) h += lead.join('');
@@ -2326,9 +2359,25 @@ function viewPlace(id) {
   var live = arr(p.live).filter(function (l) { return l && safeUrl(l.url); }), btns = '';
   var amap = amapUrl(p), apx = amap ? apxMetres(p) : 0;
   if (live.length) btns += '<a class="pill solid" href="' + esc(safeUrl(live[0].url)) + '" target="_blank" rel="noopener">Live wait' + ICON.out.replace('<svg', '<svg width="14" height="14"') + '</a>';
+  var watch = watchLinks(p), search = searchLinks(p), also = '';
+  if (watch.length) {
+    var wl = watchLen(watch[0]), wtags = watchTags(watch[0]);
+    btns += outLink(watch[0].url, ICON.play + '<span class="w-t"><span>' + esc(watchLabel(watch[0])) + '</span>' +
+      (wl ? '<span class="vis-hidden"> · </span><span class="w-len">' + esc(wl) + '</span>' : '') + '</span>', 'class="pill watch" data-watch="link" ');
+    if (wtags.length) also = '<span class="w-tag w-first">' + (wtags.length > 1 ? 'Video link not checked, said to show the whole ride.' : wtags[0] !== 'not checked' ? 'Shows the whole ride.' : /page/i.test(watchLabel(watch[0])) ? 'Link not checked.' : 'Video link not checked.') + '</span> ';
+  } else if (search.length) btns += outLink(search[0].url, ICON.search + 'Search videos', 'class="pill watch" data-watch="search" ');
   if (amap) btns += '<a class="pill amap" href="' + esc(amap) + '" target="_blank" rel="noopener">Show in Amap</a>';
   if (str(p.zh)) btns += '<button type="button" class="pill" data-act="copy" aria-live="polite">Copy 中文 name</button>';
   if (btns) h += '<div class="sh-btns">' + btns + '</div>';
+  if (watch.length || search.length) {    /* the other options, then one line of help */
+    var more = watch.slice(1).map(function (l) {
+      var len = watchLen(l), tags = watchTags(l);
+      return outLink(l.url, esc(watchLabel(l).replace(/^Watch on\s+/i, '') + (len ? ' ' + len : '')), 'data-watch="link" ') + (tags.length ? ' <span class="w-tag">' + tags.join(', ') + '</span>' : '');
+    }).concat((watch.length ? search : search.slice(1)).map(function (l) { return outLink(l.url, esc(str(l.label) || 'Search'), 'data-watch="search" '); }));
+    if (more.length) also += 'Also: ' + more.join(' · ');
+    if (also) h += '<p class="sh-also">' + also + '</p>';
+    h += '<p class="sh-help">YouTube needs roaming data or a VPN in mainland China; Bilibili works on local networks.</p>';
+  }
   if (live.length > 1) {    /* several sources: one small pill each, two to a row */
     h += '<div class="sh-live">' + live.map(function (l) {
       return '<a class="pill sm" href="' + esc(safeUrl(l.url)) + '" target="_blank" rel="noopener">' + esc(str(l.label) || 'Live wait') + '</a>';
@@ -2534,8 +2583,10 @@ function viewInfo() {
     'or 60 to 150 m where marked ≈. The outlines are drawn by hand, so judge your dot against the pins, not the outlines.</p></section>';
   var topics = [], by = {};
   D.ops.forEach(function (o) { var t = str(o.topic) || 'Other'; if (!by[t]) { by[t] = []; topics.push(t); } by[t].push(o); });
+  /* early entry stays as reference facts; when no route has an early-entry stop the heading says the plan does not use it */
+  var noEarly = D.routes.length > 0 && !D.routes.some(function (r) { return arr(r.stops).some(function (s) { return s && str(s.kind) === 'early'; }); });
   topics.forEach(function (t) {
-    h += '<section><h3>' + esc(t) + '</h3><ul class="ops">';
+    h += '<section><h3>' + (noEarly && /^early entry$/i.test(t) ? 'Not used today: ' : '') + esc(t) + '</h3><ul class="ops">';
     by[t].forEach(function (o) {
       var c = CONF[str(o.confidence)] || [str(o.confidence), ''], url = safeUrl(o.source_url), title = esc(str(o.source_title) || 'Source');
       h += '<li>' + esc(str(o.claim)) + '<div class="srcline">' + (c[0] ? '<span class="tag ' + c[1] + '">' + esc(c[0]) + '</span>' : '') +

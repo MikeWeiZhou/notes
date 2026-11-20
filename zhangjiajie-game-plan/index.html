@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Zhangjiajie 11am Game Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: one narrow phone column. Answer first, then a decision clock,
+   then three routes. Each route = hours bar, schematic map, tickets, timeline.
+   The route's colour ties its map markers, bar and timeline dots together. */
+:root{
+  --paper:#eaefec;      /* valley mist */
+  --surface:#f7faf8;
+  --ink:#172625;        /* wet sandstone */
+  --muted:#586a67;
+  --line:#c9d4cf;
+  --plateau:#dae5de;
+  --r1:#1c7658;         /* pine */
+  --r2:#c23f2d;         /* seal vermilion */
+  --r3:#3a5796;         /* dusk indigo */
+  --warn:#8a5a00;
+  --warn-bg:#f6ecd2;
+  --display:"Instrument Serif","Songti SC","Noto Serif SC",Georgia,serif;
+  --body:"IBM Plex Sans","PingFang SC","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#101817;--surface:#182221;--ink:#e4ece8;--muted:#96a8a3;--line:#2b3a37;
+    --plateau:#1e2d2a;--r1:#52c79d;--r2:#f27a66;--r3:#8eaaf0;
+    --warn:#f0c66a;--warn-bg:#2d2613;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#101817;--surface:#182221;--ink:#e4ece8;--muted:#96a8a3;--line:#2b3a37;
+  --plateau:#1e2d2a;--r1:#52c79d;--r2:#f27a66;--r3:#8eaaf0;
+  --warn:#f0c66a;--warn-bg:#2d2613;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+.wrap{max-width:680px;margin:0 auto;padding:28px 18px 56px;display:flex;flex-direction:column;gap:36px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;line-height:1.1}
+h1{font-size:2.6rem}
+h2{font-size:1.9rem}
+h3{font-size:1.35rem}
+p{margin:0}
+a{color:inherit}
+a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:4px}
+.zh{font-family:var(--body);color:var(--muted);font-size:.9em;white-space:nowrap}
+.eyebrow{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+section{display:flex;flex-direction:column;gap:14px;scroll-margin-top:12px}
+
+header{display:flex;flex-direction:column;gap:14px}
+header p.lede{color:var(--muted);max-width:60ch}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.fact{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.fact b{font-family:var(--display);font-weight:400;font-size:1.5rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.fact span{font-size:.82rem;color:var(--muted)}
+
+.answer{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--ink);border-radius:10px;padding:16px;gap:10px}
+.answer ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:7px;font-size:.95rem}
+.answer li{max-width:62ch}
+
+.picker{display:flex;flex-direction:column;gap:10px}
+.pick{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start;padding:14px;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:10px;text-decoration:none}
+.pick .n{width:34px;height:34px;border-radius:50%;background:var(--c);color:var(--paper);display:grid;place-items:center;font-weight:600}
+.pick strong{font-family:var(--display);font-weight:400;font-size:1.3rem;line-height:1.15;display:block}
+.pick p{font-size:.9rem;color:var(--muted);margin-top:3px}
+.pick .go{font-size:.82rem;font-weight:600;color:var(--c);margin-top:6px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.tag{font-size:.72rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border:1.5px solid var(--c);color:var(--c);border-radius:999px;padding:1px 8px}
+.tag.none{border-color:var(--line);color:var(--muted)}
+.verdict{font-size:.72rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 8px;border:1.5px solid var(--muted);color:var(--muted)}
+.verdict.ok{border-color:var(--r1);color:var(--r1)}
+.verdict.tight{border-color:var(--warn);color:var(--warn)}
+.verdict.risk{border-color:var(--r2);color:var(--r2)}
+
+/* tables: decision clock and tickets */
+.tbl{border:1px solid var(--line);border-radius:10px;overflow-x:auto;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap}
+td.t{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+td small{display:block;color:var(--muted);font-size:.82rem;font-weight:400}
+td small a{overflow-wrap:anywhere}
+.yes{font-weight:600}
+.no{color:var(--muted)}
+
+.route{gap:16px}
+.route > .head{display:flex;flex-direction:column;gap:6px;border-top:5px solid var(--c);padding-top:14px}
+.route .sum{color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.8rem;padding:4px 9px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-variant-numeric:tabular-nums}
+.chip b{font-weight:600}
+
+/* hours bar: where the day goes */
+.hours{display:flex;flex-direction:column;gap:8px}
+.hours .bar{display:flex;height:30px;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:var(--surface)}
+.hours .seg{flex:var(--m) 1 0;min-width:0;border-right:2px solid var(--surface)}
+.hours .seg:last-child{border-right:0}
+.seg.yjj{background:var(--c)}
+.seg.tz{background:repeating-linear-gradient(135deg,var(--c) 0 5px,transparent 5px 9px)}
+.seg.val{background:repeating-linear-gradient(90deg,var(--c) 0 2px,transparent 2px 6px)}
+.seg.move{background:var(--line)}
+.hours ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--muted)}
+.hours li{display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+.hours li i{width:14px;height:10px;border-radius:2px;border:1px solid var(--line);display:inline-block}
+.hours li b{color:var(--ink);font-weight:600}
+
+figure{margin:0;display:flex;flex-direction:column;gap:6px}
+.map{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px}
+.map svg{display:block;width:100%;height:auto}
+figcaption{font-size:.82rem;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.76rem;color:var(--muted);padding:2px 8px 6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:26px;height:8px}
+
+ol.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+ol.tl li{display:grid;grid-template-columns:52px 30px 1fr;column-gap:10px;position:relative;padding-bottom:6px}
+ol.tl .t{font-variant-numeric:tabular-nums;font-weight:600;font-size:.92rem;padding-top:4px;text-align:right}
+ol.tl .dot{width:28px;height:28px;border-radius:50%;background:var(--c);color:var(--paper);display:grid;place-items:center;font-size:.82rem;font-weight:600;z-index:1}
+ol.tl li.end .dot,ol.tl li.opt .dot{background:var(--surface);border:2px solid var(--c);color:var(--c)}
+ol.tl li.opt .dot{border-style:dashed}
+ol.tl li:not(:last-child)::before{content:"";position:absolute;left:75px;top:28px;bottom:0;width:2px;background:var(--line)}
+ol.tl .b{padding-bottom:10px;min-width:0}
+ol.tl .b strong{font-weight:600;display:block;line-height:1.3;padding-top:3px}
+ol.tl .b p{font-size:.92rem;color:var(--muted);margin-top:2px}
+ol.tl .b p.watch{color:var(--warn)}
+ol.tl .b p b{color:var(--ink);font-weight:600}
+ol.tl .b p.watch b{color:inherit}
+ol.tl .hops{display:flex;flex-direction:column;gap:5px;margin-top:10px;padding:8px 10px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+ol.tl .nx{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+ol.tl .hop{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;font-size:.84rem;color:var(--ink);font-variant-numeric:tabular-nums}
+ol.tl .hop .m{font-size:.7rem;letter-spacing:.04em;text-transform:uppercase;font-weight:600;background:var(--c);color:var(--paper);border-radius:5px;padding:2px 7px;white-space:nowrap;min-width:4.6em;text-align:center}
+.optlabel{font-size:.7rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--c);border:1.5px dashed var(--c);border-radius:999px;padding:0 7px;margin-left:4px;white-space:nowrap}
+.why{display:block;width:fit-content;margin-top:6px;font-size:.8rem;font-weight:600;color:var(--c);text-underline-offset:3px}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:10px 12px;font-size:.9rem}
+.note b{font-weight:600}
+.checked{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:.9rem}
+.checked b{font-weight:600}
+
+.spots > p{color:var(--muted);max-width:62ch}
+.spot{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;scroll-margin-top:12px}
+.spot > p{font-size:.94rem}
+.spot dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:.9rem}
+.spot dt{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--muted);padding-top:3px;white-space:nowrap}
+.spot dd{margin:0}
+.spot dd.w{color:var(--warn)}
+.spot ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:7px;font-size:.88rem;color:var(--muted)}
+.spot li a{color:var(--ink);font-weight:500;text-underline-offset:3px;overflow-wrap:anywhere}
+.spot .gap{font-size:.86rem;color:var(--warn);background:var(--warn-bg);border-radius:6px;padding:6px 10px}
+
+.know ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:8px}
+.know li{max-width:62ch}
+.names{display:grid;grid-template-columns:1fr auto;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.names div{background:var(--surface);padding:9px 12px;font-size:.92rem}
+.names div:nth-child(even){font-size:1.15rem;text-align:right;white-space:nowrap}
+footer{font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;gap:8px}
+footer ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:3px}
+footer li a{overflow-wrap:anywhere}
+
+
+ol.tl .b p.guide{color:var(--ink);border-left:3px solid var(--c);padding-left:10px;margin-top:8px;font-size:.9rem}
+ol.tl .b p.guide b{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--c)}
+ul.story{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:9px;font-size:.95rem}
+ul.story li{max-width:62ch}
+/* sticky route switcher */
+.wrap{padding-bottom:132px}
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px))}
+.dock-in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.dock a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:48px;padding:4px 2px;border:1.5px solid var(--c,var(--muted));border-radius:10px;text-decoration:none;color:var(--c,var(--ink));background:var(--surface);line-height:1.15}
+.dock a b{font-weight:600;font-size:1rem;font-variant-numeric:tabular-nums}
+.dock a span{font-size:.7rem;font-weight:600;white-space:nowrap}
+.dock a[aria-current="true"]{background:var(--c,var(--ink));color:var(--paper)}
+section,.spot{scroll-margin-bottom:80px}
+@media (min-width:560px){.facts{grid-template-columns:repeat(4,1fr)}h1{font-size:3.2rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Zhangjiajie National Forest Park · Sat 14 Nov 2026 · East Gate, Line A</span>
+  <h1>Game plan for an 11am start</h1>
+  <p class="lede">Line A <span class="zh">A线</span> sends you up the Tianzi Mountain cable car <span class="zh">天子山索道</span> first. That leaves about six hours of daylight. All three routes reach the Avatar pillar <span class="zh">乾坤柱</span>, favour rides over stairs, keep Tianzi Mountain <span class="zh">天子山</span> short and mark every extra walk as optional. Clock times are estimates and move with queues.</p>
+  <div class="facts">
+    <div class="fact"><b>11:00</b><span>East Gate <span class="zh">东门</span>, Line A lane, passport ready</span></div>
+    <div class="fact"><b>15:45</b><span>Latest to join the queue for your ride down</span></div>
+    <div class="fact"><b>17:00</b><span>Lifts stop. <a href="#last-rides">Last rides</a></span></div>
+    <div class="fact"><b>12–22°C</b><span>Cloudy and dry in town. About 10–12°C forecast on top</span></div>
+  </div>
+</header>
+
+<section class="answer" id="answer">
+  <span class="eyebrow">Short answer</span>
+  <h3>Give your hours to Yuanjiajie <span class="zh">袁家界</span></h3>
+  <ul>
+    <li><b>Most time: Yuanjiajie <span class="zh">袁家界</span>.</b> The Avatar pillar <span class="zh">乾坤柱</span>, the natural bridge <span class="zh">天下第一桥</span> and Mihun Terrace <span class="zh">迷魂台</span> sit on one paved cliff path of about 2 km, and the Bailong Elevator <span class="zh">百龙天梯</span> down is at its far end. Travellers short on time say to put it first. <a href="#spot-yuanjiajie">Posts</a></li>
+    <li><b>Light touch: Tianzi Mountain <span class="zh">天子山</span>.</b> Line A makes you change buses at Helong Park <span class="zh">贺龙公园</span> anyway. Give it 20 to 30 minutes for the Imperial Brush Peaks deck <span class="zh">御笔峰</span>, then go. <a href="#spot-helong">Posts</a></li>
+    <li><b>Skip: Huangshizhai <span class="zh">黄石寨</span>.</b> It stands apart by the south gate. Its cable car links to no bus or trail on the plateau you will be on, and travellers who saw Yuanjiajie first found it less dramatic. <a href="#spot-huangshizhai">Posts</a></li>
+    <li><b>The train <span class="zh">十里画廊小火车</span> fits two ways.</b> Last, after the elevator down, which is the order the park itself suggests (route 2). Or at midday, before riding the elevator up to the pillar (route 3). Plan to board by 16:30. <a href="#last-rides">Last rides</a></li>
+    <li><b>My pick: route 1.</b> Decide about the train when you step out of the elevator, using the clock below.</li>
+  </ul>
+</section>
+
+<figure>
+  <div class="map"><div data-map="all" data-label="Schematic of the park with four mountain areas outlined: Yangjiajie top left, Tianzi Mountain top right, Yuanjiajie in the centre, Huangshizhai bottom left. The route runs East Gate, cable car up to Tianzi Mountain, bus across to Yuanjiajie, Bailong Elevator down, bus back past Ten-Mile Gallery."></div><div class="legend" data-legend></div></div>
+  <figcaption>Dashed outlines are the mountain areas. Line A sets up a loop: cable car up to Tianzi Mountain <span class="zh">天子山</span>, bus across the top past the Yangjiajie stop <span class="zh">杨家界站</span> to Yuanjiajie <span class="zh">袁家界</span>, elevator down, bus back along the valley. Yangjiajie <span class="zh">杨家界</span> and Huangshizhai <span class="zh">黄石寨</span> are not visited. Schematic, not to scale.</figcaption>
+</figure>
+
+
+<section id="story">
+  <span class="eyebrow">Before you go in</span>
+  <h2>The place in five minutes</h2>
+  <ul class="story">
+    <li><b>What you are looking at.</b> More than 3,000 quartz sandstone pillars, many over 200 m tall. Over 1,000 of them pass 120 m and 45 pass 300 m. Guinness lists it as the largest concentration of sandstone pillars on Earth.</li>
+    <li><b>How it formed.</b> About 380 million years ago this was a shallow Devonian sea laying down sand. The sand hardened into thick quartz sandstone and was lifted into a plateau. Water then worked down the vertical cracks, helped by frost and tree roots, and cut the plateau into walls, then fins, then free-standing pillars. Tianzi Mountain <span class="zh">天子山</span> and Yuanjiajie <span class="zh">袁家界</span> are what is left of the plateau top. The pillars are what is left of its edges.</li>
+    <li><b>Why the mist matters.</b> Forest covers about 98% of the park and the air is humid. After rain, cloud pools in the gorges and the pillar tops stand clear above it. Friday was wet, so today has a chance of that.</li>
+    <li><b>The names.</b> Wulingyuan <span class="zh">武陵源</span> is the whole protected area. Zhangjiajie National Forest Park <span class="zh">张家界国家森林公园</span>, founded in 1982, was China's first national forest park. Jie <span class="zh">界</span> means a boundary or domain, so Zhangjiajie is the Zhang family's land, and Yuanjiajie and Yangjiajie follow the same pattern. Local legend says the Zhang was Zhang Liang <span class="zh">张良</span>, a Han dynasty strategist who retired here.</li>
+    <li><b>The people.</b> This is Tujia <span class="zh">土家族</span> country. The stories you will hear on Tianzi Mountain, of a rebel king and his stone brushes, are Tujia legends.</li>
+    <li><b>Recognition.</b> UNESCO World Heritage Site since 1992, listed for natural beauty, and a Global Geopark since 2004. The highest ground is on Tianzi Mountain, at about 1,262 m.</li>
+    <li><b>The film.</b> Avatar opened in December 2009. A month later the park renamed one pillar after the film's floating mountains. The film was shot on soundstages, and its designers also drew on Huangshan <span class="zh">黄山</span>, so the claim rests on reference photos.</li>
+    <li><b>The residents.</b> Wild macaques work the valley floor, most of all at Ten-Mile Gallery <span class="zh">十里画廊</span>. They take food from hands and open bags.</li>
+  </ul>
+</section>
+
+<nav class="picker" aria-label="Routes">
+  <a class="pick" href="#route-1" style="--c:var(--r1)"><span class="n">1</span><span><strong>Yuanjiajie, unhurried</strong><p>Twenty-five minutes on Tianzi <span class="zh">天子山</span>, two full hours on the Avatar cliff path <span class="zh">袁家界</span>, elevator down. Train only as a bonus.</p><span class="go">Gate ~16:40 <span class="tag none">Train optional</span> <span class="verdict ok">Recommended</span></span></span></a>
+  <a class="pick" href="#route-2" style="--c:var(--r2)"><span class="n">2</span><span><strong>Avatar highlights, then the train</strong><p>A 20-minute Tianzi stop, a brisk 70 minutes on Yuanjiajie, then the mini-train <span class="zh">小火车</span> as the last act.</p><span class="go">Gate ~16:40 <span class="tag">Train</span> <span class="verdict tight">Tight</span></span></span></a>
+  <a class="pick" href="#route-3" style="--c:var(--r3)"><span class="n">3</span><span><strong>Train at midday, Avatar at 3pm</strong><p>Cable car down after a quick Tianzi stop, the train while it is quiet, then the elevator up to Mihun Terrace and the Avatar pillar, and down again.</p><span class="go">Gate ~16:40 <span class="tag">Train first</span> <span class="verdict tight">Most rides, ¥350</span></span></span></a>
+</nav>
+
+<section id="clock">
+  <span class="eyebrow">Decision clock</span>
+  <h2>Where to be, and what to cut</h2>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>By</th><th>You should be</th><th>If you are late</th></tr></thead>
+      <tbody>
+        <tr><td class="t">12:30</td><td>On the bus leaving Helong Park <span class="zh">贺龙公园</span> for Yuanjiajie <span class="zh">袁家界</span></td><td>After 12:45, forget the train and follow route 1.</td></tr>
+        <tr><td class="t">13:30</td><td>On foot at First Bridge <span class="zh">天下第一桥</span></td><td>After 14:00, walk straight through: bridge, Hallelujah, Mihun Terrace, one hour in all.</td></tr>
+        <tr><td class="t">14:45</td><td>Route 3 only: at the top of the elevator</td><td>Later than this, see Mihun Terrace only and come straight back down.</td></tr>
+        <tr><td class="t">15:20</td><td>Leaving Mihun Terrace <span class="zh">迷魂台</span> by bus</td><td>15:30 is the limit. Skip Back Garden.</td></tr>
+        <tr><td class="t">15:45</td><td>In the Bailong Elevator queue <span class="zh">百龙天梯</span></td><td>This is the hard line. A November reviewer waited an hour here, and the last car may leave at 17:00.</td></tr>
+        <tr><td class="t">16:00</td><td>At the Ten-Mile Gallery stop <span class="zh">十里画廊</span>, if you want the train</td><td>Later than this, stay on the bus to the gate.</td></tr>
+        <tr><td class="t">17:00</td><td>Down in the valley</td><td>Lifts stop at 17:00 by most accounts. Valley buses run later.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="last-rides">
+  <span class="eyebrow">Last rides today · Sat 14 Nov</span>
+  <h2>When things stop running</h2>
+  <p>The park's own site and the tram operator's site would not open, so these come from official notices reposted by news outlets, ticket listings and recent posts. Plan on the middle column.</p>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Ride</th><th>Plan on</th><th>Sources say</th></tr></thead>
+      <tbody>
+        <tr><td>Mini-train <span class="zh">十里画廊小火车</span></td><td class="t">16:30<small>last boarding</small></td><td>Listings: 07:30–18:00 from 1 Mar to 30 Nov, then 08:00 or 08:30–17:00 from 1 Dec. One ticket seller says trains run 08:00–17:30 and tickets scan until 17:00. Buy your ticket before 17:00.</td></tr>
+        <tr><td>Bailong Elevator <span class="zh">百龙天梯</span></td><td class="t">17:00<small>queue by 15:45</small></td><td>Autumn 2026 posts: stops at 17:00 with the gates. Ctrip's listing shows 19:00 in peak season and 17:45 in low season. A traveller rode down at 17:40 on 7 Nov 2024.</td></tr>
+        <tr><td>Tianzi cable car <span class="zh">天子山索道</span></td><td class="t">17:00<small>last car</small></td><td>Autumn 2026 posts: 17:00. One Trip.com guide says 16:30 from November. Boarding upward can close earlier than the last car down.</td></tr>
+        <tr><td>Eco-buses <span class="zh">环保车</span></td><td class="t">17:00<small>on the top</small></td><td>Autumn 2026 posts: 07:00–19:00. A guide site says mountaintop loops stop first, valley buses last.</td></tr>
+        <tr><td>Gates <span class="zh">门票站</span></td><td class="t">17:00<small>close</small></td><td>Official WeChat notice, reposted May 2023: 07:30–17:00. Autumn 2026 posts add no entry after 16:00.</td></tr>
+        <tr><td>Yuanjiajie paths <span class="zh">袁家界</span></td><td class="t">16:30<small>off the path</small></td><td>One post says the area stops admitting at 16:00 and closes at 16:30. Unconfirmed elsewhere.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="official">
+  <span class="eyebrow">Conflicts, checked against official notices</span>
+  <h2>What the park itself has said</h2>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Question</th><th>Finding</th></tr></thead>
+      <tbody>
+        <tr><td>Are winter hours on yet?</td><td><b>No.</b> The park's official site dated low season from 1 December in its 2023 notice, and ticket listings use the same date. Today runs on the main-season timetable.<small><a href="http://www.hnzjj.com/index.php/Article/show/552.html">Official site notice, Dec 2023</a></small></td></tr>
+        <tr><td>Do the lifts stop at 17:00 or later?</td><td><b>Plan on 17:00.</b> The official notice gives gate hours of 07:30–17:00. Several Sina and Weibo posts from September to November 2026 say the cable cars and elevator stop with the gates. Later times appear only in listings and one 2024 account.<small><a href="https://news.qq.com/rain/a/20230508A064DC00">Official WeChat notice via Xiaoxiang Morning Herald, May 2023</a> · <a href="https://www.sina.cn/gc/article/nixqsyw6647598.html">Sina post, Nov 2026</a></small></td></tr>
+        <tr><td>Can a Line A visitor ride the cable car down?</td><td><b>Probably yes.</b> The park's reopening notice of June 2025 listed Line A as the Tianzi cable car both ways. That was during a road closure, so ask at the window today.<small><a href="https://zjj.rednet.cn/content/646940/65/15063474.html">Park notice on Rednet, June 2025</a></small></td></tr>
+        <tr><td>Is the train meant to come last?</td><td><b>Yes, officially.</b> The park's suggested East Gate day runs cable car up, Tianzi, Yuanjiajie, elevator down, then Ten-Mile Gallery, and prices in a one-way train ticket.<small><a href="https://m.thepaper.cn/newsDetail_forward_22292320">Park notice on The Paper, 2023</a></small></td></tr>
+        <tr><td>Are buses in the ticket?</td><td><b>Yes</b> for the standard combined ticket <span class="zh">景车联票</span>. An entry-only ticket also exists, so check your voucher.</td></tr>
+        <tr><td>Is Back Garden open?</td><td><b>Unknown.</b> No closure notice turned up for 2026. A June 2025 notice closed the road between the elevator top and Mihun Terrace for a time, which may be the source of the old warning.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="tickets">
+  <span class="eyebrow">Tickets</span>
+  <h2>What you still need to buy</h2>
+  <p>You hold the entry ticket. Yes, the buses are included: the standard park ticket covers unlimited eco-bus rides for its four days. The rides below cost extra and none are bought yet.</p>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Ride</th><th>Price</th><th>R1</th><th>R2</th><th>R3</th></tr></thead>
+      <tbody>
+        <tr><td>Eco-buses, all lines <span class="zh">环保车</span><small>Included in the park ticket. Check your voucher mentions the bus.</small></td><td class="num">¥0</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+        <tr><td>Tianzi cable car, up <span class="zh">天子山索道 上行</span></td><td class="num">¥72</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+        <tr><td>Tianzi cable car, down <span class="zh">下行</span><small>Tickets are direction-locked. Buy one marked down.</small></td><td class="num">¥72</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td></tr>
+        <tr><td>Bailong Elevator, up <span class="zh">百龙天梯 上行</span></td><td class="num">¥65</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td></tr>
+        <tr><td>Bailong Elevator, down <span class="zh">百龙天梯 下行</span><small>Passport needed at the window.</small></td><td class="num">¥65</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+        <tr><td>Ten-Mile Gallery mini-train <span class="zh">十里画廊小火车</span><small>¥38 one way, ¥76 return.</small></td><td class="num">¥38–76</td><td class="no">Bonus</td><td class="yes">Return</td><td class="yes">Return</td></tr>
+        <tr><td><b>Total per person</b></td><td></td><td class="num"><b>¥137</b></td><td class="num"><b>¥213</b></td><td class="num"><b>¥350</b></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note"><b>Paying:</b> buy at the window beside each ride, on the day, with WeChat Pay, Alipay or cash. Foreign cards are unreliable at the booths. Carry your passport for every purchase. Rides have no time slots, only the park entry does.</p>
+</section>
+
+<!-- ============ ROUTE 1 ============ -->
+<section class="route" id="route-1" style="--c:var(--r1)">
+  <div class="head">
+    <span class="eyebrow">Route 1 · recommended</span>
+    <h2>Yuanjiajie, unhurried</h2>
+    <p class="sum">Tianzi Mountain is a 25-minute stop on the way through. The time saved goes to the cliff path, where posters say they needed two hours or more.</p>
+  </div>
+  <div class="chips">
+    <span class="chip"><b>Walking</b> ~3 km, paved, some steps</span>
+    <span class="chip"><b>Tickets</b> ¥137</span>
+    <span class="chip"><b>Buffer down</b> ~80 min before 17:00</span>
+  </div>
+  <div class="hours" aria-label="Where the hours go on route 1">
+    <span class="eyebrow">Where 5 h 40 goes</span>
+    <div class="bar"><span class="seg move" style="--m:55"></span><span class="seg tz" style="--m:25"></span><span class="seg move" style="--m:60"></span><span class="seg yjj" style="--m:120"></span><span class="seg move" style="--m:80"></span></div>
+    <ul>
+      <li><i class="seg tz"></i>Tianzi <b>25 min</b></li>
+      <li><i class="seg yjj"></i>Yuanjiajie <b>2 h</b></li>
+      <li><i class="seg move"></i>Buses, rides, queues <b>3 h 15</b></li>
+    </ul>
+  </div>
+  <figure>
+    <div class="map"><div data-map="r1" data-label="Route 1: East Gate, cable car, Helong Park, bus to First Bridge, walk to Hallelujah Mountain and Mihun Terrace, Bailong Elevator down, bus to the gate."></div><div class="legend" data-legend></div></div>
+  </figure>
+  <ol class="tl">
+    <li><span class="t">11:00</span><span class="dot">1</span><div class="b"><strong>East Gate <span class="zh">东门 · 标志门</span></strong><p>Line A is the left lane. Scan your passport and board the bus marked for the Tianzi Mountain cableway.</p><p class="guide"><b>Guide:</b> You are at the Wujiayu ticket station <span class="zh">吴家峪门票站</span>, which locals call the landmark gate <span class="zh">标志门</span>. This is the Suoxi Valley <span class="zh">索溪峪</span> side of Wulingyuan <span class="zh">武陵源</span>. The forest park and this valley reserve were both set up in 1982, and the whole area joined the UNESCO list in 1992.</p><a class="why" href="#spot-gate">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>to the Tianzi cable car base <span class="zh">天子山索道下站</span> · ~20 min · free eco-bus, boards just inside the gate</span></span></div></div></li>
+    <li><span class="t">11:25</span><span class="dot">2</span><div class="b"><strong>Tianzi Mountain cable car, up <span class="zh">天子山索道 上行</span></strong><p>Buy the up ticket (¥72). About 200 steps lead to the station, then 7 to 10 minutes in the air.</p><p class="guide"><b>Guide:</b> The line runs about 2 km and lifts you roughly 690 m. Partway up you are level with the pillar tops. For the rest of the day you look down on them, so this is your one ride through the stone forest at eye height.</p><a class="why" href="#spot-cablecar">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>to Helong Park <span class="zh">贺龙公园</span> · 2–10 min · waits outside the top station</span></span></div></div></li>
+    <li><span class="t">11:55</span><span class="dot">3</span><div class="b"><strong>Helong Park, 25 minutes <span class="zh">贺龙公园</span></strong><p><b>Why:</b> the Imperial Brush Peaks deck <span class="zh">御笔峰</span> is the one Tianzi view posters call unmissable, and it is two minutes from the bus.</p><p class="watch"><b>Watch out:</b> photo queues build from 13:00. Buy food on the square and eat it on the bus.</p><p class="guide"><b>Guide:</b> Tianzi means Son of Heaven. The mountain was Qingyan Mountain <span class="zh">青岩山</span> until Xiang Dakun <span class="zh">向大坤</span>, a Tujia leader, rebelled here in 1353 and took the emperor's title for himself. He lost, and the story has him dying in Shentang Bay <span class="zh">神堂湾</span> below. Legend turns his writing brushes into the Imperial Brush Peaks: the pines on top are the bristles. The park dates from 1986 and honours Marshal He Long <span class="zh">贺龙</span>, a Red Army commander born in nearby Sangzhi <span class="zh">桑植</span>. His bronze stands 6.5 m tall and weighs 9 tons, with his horse beside him.</p><a class="why" href="#spot-helong">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>to First Bridge <span class="zh">天下第一桥站</span> · 45–75 min with waits · from the Helong Park lot. Say 天下第一桥. You may change at <span class="zh">杨家界站</span></span></span></div></div></li>
+    <li><span class="t">13:20</span><span class="dot">4</span><div class="b"><strong>First Bridge Under Heaven <span class="zh">天下第一桥</span></strong><p><b>Why:</b> a natural rock arch joining two pillars, and the start of the cliff path. View it from the deck first, then cross it.</p><p class="watch"><b>Watch out:</b> no bus runs along the path. Once you start, you walk to Mihun Terrace.</p><p class="guide"><b>Guide:</b> The usual explanation is that a slab of harder sandstone stayed put while water cut away the rock beneath it. What is left is an arch about 20 m long and 2 to 3 m wide. Sources put the drop under it anywhere from 357 to 400 m. It is one of two natural bridges in Wulingyuan.</p><a class="why" href="#spot-first-bridge">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Walk</b><span>to Hallelujah Mountain <span class="zh">乾坤柱</span> · 10–15 min · paved cliff path with railings, some steps</span></span></div></div></li>
+    <li><span class="t">13:55</span><span class="dot">5</span><div class="b"><strong>Hallelujah Mountain <span class="zh">乾坤柱 · 哈利路亚山</span></strong><p><b>Why:</b> the pillar behind the floating mountains in Avatar. This is the stop the day is built around.</p><p class="watch"><b>Watch out:</b> the densest crowd of the day. Wait for a gap at the rail instead of shooting over heads.</p><p class="guide"><b>Guide:</b> The Chinese name is Qiankun Pillar <span class="zh">乾坤柱</span>, the pillar of heaven and earth. English guides used to call it the Southern Sky Column. About 150 m of it stands free, with the top around 1,080 m above sea level. On 25 January 2010, five weeks after Avatar opened, the park renamed it Avatar Hallelujah Mountain <span class="zh">阿凡达-哈利路亚山</span>. Critics in China objected to the foreign name and officials had to defend it. Nothing was filmed here: the floating mountains were built on computers from reference photos. When mist fills the gorge the base vanishes and the column seems to hang in the air, which is the look the film borrowed.</p><a class="why" href="#spot-hallelujah">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Walk</b><span>to Mihun Terrace <span class="zh">迷魂台</span> · 10–15 min · same cliff path, no bus on this stretch</span></span></div></div></li>
+    <li><span class="t">14:35</span><span class="dot">6</span><div class="b"><strong>Mihun Terrace <span class="zh">迷魂台</span></strong><p><b>Why:</b> all-round view over the pillar forest, a favourite platform in posts. Sit here. Leave by 15:20.</p><p class="watch"><b>Watch out:</b> posts split on afternoon light. Some call it backlit after midday, others like it after 15:30.</p><p class="guide"><b>Guide:</b> Mihun means losing your soul. The old line is that visitors were so dazed by the view they forgot where they were. More than a hundred pillars rise out of the gorge below, and locals have named many of them. Look for the Heavenly Dog Watching the Moon <span class="zh">天狗望月</span> and the Generals in Formation <span class="zh">将军列队</span>.</p><a class="why" href="#spot-mihun">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>to the elevator top <span class="zh">百龙天梯上站</span> · 5–15 min · from the Mihun Terrace stop <span class="zh">迷魂台站</span></span></span></div></div></li>
+    <li class="opt"><span class="t">+20</span><span class="dot">＋</span><div class="b"><strong>Back Garden <span class="zh">后花园</span> <span class="optlabel">Optional walk</span></strong><p>The quiet corner posters keep naming, a request stop on the bus to the elevator. Only if you reach Mihun Terrace by 14:15.</p><p class="watch"><b>Watch out:</b> one guide lists the path as closed for repairs. Ask the driver before getting off.</p><p class="guide"><b>Guide:</b> The path drops through bamboo until a rock wall seems to block it. At the corner a round, moon-shaped opening leads through, and dozens of pillars appear in a dark green ravine. All of Yuanjiajie was once called Zhangjiajie's back garden, because few people could reach it before the elevator.</p><a class="why" href="#spot-back-garden">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>on to the elevator top <span class="zh">百龙天梯上站</span> · a few minutes · flag the next bus on the same line</span></span></div></div></li>
+    <li><span class="t">15:35</span><span class="dot">7</span><div class="b"><strong>Bailong Elevator, down <span class="zh">百龙天梯 下行</span></strong><p>Buy the down ticket (¥65, passport). 326 m in about 90 seconds. Stand at the glass side or you see nothing.</p><p class="watch"><b>Watch out:</b> November waits ran from none to an hour. Be in the queue by 15:45.</p><p class="guide"><b>Guide:</b> Bailong means Hundred Dragons. Work began in 1999 and the lift opened in 2002. The cars travel 326 m. The lower half runs in a shaft drilled into the cliff, and the upper 170 m or so climbs an exposed steel tower. Guinness certified it as the world's tallest outdoor lift in 2015. It was controversial from the start, bolted onto a World Heritage cliff, and it shut for ten months in 2002–03 over safety. The park's case is that it let them clear the hotels off the plateau.</p><a class="why" href="#spot-bailong">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>to the East Gate <span class="zh">东门</span> · ~30 min · from the elevator bottom, change at Shuiraosimen <span class="zh">水绕四门</span></span></span></div></div></li>
+    <li class="opt"><span class="t">+50</span><span class="dot">＋</span><div class="b"><strong>Mini-train bonus <span class="zh">十里画廊小火车</span> <span class="optlabel">Optional</span></strong><p>The bus to the gate passes Ten-Mile Gallery. If you reach that stop by 16:00, hop off and ride the train in and back (¥76). Board by 16:30.</p><p class="guide"><b>Guide:</b> Ten li is about 5 km, the length of this valley. It is called a gallery because the cliff line reads like a scroll of rock figures. Watch for the Longevity Star Welcoming Guests <span class="zh">寿星迎宾</span> near the start and the Old Man Gathering Herbs <span class="zh">采药老人</span>, a stooped figure with a basket on his back. At the end stand the Three Sisters <span class="zh">三姐妹峰</span>. In the local telling the eldest carries a baby on her back, the second holds one in her arms and the youngest is expecting. A tram has run here since 1999, and the zodiac-themed cars arrived in 2022.</p><a class="why" href="#spot-gallery">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Train</b><span>in and back · 10–15 min each way</span></span><span class="hop"><b class="m">Bus</b><span>to the East Gate <span class="zh">东门</span> · ~15 min</span></span></div></div></li>
+    <li class="end"><span class="t">16:40</span><span class="dot">↩</span><div class="b"><strong>East Gate <span class="zh">东门</span></strong><p>About an hour before sunset.</p></div></li>
+  </ol>
+  <p class="checked"><b>Why this one:</b> it matches what first-hand posts report. They took 2 to 2.5 hours from First Bridge to Mihun Terrace, and this is the only route of the three that gives it.</p>
+</section>
+
+<!-- ============ ROUTE 2 ============ -->
+<section class="route" id="route-2" style="--c:var(--r2)">
+  <div class="head">
+    <span class="eyebrow">Route 2 · train at the end</span>
+    <h2>Avatar highlights, then the train</h2>
+    <p class="sum">Same loop with a faster walk. You trade 50 minutes of Yuanjiajie for the mini-train and a look up at the pillars from the valley floor.</p>
+  </div>
+  <div class="chips">
+    <span class="chip"><b>Walking</b> ~2.5 km, paved, brisk</span>
+    <span class="chip"><b>Tickets</b> ¥213</span>
+    <span class="chip"><b>Buffer down</b> ~2 h before 17:00</span>
+  </div>
+  <div class="hours" aria-label="Where the hours go on route 2">
+    <span class="eyebrow">Where 5 h 40 goes</span>
+    <div class="bar"><span class="seg move" style="--m:55"></span><span class="seg tz" style="--m:20"></span><span class="seg move" style="--m:60"></span><span class="seg yjj" style="--m:70"></span><span class="seg move" style="--m:70"></span><span class="seg val" style="--m:50"></span><span class="seg move" style="--m:15"></span></div>
+    <ul>
+      <li><i class="seg tz"></i>Tianzi <b>20 min</b></li>
+      <li><i class="seg yjj"></i>Yuanjiajie <b>1 h 10</b></li>
+      <li><i class="seg val"></i>Train and valley <b>50 min</b></li>
+      <li><i class="seg move"></i>Buses, rides, queues <b>3 h 20</b></li>
+    </ul>
+  </div>
+  <figure>
+    <div class="map"><div data-map="r2" data-label="Route 2: the same loop as route 1, plus the mini-train from Ten-Mile Gallery to Three Sisters Peak on the way back to the gate."></div><div class="legend" data-legend></div></div>
+  </figure>
+  <ol class="tl">
+    <li><span class="t">11:00</span><span class="dot">1</span><div class="b"><strong>East Gate <span class="zh">东门 · 标志门</span></strong><p>Line A lane, then the bus for the Tianzi Mountain cableway.</p><p class="guide"><b>Guide:</b> You are at the Wujiayu ticket station <span class="zh">吴家峪门票站</span>, which locals call the landmark gate <span class="zh">标志门</span>. This is the Suoxi Valley <span class="zh">索溪峪</span> side of Wulingyuan <span class="zh">武陵源</span>. The forest park and this valley reserve were both set up in 1982, and the whole area joined the UNESCO list in 1992.</p><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>to the Tianzi cable car base <span class="zh">天子山索道下站</span> · ~20 min · free eco-bus, boards just inside the gate</span></span></div></div></li>
+    <li><span class="t">11:25</span><span class="dot">2</span><div class="b"><strong>Tianzi Mountain cable car, up <span class="zh">天子山索道 上行</span></strong><p>Up ticket, ¥72.</p><p class="guide"><b>Guide:</b> The line runs about 2 km and lifts you roughly 690 m. Partway up you are level with the pillar tops. For the rest of the day you look down on them, so this is your one ride through the stone forest at eye height.</p><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>to Helong Park <span class="zh">贺龙公园</span> · 2–10 min · waits outside the top station</span></span></div></div></li>
+    <li><span class="t">11:55</span><span class="dot">3</span><div class="b"><strong>Helong Park, 20 minutes <span class="zh">贺龙公园</span></strong><p>Imperial Brush Peaks deck only. Food to go. On the bus by 12:15.</p><p class="guide"><b>Guide:</b> Tianzi means Son of Heaven. The mountain was Qingyan Mountain <span class="zh">青岩山</span> until Xiang Dakun <span class="zh">向大坤</span>, a Tujia leader, rebelled here in 1353 and took the emperor's title for himself. He lost, and the story has him dying in Shentang Bay <span class="zh">神堂湾</span> below. Legend turns his writing brushes into the Imperial Brush Peaks: the pines on top are the bristles. The park dates from 1986 and honours Marshal He Long <span class="zh">贺龙</span>, a Red Army commander born in nearby Sangzhi <span class="zh">桑植</span>. His bronze stands 6.5 m tall and weighs 9 tons, with his horse beside him.</p><a class="why" href="#spot-helong">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>to First Bridge <span class="zh">天下第一桥站</span> · 45–75 min with waits · from the Helong Park lot. Say 天下第一桥. You may change at <span class="zh">杨家界站</span></span></span></div></div></li>
+    <li><span class="t">13:15</span><span class="dot">4</span><div class="b"><strong>First Bridge Under Heaven <span class="zh">天下第一桥</span></strong><p>Fifteen minutes. See it from the deck and keep moving.</p><p class="guide"><b>Guide:</b> The usual explanation is that a slab of harder sandstone stayed put while water cut away the rock beneath it. What is left is an arch about 20 m long and 2 to 3 m wide. Sources put the drop under it anywhere from 357 to 400 m. It is one of two natural bridges in Wulingyuan.</p><a class="why" href="#spot-first-bridge">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Walk</b><span>to Hallelujah Mountain <span class="zh">乾坤柱</span> · 10–15 min · paved cliff path with railings, some steps</span></span></div></div></li>
+    <li><span class="t">13:35</span><span class="dot">5</span><div class="b"><strong>Hallelujah Mountain <span class="zh">乾坤柱 · 哈利路亚山</span></strong><p>Your longest stop. Twenty-five minutes at the Avatar pillar.</p><p class="guide"><b>Guide:</b> The Chinese name is Qiankun Pillar <span class="zh">乾坤柱</span>, the pillar of heaven and earth. English guides used to call it the Southern Sky Column. About 150 m of it stands free, with the top around 1,080 m above sea level. On 25 January 2010, five weeks after Avatar opened, the park renamed it Avatar Hallelujah Mountain <span class="zh">阿凡达-哈利路亚山</span>. Critics in China objected to the foreign name and officials had to defend it. Nothing was filmed here: the floating mountains were built on computers from reference photos. When mist fills the gorge the base vanishes and the column seems to hang in the air, which is the look the film borrowed.</p><a class="why" href="#spot-hallelujah">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Walk</b><span>to Mihun Terrace <span class="zh">迷魂台</span> · 10–15 min · same cliff path, no bus on this stretch</span></span></div></div></li>
+    <li><span class="t">14:05</span><span class="dot">6</span><div class="b"><strong>Mihun Terrace <span class="zh">迷魂台</span></strong><p>Twenty minutes. On the bus by 14:25.</p><p class="guide"><b>Guide:</b> Mihun means losing your soul. The old line is that visitors were so dazed by the view they forgot where they were. More than a hundred pillars rise out of the gorge below, and locals have named many of them. Look for the Heavenly Dog Watching the Moon <span class="zh">天狗望月</span> and the Generals in Formation <span class="zh">将军列队</span>.</p><a class="why" href="#spot-mihun">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>to the elevator top <span class="zh">百龙天梯上站</span> · 5–15 min · from the Mihun Terrace stop <span class="zh">迷魂台站</span></span></span></div></div></li>
+    <li><span class="t">14:40</span><span class="dot">7</span><div class="b"><strong>Bailong Elevator, down <span class="zh">百龙天梯 下行</span></strong><p>Down ticket, ¥65. Glass side.</p><p class="watch"><b>Watch out:</b> the plan allows 30 minutes of queue. An hour-long wait ends the train idea.</p><p class="guide"><b>Guide:</b> Bailong means Hundred Dragons. Work began in 1999 and the lift opened in 2002. The cars travel 326 m. The lower half runs in a shaft drilled into the cliff, and the upper 170 m or so climbs an exposed steel tower. Guinness certified it as the world's tallest outdoor lift in 2015. It was controversial from the start, bolted onto a World Heritage cliff, and it shut for ten months in 2002–03 over safety. The park's case is that it let them clear the hotels off the plateau.</p><a class="why" href="#spot-bailong">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>to Ten-Mile Gallery <span class="zh">十里画廊</span> · ~25 min · from the elevator bottom, change at Shuiraosimen <span class="zh">水绕四门</span></span></span></div></div></li>
+    <li><span class="t">15:35</span><span class="dot">8</span><div class="b"><strong>Ten-Mile Gallery mini-train <span class="zh">十里画廊小火车</span></strong><p><b>Why:</b> a seated ride past named rock figures to Three Sisters Peak <span class="zh">三姐妹峰</span>, good for tired legs. Buy the return (¥76). Sit on the left going in, outer seat.</p><p class="watch"><b>Watch out:</b> macaques at the far stop grab food. Keep bags zipped. Be back at the entrance by 16:30.</p><p class="guide"><b>Guide:</b> Ten li is about 5 km, the length of this valley. It is called a gallery because the cliff line reads like a scroll of rock figures. Watch for the Longevity Star Welcoming Guests <span class="zh">寿星迎宾</span> near the start and the Old Man Gathering Herbs <span class="zh">采药老人</span>, a stooped figure with a basket on his back. At the end stand the Three Sisters <span class="zh">三姐妹峰</span>. In the local telling the eldest carries a baby on her back, the second holds one in her arms and the youngest is expecting. A tram has run here since 1999, and the zodiac-themed cars arrived in 2022.</p><a class="why" href="#spot-gallery">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>to the East Gate <span class="zh">东门</span> · ~15 min · from the Ten-Mile Gallery stop</span></span></div></div></li>
+    <li class="end"><span class="t">16:40</span><span class="dot">↩</span><div class="b"><strong>East Gate <span class="zh">东门</span></strong><p>About an hour before sunset.</p></div></li>
+  </ol>
+  <p class="note"><b>Cut rule:</b> if you reach the Ten-Mile Gallery stop after 16:00, stay on the bus. Listings run the train to 18:00 through 30 November, but one seller scans tickets only until 17:00, so board by 16:30. A Chinese queue report says the line is almost gone after 16:00.</p>
+  <p class="checked"><b>Honest take:</b> 70 minutes on Yuanjiajie is less than posters took. It works if you walk past the minor photo spots and stop only at the three named ones.</p>
+</section>
+
+<!-- ============ ROUTE 3 ============ -->
+<section class="route" id="route-3" style="--c:var(--r3)">
+  <div class="head">
+    <span class="eyebrow">Route 3 · train first</span>
+    <h2>Train at midday, Avatar at 3pm</h2>
+    <p class="sum">Rides do nearly all the work. A quick Tianzi stop, cable car back down, the mini-train while it is quiet, then the Bailong Elevator up to Mihun Terrace <span class="zh">迷魂台</span> and the Avatar pillar <span class="zh">乾坤柱</span> in late light, and down again.</p>
+  </div>
+  <div class="chips">
+    <span class="chip"><b>Walking</b> ~1.5 km, paved</span>
+    <span class="chip"><b>Tickets</b> ¥350</span>
+    <span class="chip"><b>Buffer down</b> ~65 min before 17:00</span>
+  </div>
+  <div class="hours" aria-label="Where the hours go on route 3">
+    <span class="eyebrow">Where 5 h 40 goes</span>
+    <div class="bar"><span class="seg move" style="--m:55"></span><span class="seg tz" style="--m:20"></span><span class="seg move" style="--m:50"></span><span class="seg val" style="--m:45"></span><span class="seg move" style="--m:55"></span><span class="seg yjj" style="--m:55"></span><span class="seg move" style="--m:60"></span></div>
+    <ul>
+      <li><i class="seg tz"></i>Tianzi <b>20 min</b></li>
+      <li><i class="seg val"></i>Train and valley <b>45 min</b></li>
+      <li><i class="seg yjj"></i>Yuanjiajie <b>55 min</b></li>
+      <li><i class="seg move"></i>Buses, rides, queues <b>3 h 40</b></li>
+    </ul>
+  </div>
+  <figure>
+    <div class="map"><div data-map="r3" data-label="Route 3: East Gate, cable car up to Helong Park and back down, mini-train at Ten-Mile Gallery, bus to the Bailong Elevator, up to Mihun Terrace and Hallelujah Mountain, elevator down, bus to the gate."></div><div class="legend" data-legend></div></div>
+  </figure>
+  <ol class="tl">
+    <li><span class="t">11:00</span><span class="dot">1</span><div class="b"><strong>East Gate <span class="zh">东门 · 标志门</span></strong><p>Line A is the left lane. Bus for the Tianzi Mountain cableway.</p><p class="guide"><b>Guide:</b> You are at the Wujiayu ticket station <span class="zh">吴家峪门票站</span>, which locals call the landmark gate <span class="zh">标志门</span>. This is the Suoxi Valley <span class="zh">索溪峪</span> side of Wulingyuan <span class="zh">武陵源</span>. The forest park and this valley reserve were both set up in 1982, and the whole area joined the UNESCO list in 1992.</p><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>to the Tianzi cable car base <span class="zh">天子山索道下站</span> · ~20 min · free eco-bus, boards just inside the gate</span></span></div></div></li>
+    <li><span class="t">11:25</span><span class="dot">2</span><div class="b"><strong>Tianzi Mountain cable car, up <span class="zh">天子山索道 上行</span></strong><p>Buy the up ticket (¥72). Ask at the window if you can also buy a down ticket <span class="zh">下行票</span>. If the answer is no, switch to route 2.</p><p class="guide"><b>Guide:</b> The line runs about 2 km and lifts you roughly 690 m. Partway up you are level with the pillar tops. For the rest of the day you look down on them, so this is your one ride through the stone forest at eye height.</p><a class="why" href="#spot-cablecar">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>to Helong Park <span class="zh">贺龙公园</span> · 2–10 min · waits outside the top station</span></span></div></div></li>
+    <li><span class="t">11:55</span><span class="dot">3</span><div class="b"><strong>Helong Park, 20 minutes <span class="zh">贺龙公园</span></strong><p>Imperial Brush Peaks deck <span class="zh">御笔峰</span> only, then the bus back to the cable car top station <span class="zh">索道上站</span>.</p><p class="guide"><b>Guide:</b> Tianzi means Son of Heaven. The mountain was Qingyan Mountain <span class="zh">青岩山</span> until Xiang Dakun <span class="zh">向大坤</span>, a Tujia leader, rebelled here in 1353 and took the emperor's title for himself. He lost, and the story has him dying in Shentang Bay <span class="zh">神堂湾</span> below. Legend turns his writing brushes into the Imperial Brush Peaks: the pines on top are the bristles. The park dates from 1986 and honours Marshal He Long <span class="zh">贺龙</span>, a Red Army commander born in nearby Sangzhi <span class="zh">桑植</span>. His bronze stands 6.5 m tall and weighs 9 tons, with his horse beside him.</p><a class="why" href="#spot-helong">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>back to the cable car top station <span class="zh">索道上站</span> · 2–10 min</span></span><span class="hop"><b class="m">Cable car</b><span>down to the base · ~10 min · down ticket ¥72</span></span><span class="hop"><b class="m">Bus</b><span>shuttle to Ten-Mile Gallery <span class="zh">十里画廊</span> · 5–20 min</span></span></div></div></li>
+    <li><span class="t">13:05</span><span class="dot">4</span><div class="b"><strong>Ten-Mile Gallery mini-train <span class="zh">十里画廊小火车</span></strong><p><b>Why:</b> the free shuttle from the cable car base stops here, and midday is well clear of the last train. Buy the return (¥76), sit left going in, 15 minutes at Three Sisters Peak <span class="zh">三姐妹峰</span>. Eat at the entrance.</p><p class="watch"><b>Watch out:</b> macaques at the far stop grab food.</p><p class="guide"><b>Guide:</b> Ten li is about 5 km, the length of this valley. It is called a gallery because the cliff line reads like a scroll of rock figures. Watch for the Longevity Star Welcoming Guests <span class="zh">寿星迎宾</span> near the start and the Old Man Gathering Herbs <span class="zh">采药老人</span>, a stooped figure with a basket on his back. At the end stand the Three Sisters <span class="zh">三姐妹峰</span>. In the local telling the eldest carries a baby on her back, the second holds one in her arms and the youngest is expecting. A tram has run here since 1999, and the zodiac-themed cars arrived in 2022.</p><a class="why" href="#spot-gallery">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>to the elevator bottom <span class="zh">百龙天梯下站</span> · ~10 min · may change at Shuiraosimen <span class="zh">水绕四门</span></span></span></div></div></li>
+    <li><span class="t">14:10</span><span class="dot">5</span><div class="b"><strong>Bailong Elevator, up <span class="zh">百龙天梯 上行</span></strong><p><b>Why:</b> riding up is the better direction for the view. The car bursts out of the shaft onto the pillars. ¥65, passport, glass side.</p><p class="watch"><b>Watch out:</b> ask staff for the last car down <span class="zh">末班下行</span> before you go up. If you are not at the top by 14:45, see Mihun Terrace only.</p><p class="guide"><b>Guide:</b> Bailong means Hundred Dragons. Work began in 1999 and the lift opened in 2002. The cars travel 326 m. The lower half runs in a shaft drilled into the cliff, and the upper 170 m or so climbs an exposed steel tower. Guinness certified it as the world's tallest outdoor lift in 2015. It was controversial from the start, bolted onto a World Heritage cliff, and it shut for ten months in 2002–03 over safety. The park's case is that it let them clear the hotels off the plateau.</p><a class="why" href="#spot-bailong">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>to the Mihun Terrace stop <span class="zh">迷魂台站</span> · 5–10 min · from the elevator top</span></span></div></div></li>
+    <li><span class="t">14:45</span><span class="dot">6</span><div class="b"><strong>Mihun Terrace <span class="zh">迷魂台</span></strong><p><b>Why:</b> the all-round platform, and one poster's tip is to come after 15:30 for softer light and fewer people. Twenty minutes.</p><p class="guide"><b>Guide:</b> Mihun means losing your soul. The old line is that visitors were so dazed by the view they forgot where they were. More than a hundred pillars rise out of the gorge below, and locals have named many of them. Look for the Heavenly Dog Watching the Moon <span class="zh">天狗望月</span> and the Generals in Formation <span class="zh">将军列队</span>.</p><a class="why" href="#spot-mihun">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Walk</b><span>to Hallelujah Mountain <span class="zh">乾坤柱</span> · 10–15 min · paved cliff path, some steps</span></span></div></div></li>
+    <li><span class="t">15:10</span><span class="dot">7</span><div class="b"><strong>Hallelujah Mountain <span class="zh">乾坤柱 · 哈利路亚山</span></strong><p>The Avatar pillar. Twenty minutes, then walk back the way you came to the Mihun Terrace bus stop by 15:45.</p><p class="guide"><b>Guide:</b> The Chinese name is Qiankun Pillar <span class="zh">乾坤柱</span>, the pillar of heaven and earth. English guides used to call it the Southern Sky Column. About 150 m of it stands free, with the top around 1,080 m above sea level. On 25 January 2010, five weeks after Avatar opened, the park renamed it Avatar Hallelujah Mountain <span class="zh">阿凡达-哈利路亚山</span>. Critics in China objected to the foreign name and officials had to defend it. Nothing was filmed here: the floating mountains were built on computers from reference photos. When mist fills the gorge the base vanishes and the column seems to hang in the air, which is the look the film borrowed.</p><a class="why" href="#spot-hallelujah">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Walk</b><span>back the same path to the Mihun Terrace stop <span class="zh">迷魂台站</span> · 10–15 min</span></span><span class="hop"><b class="m">Bus</b><span>to the elevator top <span class="zh">百龙天梯上站</span> · 5–15 min</span></span></div></div></li>
+    <li class="opt"><span class="t">+20</span><span class="dot">＋</span><div class="b"><strong>First Bridge Under Heaven <span class="zh">天下第一桥</span> <span class="optlabel">Optional walk</span></strong><p>Carry on to the bridge and take the 10-minute road back to the Mihun bus stop. Only if you leave Hallelujah Mountain by 15:20.</p><p class="guide"><b>Guide:</b> The usual explanation is that a slab of harder sandstone stayed put while water cut away the rock beneath it. What is left is an arch about 20 m long and 2 to 3 m wide. Sources put the drop under it anywhere from 357 to 400 m. It is one of two natural bridges in Wulingyuan.</p><a class="why" href="#spot-first-bridge">What posts say</a><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Walk</b><span>from the bridge along the road to the Mihun Terrace stop · ~10 min</span></span><span class="hop"><b class="m">Bus</b><span>to the elevator top <span class="zh">百龙天梯上站</span> · 5–15 min</span></span></div></div></li>
+    <li><span class="t">15:55</span><span class="dot">8</span><div class="b"><strong>Bailong Elevator, down <span class="zh">百龙天梯 下行</span></strong><p>Second ticket, ¥65. Be in this queue by 16:15 at the very latest.</p><div class="hops"><span class="nx">Then</span><span class="hop"><b class="m">Bus</b><span>to the East Gate <span class="zh">东门</span> · ~30 min · from the elevator bottom, change at Shuiraosimen <span class="zh">水绕四门</span></span></span></div></div></li>
+    <li class="end"><span class="t">16:40</span><span class="dot">↩</span><div class="b"><strong>East Gate <span class="zh">东门</span></strong><p>About an hour before sunset.</p></div></li>
+  </ol>
+  <p class="note"><b>Trade-offs:</b> the dearest route (five ride tickets), under an hour on Yuanjiajie, and the thinnest buffer for getting down. It also needs a cable car ticket down on a Line A booking.</p>
+  <p class="checked"><b>Does it work?</b> A Ctrip poster did this shape on 7 Nov 2024 from an 11:00 East Gate entry: Tianzi by cable car, Ten-Mile Gallery, then up the elevator at about 15:10 with few people queuing. A June 2025 park notice also describes Line A as the cable car both ways. <a href="#official">Details</a></p>
+</section>
+
+<!-- ============ SPOTS ============ -->
+<section class="spots" id="viewpoints">
+  <h2>What posts say about each stop</h2>
+  <p>Why travellers recommend each place and what they warn about, with links. Sources are Tripadvisor reviews, Trip.com Moments, Ctrip, Douban, Weibo and personal blogs. Summaries are paraphrased.</p>
+
+  <article class="spot" id="spot-yuanjiajie">
+    <h3>Yuanjiajie, the mountaintop to prioritise <span class="zh">袁家界</span></h3>
+    <dl>
+      <dt>Why go</dt><dd>The famous pillar views line one paved, railed path, so tired legs get the most scenery per step. Posters who had to choose put it first.</dd>
+      <dt>Watch out</dt><dd class="w">Narrow decks jam when tour groups arrive, and you reach it in the afternoon when some views are backlit.</dd>
+    </dl>
+    <ul>
+      <li><a href="https://www.bucketlistly.blog/posts/one-day-upper-zhangjiajie-national-park-travel-solo">Personal blog · Pete R, BucketListly · Jan 2026</a>: if time is short, drop Tianzi and Yangjiajie and give it all to Yuanjiajie.</li>
+      <li><a href="https://www.bucketlistly.blog/posts/zhangjiajie-3-days-itinerary">Personal blog · Pete R, BucketListly · Jan 2026</a>: ranks Yuanjiajie first, Tianzi second, Yangjiajie third.</li>
+      <li><a href="https://theworldtravelguy.com/zhangjiajie-park-itinerary/">Personal blog · David and Intan, The World Travel Guy · Aug 2025</a>: with a late start, do only Yuanjiajie and Tianzi. The Yuanjiajie trail takes one to two hours and is signed in English.</li>
+      <li><a href="https://gs.ctrip.com/html5/you/travels/23/4151517.html">Ctrip travel note · fswpq · visited 7 Nov 2024</a>: also entered the East Gate at 11:00 and went up the Tianzi cable car. Spent about two hours on Yuanjiajie in the late afternoon.</li>
+      <li><a href="https://www.fabionodariphoto.com/en/zhangjiajie-travel-guide-hunan/">Personal blog · Fabio Nodari · Nov 2026</a>: the dissent. Short on time, he would head straight to Tianzi.</li>
+    </ul>
+  </article>
+
+  <article class="spot" id="spot-huangshizhai">
+    <h3>Huangshizhai <span class="zh">黄石寨</span> <span class="verdict">Skipped</span></h3>
+    <dl>
+      <dt>Why skip</dt><dd>Posters like it, but as a quiet second-day stop. It sits by the south gate, its loop takes two to three hours, and nothing connects it to Yuanjiajie or Tianzi on top.</dd>
+      <dt>The other view</dt><dd>Several travellers call it peaceful and worth the trip if you have an extra day.</dd>
+    </dl>
+    <ul>
+      <li><a href="https://sailingstonetravel.com/zhangjiajie-national-forest-park-hiking-huangshi-village/">Personal blog · Ken Lawrence, Sailingstone Travel · May 2019</a>: the least remarkable of his three days. A flat loop of about three hours, for visitors with a spare day.</li>
+      <li><a href="https://unusualnomad.com/zhangjiajie-2-day-itinerary/">Personal blog · Panos, Unusual Nomad · Apr 2026</a>: worth seeing, as a second-day item.</li>
+      <li><a href="https://www.postcardsfrommimi.com/zhangjiajie-travel-guide/">Personal blog · Mimi · updated Nov 2025</a>: a good add-on, but not linked to the other upper paths.</li>
+      <li><a href="https://backpackingpeople.com/visiting-zhangjiajie-national-park/">Personal blog · Michaela, Backpacking People · 2018</a>: worth it, and far quieter than Yuanjiajie.</li>
+      <li><a href="https://chinafortravelers.com/guides/zhangjiajie-national-park/">Guide site · China for Travelers · Sep 2026</a>: calls it the park's most skippable zone. Its cable car rises from the south gate and joins nothing on the plateau.</li>
+      <li><a href="https://www.wanderinchina.com/destinations/zhangjiajie/national-forest-park/hiking-trails/">Guide site · Wander in China · 2026</a>: visitors who went after Yuanjiajie and Tianzi found it a little less dramatic.</li>
+    </ul>
+  </article>
+
+  <article class="spot" id="spot-gate">
+    <h3>East Gate and Line A <span class="zh">标志门 · A线</span></h3>
+    <dl>
+      <dt>Why it works</dt><dd>Line A means cable car up, elevator down. Posters credit it with lighter queues than the reverse.</dd>
+      <dt>Watch out</dt><dd class="w">The lane and slot must match the booking. There is a staircase before the cable car.</dd>
+    </dl>
+    <ul>
+      <li><a href="https://www.trip.com/moments/detail/zhangjiajie-23-146459749/">Trip.com Moments · OlgaMay · 2026</a>: picked Line A as far less crowded. A free eco-bus runs from the turnstile to the Tianzi cable car.</li>
+      <li><a href="https://www.tripadvisor.com/Attraction_Review-g494933-d505450-Reviews-Zhangjiajie_National_Forest_Park-Zhangjiajie_Hunan.html">Tripadvisor · Shopfoot P · Nov 2026</a>: booked the wrong line and missed the slot. A clerk moved them to the next one.</li>
+      <li><a href="https://heyroseanne.com/zhangjiajie-national-forest-park/">Personal blog · Hey Roseanne · 2026</a>: ten minutes late for the slot, fixed by staff in two minutes.</li>
+      <li><a href="https://serenaslenses.net/zhangjiajie-avatar-mountains-guide-and-itinerary/">Personal blog · Serena's Lenses · Sep 2026</a>: prefers Line B for seeing the pillars first, and notes Line A's staircase up to the cable car.</li>
+    </ul>
+  </article>
+
+  <article class="spot" id="spot-cablecar">
+    <h3>Tianzi Mountain cable car <span class="zh">天子山索道</span></h3>
+    <dl>
+      <dt>Why go</dt><dd>The low-queue way up outside holidays, with views over the pillars from the cabin.</dd>
+      <dt>Watch out</dt><dd class="w">Tickets are sold per direction. Afternoon queues build for the ride down, but route 3 rides down at midday.</dd>
+    </dl>
+    <ul>
+      <li><a href="https://www.trip.com/moments/detail/zhangjiajie-23-139112332">Trip.com Moments · Lee Lee Sam · Dec 2025</a>: about 10 minutes and ¥72 one way. Crowds grow on the way down in the afternoon.</li>
+      <li><a href="https://www.tripadvisor.com/Attraction_Review-g494933-d1805384-Reviews-or10-Tianzi_Mountain-Zhangjiajie_Hunan.html">Tripadvisor · Blanches85 · Nov 2024</a>: no cable car queue in November.</li>
+      <li><a href="https://www.bucketlistly.blog/posts/zhangjiajie-3-days-itinerary">Personal blog · Pete R, BucketListly · Jan 2026</a>: had a cabin to himself on a late-autumn visit.</li>
+      <li><a href="https://themiddlespaces.blogspot.com/2020/03/chinas-most-famous-national-park.html">Personal blog · Maura Lydon · Mar 2020</a>: the ride is worth it. The summit area is small.</li>
+    </ul>
+  </article>
+
+  <article class="spot" id="spot-helong">
+    <h3>Helong Park: Imperial Brush Peaks <span class="zh">贺龙公园 · 御笔峰</span></h3>
+    <dl>
+      <dt>Why go</dt><dd>The Imperial Brush deck is the one Tianzi view posters call unmissable, and it sits beside the bus change you make anyway.</dd>
+      <dt>Watch out</dt><dd class="w">You arrive after the morning light posters favour. Photo queues run 13:00 to 16:00. One poster found Fairy Scattering Flowers underwhelming.</dd>
+    </dl>
+    <ul>
+      <li><a href="https://www.bucketlistly.blog/posts/one-day-upper-zhangjiajie-national-park-travel-solo">Personal blog · Pete R, BucketListly · Jan 2026</a>: Imperial Brush and Fairy Scattering Flowers are enough. There is little else up here.</li>
+      <li><a href="https://gs.ctrip.com/html5/you/travels/23/4151517.html">Ctrip travel note · fswpq · Nov 2024</a>: liked Imperial Brush Peaks, was let down by the Fairy deck, and gave up on Dianjiang Terrace after a 30-minute shuttle wait.</li>
+      <li><a href="https://www.tripadvisor.com/Attraction_Review-g494933-d1805384-Reviews-Tianzi_Mountain-Zhangjiajie_Hunan.html">Tripadvisor · lmeuskadi · Apr 2026</a>: calls the Imperial Brush deck a must-see.</li>
+      <li><a href="https://laurenslighthouse.com/zhangjiajie-guide/">Personal blog · Lauren Neves · May 2025</a>: take the stairs right of the statue for framed views. McDonald's, Luckin and stalls on the square.</li>
+      <li><a href="https://blog.sina.com.cn/s/blog_4c1228600102yhx4.html">Sina blog · 落霞孤鹜 · Apr 2019</a>: walked the decks as one short loop. Photo queues from 13:00 to 16:00.</li>
+    </ul>
+  </article>
+
+  <article class="spot" id="spot-first-bridge">
+    <h3>First Bridge Under Heaven <span class="zh">天下第一桥</span></h3>
+    <dl>
+      <dt>Why go</dt><dd>A natural stone arch between two pillars. The bus from Tianzi stops here, so it opens the cliff walk.</dd>
+      <dt>Watch out</dt><dd class="w">No bus links this stop with Mihun Terrace. The stretch between is on foot.</dd>
+    </dl>
+    <ul>
+      <li><a href="https://gs.ctrip.com/html5/you/travels/23/4164470.html">Ctrip travel note · 清风乐语 · May 2025</a>: walked bridge, Hallelujah pillar, then Mihun Terrace, the same order as these routes.</li>
+      <li><a href="https://zed67.blogspot.com/2025/04/avatar-mountains-zhangjiajie-national-forest-park.html">Personal blog · ZED67 · Apr 2025</a>: no bus between the bridge stop and Mihun Terrace.</li>
+      <li><a href="https://in.trip.com/moments/detail/zhangjiajie-23-139244632">Trip.com Moments · Nov 2025</a>: see the whole arch from the deck first, then cross it and look back.</li>
+      <li><a href="https://www.tripadvisor.com/ShowUserReviews-g494933-d505450-r425196005-Zhangjiajie_National_Forest_Park-Zhangjiajie_Hunan.html">Tripadvisor · LG_Kay · Oct 2016</a>: ride to the First Bridge stop and tell the driver.</li>
+    </ul>
+  </article>
+
+  <article class="spot" id="spot-hallelujah">
+    <h3>Hallelujah Mountain <span class="zh">乾坤柱</span></h3>
+    <dl>
+      <dt>Why go</dt><dd>The film pillar. Every Yuanjiajie account includes it.</dd>
+      <dt>Watch out</dt><dd class="w">Crowds. Decks fill from mid-morning and weekends are worst. Today is a Saturday.</dd>
+    </dl>
+    <ul>
+      <li><a href="https://ummigoeswhere.com/zhangjiajie-travel-guide/">Personal blog · Ummi Goes Where · Jul 2026</a>: on a November visit the decks got busier by mid-morning, weekends most of all.</li>
+      <li><a href="https://www.tripadvisor.com/ShowUserReviews-g494933-d505450-r425196005-Zhangjiajie_National_Forest_Park-Zhangjiajie_Hunan.html">Tripadvisor · LG_Kay · Oct 2016</a>: expect a crush along the cliff walk.</li>
+      <li><a href="https://gs.ctrip.com/html5/you/travels/23/4164470.html">Ctrip travel note · 清风乐语 · May 2025</a>: the full walk took over three hours with detours.</li>
+    </ul>
+  </article>
+
+  <article class="spot" id="spot-mihun">
+    <h3>Mihun Terrace <span class="zh">迷魂台</span></h3>
+    <dl>
+      <dt>Why go</dt><dd>All-round view over the pillar forest. Several posters name it their favourite platform.</dd>
+      <dt>Watch out</dt><dd class="w">Selfie crowds at the rail, and mixed reports on afternoon light.</dd>
+    </dl>
+    <ul>
+      <li><a href="https://in.trip.com/moments/theme/poi-mihuntai-scenic-spot-10543148-guides-993135/">Trip.com Moments · several posters</a>: 360-degree views and one poster's favourite platform. Another says go after 15:30 for light and fewer people.</li>
+      <li><a href="https://om.trip.com/moments/detail/zhangjiajie-23-134224700">Trip.com Moments · ExpeditionEnthusiast#7 · Jul 2025</a>: best light in the morning, backlit in the afternoon.</li>
+      <li><a href="https://blog.udn.com/loveabba/181707080">UDN blog · loveabba · Jan 2025</a>: photographed it from 15:30 to 16:30 in slanting sun.</li>
+      <li><a href="https://sailingstonetravel.com/zhangjiajie-national-forest-park-yuanjiajie-yangjiajie/">Personal blog · Sailingstone Travel · 2019</a>: had to wait out the selfie crowd.</li>
+    </ul>
+  </article>
+
+  <article class="spot" id="spot-back-garden">
+    <h3>Back Garden <span class="zh">后花园</span> <span class="verdict">Optional</span></h3>
+    <dl>
+      <dt>Why go</dt><dd>The quiet Yuanjiajie corner. Posters describe half the crowds a few minutes off the road.</dd>
+      <dt>Watch out</dt><dd class="w">May be shut. One guide lists it as closed after a path collapse. No post times the detour reliably.</dd>
+    </dl>
+    <ul>
+      <li><a href="https://in.trip.com/moments/theme/poi-mihuntai-scenic-spot-10543148-guides-993135/">Trip.com Moments · AMV. GGGG</a>: half the crowds, a five-minute detour from the parking area.</li>
+      <li><a href="https://www.groovymashedpotatoes.com/two-day-itinerary-exploring-zhangjiajie-mountains-china/">Personal blog · Groovy Mashed Potatoes · 2019</a>: their favourite spot, with barely anyone there.</li>
+      <li><a href="https://www.travelchinaguide.com/attraction/hunan/zhangjiajie/yuanjiajie.htm">Guide site · TravelChinaGuide</a>: lists Back Garden as inaccessible while a collapsed footpath is repaired.</li>
+    </ul>
+  </article>
+
+  <article class="spot" id="spot-bailong">
+    <h3>Bailong Elevator <span class="zh">百龙天梯</span></h3>
+    <dl>
+      <dt>Why go</dt><dd>The fast way down: 326 m in about 90 seconds, straight to the valley buses.</dd>
+      <dt>Watch out</dt><dd class="w">Only the glass side sees out. Queue reports for the descent run from empty to an hour.</dd>
+    </dl>
+    <ul>
+      <li><a href="https://gs.ctrip.com/html5/you/travels/23/4151517.html">Ctrip travel note · fswpq · visited 7 Nov 2024</a>: went up at about 15:10 with few people queuing and rode down at about 17:40 with almost nobody in line. A crowd formed at the bottom near 18:00, likely for the bus.</li>
+      <li><a href="https://www.postcardsfrommimi.com/zhangjiajie-travel-guide/">Personal blog · Mimi · updated Nov 2025</a>: the queue down is much shorter than the queue up.</li>
+      <li><a href="https://gs.ctrip.com/html5/you/sight/23/67756.html">Ctrip reviews · 2026</a>: the moment the car leaves the shaft is the highlight. Stand by the window, and expect an hour or more at peak times.</li>
+      <li><a href="https://www.tripadvisor.com/Attraction_Review-g494933-d13990538-Reviews-BaiLong_Elevator-Zhangjiajie_Hunan.html">Tripadvisor · reviews from Nov 2025 to Nov 2026</a>: ¥65 down, passport needed. Waits ran from almost none late in the day to an hour.</li>
+      <li><a href="https://www.tripadvisor.com/Attraction_Review-g494933-d13990538-Reviews-or10-BaiLong_Elevator-Zhangjiajie_Hunan.html">Tripadvisor · Blanches85, Nov 2024 · Alessandro, Sep 2025</a>: from the back you see nothing, and the windows are dirty.</li>
+    </ul>
+    <p class="gap">Only one dated November report covers the ride down, and none is from a Saturday.</p>
+  </article>
+
+  <article class="spot" id="spot-gallery">
+    <h3>Ten-Mile Gallery and mini-train <span class="zh">十里画廊 · 小火车</span></h3>
+    <dl>
+      <dt>Why go</dt><dd>A flat valley under the pillars you just stood on, with a seated ride. Liked by tired walkers.</dd>
+      <dt>Watch out</dt><dd class="w">Opinion is split: several posters say walk it and skip the train, and one found the valley repetitive. Macaques snatch food at the far end.</dd>
+    </dl>
+    <ul>
+      <li><a href="https://us.trip.com/moments/detail/zhangjiajie-23-154867505/">Trip.com Moments · TheSofaView</a>: sit left going in, since the right side is mostly rock wall. 10 to 15 minutes one way.</li>
+      <li><a href="https://weibo.com/2/detail/comos:niypzqm3680011">Weibo article · Nov 2026</a>: after 16:00 the train has almost no queue, so it can go last in the day.</li>
+      <li><a href="https://us.trip.com/moments/detail/zhangjiajie-23-129592206/">Trip.com Moments · Annabb3 · Feb 2025</a>: train in for the commentary, walk back in about 20 minutes. ¥38 one way.</li>
+      <li><a href="https://serenaslenses.net/4-day-zhangjiajie-itinerary/">Personal blog · Serena's Lenses · Oct 2026</a>: a relaxed alternative to walking, with the same views.</li>
+      <li><a href="https://ummigoeswhere.com/zhangjiajie-national-forest-park/">Personal blog · Ummi Nadrah · Aug 2026, mid-November visit</a>: about 30 minutes each way on foot, flat.</li>
+      <li><a href="https://gs.ctrip.com/html5/you/travels/23/4151517.html">Ctrip travel note · fswpq · Nov 2024</a>: walked halfway and turned back, finding it repetitive.</li>
+      <li><a href="https://www.bucketlistly.blog/posts/zhangjiajie-complete-travel-guide">Personal blog · Pete R, BucketListly · Jan 2026</a>: the walk is very easy, so skip the train.</li>
+      <li><a href="https://gs.ctrip.com/html5/you/comment/2962/2441-sight.html">Ctrip reviews · 2025 to 2026</a>: only the edge seat sees anything. Monkeys wait by the far stop, so hide food.</li>
+    </ul>
+  </article>
+
+  <article class="spot" id="spot-dianjiang">
+    <h3>Dianjiang Terrace <span class="zh">点将台</span> <span class="verdict">Not in the routes</span></h3>
+    <dl>
+      <dt>Why go</dt><dd>Almost nobody stops there. Two posters rate the view above Imperial Brush Peaks.</dd>
+      <dt>Watch out</dt><dd class="w">Request stop. Shuttle waits of 20 to 30 minutes are reported.</dd>
+    </dl>
+    <ul>
+      <li><a href="https://us.trip.com/moments/detail/zhangjiajie-23-146670651">Trip.com Moments · Isaac Diaz</a>: few visitors, and a better view than Imperial Brush Peak.</li>
+      <li><a href="https://backpackingpeople.com/visiting-zhangjiajie-national-park/">Personal blog · Michaela, Backpacking People · 2018</a>: nearly empty, with the best views of her visit.</li>
+      <li><a href="https://www.douban.com/group/topic/295067667/">Douban · ENJOY · Sep 2023</a>: say the stop name to the driver when boarding.</li>
+      <li><a href="https://gs.ctrip.com/html5/you/travels/23/4139024.html">Ctrip travel note · 遥远的景象 · Jun 2024</a>: waited over 20 minutes at the next stop as full buses passed.</li>
+    </ul>
+  </article>
+
+</section>
+
+<section class="know" id="know">
+  <h2>Know before you go</h2>
+  <ul>
+    <li><b>Slot and line must match your booking.</b> The turnstile checks both. Travellers who arrived late or on the wrong line say staff re-slotted them in minutes.</li>
+    <li><b>Last rides are set on the day.</b> Plan on 17:00 for the lifts and 16:30 for boarding the train. The <a href="#last-rides">table above</a> has the detail. Ask at the cable car base: <span lang="zh">今天最后一班几点？</span></li>
+    <li><b>Valley buses run in segments.</b> From the elevator bottom to Ten-Mile Gallery and the East Gate you change at Shuiraosimen <span class="zh">水绕四门</span>.</li>
+    <li><b>Request stops exist on top.</b> Tell the driver your stop or the bus drives past. Full buses skip stops, so re-boarding mid-route can take 20 minutes.</li>
+    <li><b>Dress for the top.</b> Forecasts put Tianzi Mountain and the elevator area at about 10 to 12°C, windier than town. Steps may still be wet from Friday.</li>
+    <li><b>Fog check at Helong Park.</b> Humidity was near 100% this morning and no source reports summit visibility. If the top is whited out when you arrive, take route 3: it puts the train first and gives the cloud three hours to lift.</li>
+  </ul>
+  <h3>Show these to a driver</h3>
+  <div class="names">
+    <div>East Gate</div><div lang="zh">东门 · 标志门</div>
+    <div>Tianzi Mountain</div><div lang="zh">天子山</div>
+    <div>Tianzi Mountain cable car</div><div lang="zh">天子山索道</div>
+    <div>Cable car top station</div><div lang="zh">索道上站</div>
+    <div>Helong Park</div><div lang="zh">贺龙公园</div>
+    <div>Imperial Brush Peaks</div><div lang="zh">御笔峰</div>
+    <div>Yuanjiajie</div><div lang="zh">袁家界</div>
+    <div>Yangjiajie bus stop (change only)</div><div lang="zh">杨家界站</div>
+    <div>First Bridge Under Heaven</div><div lang="zh">天下第一桥</div>
+    <div>Hallelujah Mountain (Avatar pillar)</div><div lang="zh">乾坤柱</div>
+    <div>Mihun Terrace</div><div lang="zh">迷魂台</div>
+    <div>Back Garden</div><div lang="zh">后花园</div>
+    <div>Bailong Elevator</div><div lang="zh">百龙天梯</div>
+    <div>Shuiraosimen (bus change)</div><div lang="zh">水绕四门</div>
+    <div>Ten-Mile Gallery</div><div lang="zh">十里画廊</div>
+    <div>Mini-train</div><div lang="zh">小火车</div>
+    <div>Three Sisters Peak</div><div lang="zh">三姐妹峰</div>
+    <div>Ticket up / ticket down</div><div lang="zh">上行票 / 下行票</div>
+    <div>Last car down?</div><div lang="zh">末班下行几点？</div>
+    <div>What time is the last ride today?</div><div lang="zh">今天最后一班几点？</div>
+  </div>
+</section>
+
+<footer>
+  <p>Maps are schematic, not to scale. Prices, hours and queue reports were checked on 14 Nov 2026 and can change on the day. Your own research page at notes.bunnylog.ca could not be opened (it needs JavaScript), so its posts are not included yet. Reddit and Xiaohongshu could not be opened either.</p>
+  <ul>
+    <li><a href="https://chinafortravelers.com/guides/zhangjiajie-national-park/">China for Travelers: tickets, eco-bus segments, queues</a></li>
+    <li><a href="https://notesfromchina.com/blog/zhangjiajie-tickets-booking/">Notes from China: what the ticket includes, Line A lane</a></li>
+    <li><a href="https://zhangjiajietravels.com/zhangjiajie-national-forest-park-tickets/">Zhangjiajie Travels: ride prices and payment</a></li>
+    <li><a href="https://chinafantasytravel.com/zhangjiajie-ticket-rules/">China Fantasy Travel: Line A and B rules</a></li>
+    <li><a href="https://www.trip.com/guide/attraction/zhangjiajie-national-forest-park.html">Trip.com guide: low-season ride hours</a></li>
+    <li><a href="https://travelchinawith.me/china-destinations/zhangjiajie/zhangjiajie-eco-bus/">Travel China With Me: eco-bus routes and request stops</a></li>
+    <li><a href="https://www.chinatravel.com/zhangjiajie/attraction/yuanjiajie-scenic-area">China Travel: Yuanjiajie walking order</a></li>
+    <li><a href="https://www.zhangjiajieguide.com/attractions/zhangjiajie-national-forest-park/shuttle-bus.html">Zhangjiajie Guide: shuttle bus lines</a></li>
+    <li><a href="https://zhangjiajie.cncn.com/jingdian/shilihualangxiaohuoche/">CNCN: mini-train seasons and hours</a></li>
+    <li><a href="http://www.nmc.cn/publish/forecast/AHN/zhangjiajie.html">National Meteorological Centre: Zhangjiajie forecast</a></li>
+    <li><a href="https://www.weather.com.cn/weather1d/101251104.shtml">Weather China: Wulingyuan today, sunset 17:44</a></li>
+    <li><a href="http://www.hnzjj.com/index.php/Article/show/552.html">Zhangjiajie Wulingyuan official site: low season from 1 December (2023)</a></li>
+    <li><a href="https://news.qq.com/rain/a/20230508A064DC00">Official WeChat notice, reposted: gate hours 07:30–17:00</a></li>
+    <li><a href="https://zjj.rednet.cn/content/646940/65/15063474.html">Park reopening notice, June 2025: Line A and B options</a></li>
+    <li><a href="https://m.thepaper.cn/newsDetail_forward_22292320">Park notice: suggested routes by gate</a></li>
+    <li><a href="https://www.clxww.com/content/646940/61/15082336.html">Cable car operator notice, June 2025</a></li>
+    <li><a href="https://m.dahepiao.com/jingqu/shilihualang/">Dahe Ticketing: mini-train hours and ticket window</a></li>
+    <li><a href="https://gs.ctrip.com/html5/you/sight/23/67756.html">Ctrip: Bailong Elevator listing hours</a></li>
+    <li><a href="https://whc.unesco.org/document/217066">UNESCO: Wulingyuan listing and geopark</a></li>
+    <li><a href="https://www.guinnessworldrecords.com/world-records/593531-largest-concentration-of-sandstone-pillars">Guinness World Records: sandstone pillars</a></li>
+    <li><a href="https://en.wikipedia.org/wiki/Tianzi_Mountain">Wikipedia: Tianzi Mountain and Xiang Dakun</a></li>
+    <li><a href="https://www.travelchinaguide.com/attraction/hunan/zhangjiajie/tianzi-mountain.htm">TravelChinaGuide: He Long statue</a></li>
+    <li><a href="https://covid-19.chinadaily.com.cn/china/2010-01/25/content_9374295.htm">China Daily, Jan 2010: pillar renamed</a></li>
+    <li><a href="https://chinafortravelers.com/guides/avatar-mountains-china/">China for Travelers: Avatar and the pillar</a></li>
+    <li><a href="https://structurae.net/en/structures/bailong-elevator">Structurae: Bailong Elevator history</a></li>
+    <li><a href="https://elevatorworld.com/?p=34263">Elevator World: Bailong Elevator</a></li>
+    <li><a href="https://m.thepaper.cn/newsDetail_forward_17034601">The Paper: Ten-Mile Gallery tram, 2022</a></li>
+    <li><a href="../zhangjiajie-routes/">Your earlier six-route page</a></li>
+  </ul>
+
+</footer>
+
+</div>
+
+<nav class="dock" aria-label="Switch route">
+  <div class="dock-in">
+    <a href="#answer" data-dock="top"><b>Plan</b><span>Overview</span></a>
+    <a href="#route-1" data-dock="route-1" style="--c:var(--r1)"><b>1</b><span>Unhurried</span></a>
+    <a href="#route-2" data-dock="route-2" style="--c:var(--r2)"><b>2</b><span>Train last</span></a>
+    <a href="#route-3" data-dock="route-3" style="--c:var(--r3)"><b>3</b><span>Train first</span></a>
+  </div>
+</nav>
+
+<script>
+(function(){
+  var NS="http://www.w3.org/2000/svg";
+  // Schematic, north up. Dashed outlines = mountain areas. Each node: x,y, label l (| splits lines),
+  // Chinese z, label anchor a and position lx,ly (baseline of first line).
+  var N={
+    E:{x:338,y:304,l:"East Gate",z:"东门",a:"end",lx:350,ly:328},
+    X:{x:320,y:276},
+    W1:{x:322,y:216},
+    CL:{x:316,y:168,l:"Cable car",z:"天子山索道",a:"end",lx:304,ly:160},
+    CU:{x:294,y:88},
+    H:{x:226,y:78,l:"Helong Park",z:"贺龙公园",a:"middle",lx:226,ly:100},
+    Y:{x:122,y:92,l:"Bus change",z:"杨家界站",a:"start",lx:118,ly:108,minor:true},
+    J:{x:62,y:132},
+    FB:{x:62,y:176,l:"First Bridge",z:"天下第一桥",a:"start",lx:72,ly:157},
+    HA:{x:100,y:232,l:"Avatar pillar",z:"乾坤柱",a:"start",lx:112,ly:238},
+    M:{x:150,y:200,l:"Mihun Terrace",z:"迷魂台",a:"middle",lx:150,ly:181},
+    BT:{x:200,y:214},
+    BB:{x:200,y:304,l:"Bailong Elevator",z:"百龙天梯",a:"end",lx:188,ly:306},
+    SR:{x:226,y:316,l:"Shuiraosimen",z:"水绕四门",a:"middle",lx:226,ly:337},
+    G:{x:272,y:284,l:"Ten-Mile|Gallery",z:"十里画廊",a:"end",lx:256,ly:240},
+    S:{x:258,y:204,l:"Three Sisters",z:"三姐妹峰",a:"middle",lx:250,ly:185},
+    SS:{x:296,y:280}
+  };
+  var UP=[[["E","X","W1","CL"],"bus"],[["CL","CU"],"cable"],[["CU","H"],"bus"]];
+  var OVER=[[["H","Y","J","FB"],"bus"]];
+  var CLIFF=[[["FB","HA","M"],"walk"]];
+  var DOWN=[[["M","BT"],"bus"],[["BT","BB"],"lift"]];
+  var OUT=[[["BB","SR","G","SS","X","E"],"bus"]];
+  var TRAIN=[[["G","S"],"tram"]];
+  var BASE=UP.concat(OVER,CLIFF,DOWN,OUT,TRAIN);
+  var R={
+    all:{color:"var(--ink)",legs:BASE,stops:[],labels:["E","CL","H","Y","FB","HA","M","BB","SR","G","S"],areas:true},
+    r1:{color:"var(--r1)",legs:UP.concat(OVER,CLIFF,DOWN,OUT),
+        stops:["E","CL","H","FB","HA","M","BB"],also:["Y"]},
+    r2:{color:"var(--r2)",legs:UP.concat(OVER,CLIFF,DOWN,OUT,TRAIN),
+        stops:["E","CL","H","FB","HA","M","BB","G"],also:["S","SR","Y"]},
+    r3:{color:"var(--r3)",legs:UP.concat([[["X","SS","G"],"bus"]],TRAIN,[[["G","SR","BB"],"bus"],[["BT","BB"],"lift"],[["M","BT"],"bus"],[["M","HA"],"walk"]]),
+        stops:["E","CL","H","G","BB","M","HA"],also:["S","SR","FB"]}
+  };
+  var STYLE={bus:{w:4},cable:{w:4,d:"8 5"},walk:{w:4,d:"0.1 7"},lift:{w:8},tram:{w:6,rail:true}};
+  function el(n,a,t){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);if(t!=null)e.textContent=t;return e;}
+  function pts(ids){return ids.map(function(i){return N[i].x+","+N[i].y;}).join(" ");}
+  function line(ids,mode,color,scale){
+    var s=STYLE[mode],a={points:pts(ids),fill:"none",stroke:color,"stroke-width":s.w*scale,"stroke-linecap":"round","stroke-linejoin":"round"};
+    if(s.d)a["stroke-dasharray"]=s.d;
+    var p=el("polyline",a);
+    if(!s.rail)return p;
+    var g=el("g",{});g.appendChild(p);
+    g.appendChild(el("polyline",{points:pts(ids),fill:"none",stroke:"var(--surface)","stroke-width":s.w*scale*.36,"stroke-linecap":"round"}));
+    return g;
+  }
+  var AREA={fill:"var(--plateau)",stroke:"var(--muted)","stroke-width":1.3,"stroke-dasharray":"5 4"};
+  function shape(svg,tag,geo,extra){var a={},k;for(k in AREA)a[k]=AREA[k];for(k in geo)a[k]=geo[k];for(k in (extra||{}))a[k]=extra[k];svg.appendChild(el(tag,a));}
+  function areaLabel(svg,x,y,en,zh,sub,strong){
+    svg.appendChild(el("text",{x:x,y:y,"text-anchor":"middle","font-size":"9.5","font-weight":"600","letter-spacing":"0.5",fill:strong?"var(--ink)":"var(--muted)"},en));
+    svg.appendChild(el("text",{x:x,y:y+12,"text-anchor":"middle","font-size":"10.5","font-weight":strong?"600":"400",fill:strong?"var(--ink)":"var(--muted)"},zh+(sub?" · "+sub:"")));
+  }
+  function draw(host,key){
+    var r=R[key],o=r.areas,svg=el("svg",{viewBox:"0 0 360 358",role:"img","aria-label":host.getAttribute("data-label")||"Schematic map of the route"});
+    // mountain areas
+    shape(svg,"ellipse",{cx:80,cy:60,rx:58,ry:36});                       // Yangjiajie
+    shape(svg,"ellipse",{cx:240,cy:66,rx:68,ry:50});                      // Tianzi Mountain
+    shape(svg,"rect",{x:36,y:146,width:178,height:140,rx:38},{stroke:"var(--ink)","stroke-width":1.8}); // Yuanjiajie
+    shape(svg,"ellipse",{cx:54,cy:318,rx:49,ry:23},{fill:"none"});       // Huangshizhai
+    areaLabel(svg,80,54,"YANGJIAJIE","杨家界",o?"not visited":null,false);
+    areaLabel(svg,240,36,"TIANZI MTN","天子山",o?"light touch":null,true);
+    areaLabel(svg,124,264,"YUANJIAJIE","袁家界",o?"most of your time":null,true);
+    areaLabel(svg,54,314,"HUANGSHIZHAI","黄石寨","skipped",false);
+    // Golden Whip Stream on the valley floor
+    svg.appendChild(el("path",{d:"M226 316 C192 334 150 322 104 330",fill:"none",stroke:"var(--muted)","stroke-width":1.2,"stroke-dasharray":"2 4",opacity:".8"}));
+    svg.appendChild(el("text",{x:184,y:350,"text-anchor":"end","font-size":"9",fill:"var(--muted)"},"Golden Whip Stream 金鞭溪"));
+    BASE.forEach(function(b){svg.appendChild(line(b[0],b[1],"var(--line)",.6));});
+    if(!o)r.legs.forEach(function(g){svg.appendChild(line(g[0],g[1],r.color,1));});
+    else BASE.forEach(function(b){svg.appendChild(line(b[0],b[1],"var(--muted)",.75));});
+    var on={};r.stops.forEach(function(id,i){on[id]=i+1;});
+    (r.also||[]).concat(r.labels||[]).forEach(function(id){if(on[id]==null)on[id]=0;});
+    Object.keys(N).forEach(function(id){
+      var n=N[id];if(!n.l)return;
+      var active=on[id]!=null&&!n.minor;
+      if(!(on[id]>0))svg.appendChild(el("circle",{cx:n.x,cy:n.y,r:active?4:3,fill:"var(--surface)",stroke:active?r.color:"var(--muted)","stroke-width":active?2:1.2}));
+      var base={"text-anchor":n.a,fill:active?"var(--ink)":"var(--muted)",stroke:"var(--surface)","stroke-width":3,"paint-order":"stroke","stroke-linejoin":"round"};
+      var y=n.ly;
+      n.l.split("|").forEach(function(t){
+        var a={x:n.lx,y:y,"font-size":"11","font-weight":active?"600":"400"};for(var k in base)a[k]=base[k];
+        svg.appendChild(el("text",a,t));y+=11;
+      });
+      var z={x:n.lx,y:y,"font-size":"10"};for(var k2 in base)z[k2]=base[k2];
+      svg.appendChild(el("text",z,n.z));
+    });
+    r.stops.forEach(function(id,i){
+      var n=N[id];
+      svg.appendChild(el("circle",{cx:n.x,cy:n.y,r:9.5,fill:r.color,stroke:"var(--surface)","stroke-width":2}));
+      svg.appendChild(el("text",{x:n.x,y:n.y+3.6,"text-anchor":"middle","font-size":"10.5","font-weight":"600",fill:"var(--paper)"},String(i+1)));
+    });
+    host.appendChild(svg);
+  }
+  function legend(host){
+    [["bus","Bus"],["cable","Cable car"],["walk","On foot"],["lift","Elevator"],["tram","Mini-train"]].forEach(function(m){
+      var s=document.createElement("span"),svg=el("svg",{viewBox:"0 0 26 8","aria-hidden":"true"}),st=STYLE[m[0]];
+      var a={x1:2,y1:4,x2:24,y2:4,stroke:"var(--c,var(--ink))","stroke-width":Math.min(st.w,6)*.8,"stroke-linecap":"round"};
+      if(st.d)a["stroke-dasharray"]=m[0]==="walk"?"0.1 5":"6 4";
+      svg.appendChild(el("line",a));
+      if(st.rail)svg.appendChild(el("line",{x1:2,y1:4,x2:24,y2:4,stroke:"var(--surface)","stroke-width":1.7,"stroke-linecap":"round"}));
+      s.appendChild(svg);s.appendChild(document.createTextNode(m[1]));host.appendChild(s);
+    });
+    var s=document.createElement("span"),svg=el("svg",{viewBox:"0 0 26 10","aria-hidden":"true"});
+    svg.setAttribute("style","height:10px");
+    svg.appendChild(el("rect",{x:1,y:1,width:24,height:8,rx:4,fill:"var(--plateau)",stroke:"var(--muted)","stroke-width":1.2,"stroke-dasharray":"3 2"}));
+    s.appendChild(svg);s.appendChild(document.createTextNode("Mountain area"));host.appendChild(s);
+  }
+  document.querySelectorAll("[data-map]").forEach(function(h){draw(h,h.getAttribute("data-map"));});
+  document.querySelectorAll("[data-legend]").forEach(legend);
+})();
+
+(function(){
+  // Highlight the route currently on screen in the bottom bar.
+  var links=[].slice.call(document.querySelectorAll("[data-dock]"));
+  var routes=["route-1","route-2","route-3"].map(function(id){return document.getElementById(id);});
+  var queued=false;
+  function mark(){
+    queued=false;
+    var line=window.innerHeight*0.4,cur=null;
+    if(routes[0]&&routes[0].getBoundingClientRect().top>line)cur="top";
+    routes.forEach(function(s){if(!s)return;var r=s.getBoundingClientRect();if(r.top<=line&&r.bottom>line)cur=s.id;});
+    links.forEach(function(a){
+      if(a.getAttribute("data-dock")===cur)a.setAttribute("aria-current","true");else a.removeAttribute("aria-current");
+    });
+  }
+  function ask(){if(!queued){queued=true;(window.requestAnimationFrame||setTimeout)(mark);}}
+  window.addEventListener("scroll",ask,{passive:true});
+  window.addEventListener("resize",ask);
+  window.addEventListener("hashchange",ask);
+  mark();
+})();
+</script>
+</body>
+</html>

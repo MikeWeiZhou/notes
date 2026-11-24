@@ -36,28 +36,53 @@ svg { display: block; }
 .lede b { color: var(--ink); font-weight: 700; }
 .status { margin: 7px 0 0; padding: 1px 0 2px 8px; border-left: 3px solid var(--accent); font-size: 16px; line-height: 1.2; color: var(--ink-2); }
 
-/* controls */
-.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; margin: 12px 2px 12px; align-items: end; }
-.ctl { display: grid; gap: 3px; min-width: 0; }
-.ctl > span { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+/* buttons */
 .btn { appearance: none; -webkit-appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; padding: 0 12px; margin: 0;
   background: var(--plate); color: var(--ink); border: 1.5px solid var(--lava); border-radius: 0; font-weight: 700; font-size: 19px; line-height: 1; white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 .btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: square; flex: 0 0 auto; }
-.btn:disabled { color: var(--ink-screen); border-color: var(--ink-screen); cursor: default; }
-.btn:focus-visible, .mctl button:focus-visible, .pin:focus-visible, .key:focus-visible, a:focus-visible, .edge:focus-visible, .band-t:focus-visible { outline: 3px solid var(--gps); outline-offset: 2px; }
-.days { display: flex; gap: 6px; align-items: stretch; }
-.days .nav { min-width: 82px; padding: 0 9px; }
-.days .cur { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 10px; background: var(--dc, var(--lava)); color: var(--plate); font-weight: 700; font-size: 19px; letter-spacing: .02em; white-space: nowrap; border: 1.5px solid var(--dc, var(--lava)); }
-.seg { display: flex; }
-.seg .btn + .btn { margin-left: -1.5px; }
-.seg .btn[aria-pressed="true"] { background: var(--ink); color: var(--plate); }
+.btn:focus-visible, .mctl button:focus-visible, .pin:focus-visible, .key:focus-visible, a:focus-visible, .edge:focus-visible, .band-t:focus-visible, .chip:focus-visible, .lay button:focus-visible { outline: 3px solid var(--gps); outline-offset: 2px; }
 
 /* sheet (double rule) and map */
-.sheet { position: relative; background: var(--stock); border: 2px solid var(--lava); padding: 3px; scroll-margin-top: 6px; }
+.sheet { position: relative; margin-top: 12px; background: var(--stock); border: 2px solid var(--lava); padding: 3px; scroll-margin-top: 6px; }
 .sheet-in { border: 1px solid var(--lava); padding: 0; }
-.map { position: relative; height: 62vh; min-height: 320px; max-height: 900px; overflow: hidden; background: var(--sea); isolation: isolate; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-@supports (height: 1svh) { .map { height: 62svh; } }
-.map.full { position: fixed; inset: 0; z-index: 60; width: auto; height: auto; min-height: 0; max-height: none; }
+/* the map frame: the day strip on top, the map itself (the stage) under it. Full screen takes the whole frame, strip included. */
+.map { position: relative; display: flex; flex-direction: column; background: var(--stock); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.map.full { position: fixed; inset: 0; z-index: 60; }
+.stage { position: relative; flex: 0 0 auto; height: 62vh; min-height: 320px; max-height: 900px; overflow: hidden; background: var(--sea); isolation: isolate; }
+@supports (height: 1svh) { .stage { height: 62svh; } }
+.map.full .stage { flex: 1 1 0; height: auto; min-height: 0; max-height: none; }
+
+/* day strip: All, one chip per day, Backlog. Each chip carries its day's ink; the chosen one is filled with it and joins the title bar below. */
+.strip { position: relative; flex: 0 0 auto; background: var(--stock); }
+.map.full .strip { padding-top: env(safe-area-inset-top); }
+.chipsw { position: relative; }
+.chipsw::before, .chipsw::after { content: ""; position: absolute; top: 0; bottom: 0; z-index: 2; width: 30px; opacity: 0; pointer-events: none; transition: opacity .15s linear; }
+.chipsw::before { left: 0; background: linear-gradient(to right, var(--stock) 15%, rgba(243,234,221,0)); }
+.chipsw::after { right: 0; background: linear-gradient(to left, var(--stock) 15%, rgba(243,234,221,0)); }
+.chipsw.more-l::before, .chipsw.more-r::after { opacity: 1; }
+.chips { position: relative; display: flex; align-items: flex-end; gap: 5px; height: 59px; padding: 0 8px 5px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; touch-action: pan-x pan-y; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.chips::-webkit-scrollbar { display: none; }
+.chips.drag { cursor: grabbing; }
+.map.full .chips { padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
+.chip { appearance: none; -webkit-appearance: none; position: relative; flex: 1 0 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 46px; max-width: 108px; height: 44px; margin: 0; padding: 6px 3px 0;
+  background: var(--plate); color: var(--ink); border: 1.5px solid var(--lava); border-radius: 0; font-weight: 700; line-height: 1; white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: pan-x pan-y; }
+.chip::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 7px; background: var(--dc, var(--lava)); }
+.chip .dw { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); margin-right: -.1em; }
+.chip .dn { font-size: 21px; letter-spacing: 0; }
+.chip .one { font-size: 17px; letter-spacing: .06em; text-transform: uppercase; margin-right: -.06em; }
+.chip.wide { flex-basis: auto; padding-left: 9px; padding-right: 9px; }
+.chip[aria-selected="true"] { height: 49px; padding-top: 0; background: var(--dc, var(--lava)); border-color: var(--dc, var(--lava)); color: #fff; box-shadow: 0 0 5px 1px rgba(31,26,23,.4); z-index: 1; }
+.chip[aria-selected="true"]::before { display: none; }
+.chip[aria-selected="true"]::after { content: ""; position: absolute; left: -1.5px; right: -1.5px; top: 100%; height: 7px; background: var(--dc, var(--lava)); }
+.chip[aria-selected="true"] .dw { color: #fff; }
+/* the chosen chip's text is a little larger, by a transform so that no chip changes width */
+.chip[aria-selected="true"] .dn { transform: scale(1.1); }
+.chip[aria-selected="true"] .one { transform: scale(1.06); }
+.chip:focus-visible { outline-offset: 1px; z-index: 3; }
+.dtitle { display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 10px 1px; background: var(--dc, var(--lava)); color: #fff; font-size: 16px; line-height: 1; white-space: nowrap; overflow: hidden; }
+.map.full .dtitle { padding-left: max(10px, env(safe-area-inset-left)); padding-right: max(10px, env(safe-area-inset-right)); }
+.dtitle b { flex: 0 0 auto; font-weight: 700; letter-spacing: .04em; }
+.dtitle span { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 500; letter-spacing: .01em; line-height: 1.3; }
 /* until tiles arrive the sheet is a pale sea with a faint graticule */
 .surface { position: absolute; inset: 0; overflow: hidden; touch-action: none; cursor: grab; outline: none;
   background-color: var(--sea);
@@ -118,11 +143,8 @@ svg { display: block; }
 .edge.you svg { fill: #fff; }
 
 /* map furniture */
-.tag { position: absolute; left: 8px; top: 8px; z-index: 6; max-width: calc(100% - 70px); padding: 4px 8px 5px; background: var(--dc, var(--lava)); color: var(--plate); font-weight: 700; font-size: 16px; line-height: 1; letter-spacing: .03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 0 0 1.5px var(--plate); pointer-events: none; }
-.tag .tt { margin-left: 4px; font-weight: 500; letter-spacing: .01em; }
 .mctl { position: absolute; right: 8px; top: 8px; z-index: 7; display: flex; flex-direction: column; box-shadow: 0 1px 5px rgba(31,26,23,.3); }
-.map.full .mctl { top: max(8px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right)); }
-.map.full .tag { top: max(8px, env(safe-area-inset-top)); left: max(8px, env(safe-area-inset-left)); }
+.map.full .mctl { right: max(8px, env(safe-area-inset-right)); }
 .mctl button { appearance: none; -webkit-appearance: none; position: relative; display: grid; place-items: center; width: 42px; height: 42px; padding: 0; margin: 0; background: var(--plate); color: var(--ink); border: 1.5px solid var(--lava); border-radius: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 .mctl button + button { margin-top: -1.5px; }
 .mctl button:active { background: var(--stock); }
@@ -135,6 +157,33 @@ svg { display: block; }
 .mctl #exp .x, .map.full .mctl #exp .o { display: none; }
 .map.full .mctl #exp .x { display: inline; }
 .map.full .mctl #exp { background: var(--ink); color: var(--plate); }
+/* layers button: plain when all four layers show; hibiscus with a count ("3/4") as soon as one is hidden */
+.mctl #lay { align-content: center; gap: 2px; }
+.mctl #lay[aria-expanded="true"] { background: var(--ink); color: var(--plate); }
+.mctl #lay.filt { background: var(--accent); color: #fff; }
+.mctl #lay.filt svg { width: 17px; height: 17px; }
+.mctl #lay .lyn { font-size: 14px; font-weight: 700; line-height: .9; letter-spacing: .03em; }
+
+/* layers panel */
+.lay { position: absolute; top: 8px; right: 58px; z-index: 10; display: flex; flex-direction: column; width: min(262px, calc(100% - 66px)); max-height: calc(100% - 16px); overflow-y: auto; overscroll-behavior: contain; background: var(--plate); color: var(--ink); border: 1.5px solid var(--lava); box-shadow: 0 2px 10px rgba(31,26,23,.35); }
+.map.full .lay { right: calc(max(8px, env(safe-area-inset-right)) + 50px); }
+.lay > * { flex: 0 0 auto; }
+.lay-h { display: flex; align-items: center; justify-content: space-between; min-height: 40px; padding: 0 0 0 10px; border-bottom: 1px solid var(--lava); font-size: 15px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; line-height: 1; }
+.lay-x { appearance: none; -webkit-appearance: none; display: grid; place-items: center; width: 42px; height: 40px; margin: 0; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.lay-x svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.2; }
+.lrow { appearance: none; -webkit-appearance: none; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 3px 9px; align-items: center; width: 100%; min-height: 50px; margin: 0; padding: 7px 10px 8px; border: 0; border-radius: 0; background: none; color: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.lrow + .lrow { border-top: 1px dotted var(--ink-screen); }
+.lrow:active { background: var(--stock); }
+.lay .lrow:focus-visible, .lay .lay-x:focus-visible { outline-offset: -3px; }
+.lrow .sw { position: relative; grid-row: 1 / span 2; align-self: center; width: 34px; height: 20px; border: 1.5px solid var(--lava); background: var(--plate); }
+.lrow .sw::after { content: ""; position: absolute; left: 3px; top: 3px; width: 11px; height: 11px; background: var(--ink-screen); transition: transform .12s ease-out; }
+.lrow[aria-checked="true"] .sw { background: var(--ink); }
+.lrow[aria-checked="true"] .sw::after { background: var(--plate); transform: translateX(14px); }
+.lrow .ln { font-size: 19px; font-weight: 700; line-height: 1; }
+.lrow .lc { font-size: 19px; font-weight: 700; line-height: 1; text-align: right; }
+.lrow .lh { grid-column: 2 / -1; font-size: 15px; font-weight: 500; line-height: 1.1; color: var(--ink-2); }
+.lrow[aria-checked="false"] .ln, .lrow[aria-checked="false"] .lc { color: var(--ink-screen); }
+.lay-note { margin: 0; padding: 7px 10px 8px; border-top: 1px solid var(--lava); font-size: 15px; line-height: 1.15; color: var(--ink-2); }
 .scale { position: absolute; left: 8px; bottom: 8px; z-index: 6; display: inline-flex; align-items: flex-end; gap: 6px; padding: 4px 6px 4px; background: rgba(252,248,241,.9); pointer-events: none; }
 .map.full .scale { bottom: max(8px, env(safe-area-inset-bottom)); left: max(8px, env(safe-area-inset-left)); }
 .scale .bar { display: flex; height: 7px; width: 80px; border: 1px solid var(--lava); }
@@ -144,7 +193,7 @@ svg { display: block; }
 .attr { position: absolute; right: 0; bottom: 0; z-index: 6; max-width: 62%; padding: 2px 6px 3px; background: rgba(252,248,241,.86); font-size: 12px; line-height: 1.1; color: var(--ink-2); text-align: right; pointer-events: none; }
 .map.full .attr { bottom: env(safe-area-inset-bottom); }
 .toast, .tilewarn { position: absolute; z-index: 8; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 120px); padding: 6px 10px 7px; background: var(--ink); color: var(--plate); font-size: 15px; font-weight: 600; line-height: 1.2; text-align: center; box-shadow: 0 0 0 1.5px var(--plate); }
-.toast { top: 40px; cursor: pointer; }
+.toast { top: 10px; cursor: pointer; }
 .toast.err { background: var(--accent); }
 .tilewarn { bottom: 40px; background: var(--plate); color: var(--ink); border: 1.5px solid var(--accent); box-shadow: none; pointer-events: none; }
 
@@ -203,12 +252,12 @@ svg { display: block; }
 .band-t .cnt { font-size: 15px; font-weight: 500; opacity: .85; letter-spacing: 0; }
 .band-t .chev { width: 12px; height: 12px; margin-left: auto; margin-right: 10px; fill: none; stroke: currentColor; stroke-width: 2.4; transition: transform .15s; flex: 0 0 auto; }
 .lgday.open .band-t .chev { transform: rotate(90deg); }
-.dayband .btn { min-height: 42px; padding: 0 12px; border: 0; border-left: 1px solid rgba(252,248,241,.5); background: transparent; color: inherit; font-size: 17px; }
+.dayband .btn { min-width: 96px; min-height: 42px; padding: 0 12px; border: 0; border-left: 1px solid rgba(252,248,241,.5); background: transparent; color: inherit; font-size: 17px; }
 .dayband .btn:active, .band-t:active { background: rgba(252,248,241,.16); }
 .lgday ol { list-style: none; margin: 0; padding: 0 2px; }
 .lgday:not(.open) ol { display: none; }
 .row { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 0 6px; align-items: start; padding: 9px 2px 9px 2px; border-bottom: 1px dotted var(--ink-screen); cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.row:last-child { border-bottom: 0; }
+.row.last { border-bottom: 0; }
 .row.nomap { cursor: default; }
 .row.hit { background: var(--accent-wash); }
 .row > .key { cursor: pointer; margin-top: 0; justify-self: start; position: relative; }
@@ -225,6 +274,9 @@ svg { display: block; }
 .notes li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 0 5px; align-items: start; overflow-wrap: anywhere; }
 .notes li + li { margin-top: 4px; }
 .notes svg { width: 17px; height: 17px; margin: 1px 0 0 -3px; fill: none; stroke: var(--dc, var(--ink)); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.lgnote, .lgempty { margin: 6px 4px 0; font-size: 16px; line-height: 1.2; color: var(--ink-2); }
+.lgday:not(.open) .lgempty { display: none; }
+.lgempty { padding: 8px 0 4px; }
 .hint { margin: 8px 4px 6px; text-align: right; font-size: 15px; color: var(--ink-2); }
 .symbols { display: flex; flex-wrap: wrap; gap: 7px 16px; margin: 0 2px; padding: 9px 2px 2px; border-top: 1.5px solid var(--lava); font-size: 16px; color: var(--ink-2); }
 .symbols span { display: inline-flex; align-items: center; gap: 6px; }
@@ -237,8 +289,7 @@ svg { display: block; }
 .foot .fine { color: var(--ink-screen); }
 
 @media (max-width: 379px) {
-  .btn { font-size: 18px; padding: 0 10px; }
-  .days .nav { min-width: 76px; }
+  .dtitle { gap: 6px; padding-left: 8px; padding-right: 8px; font-size: 15px; }
   .row .nm, .row .nm .lnk, .row .km { font-size: 20px; }
 }
 @media (min-width: 600px) {
@@ -248,7 +299,7 @@ svg { display: block; }
   .page { padding-top: 22px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .tile, .band-t .chev { transition: none; }
+  .tile, .band-t .chev, .chipsw::before, .chipsw::after, .lrow .sw::after { transition: none; }
   .mctl .loc.locating svg { animation: none; }
 }
 
@@ -262,49 +313,42 @@ svg { display: block; }
     <p class="status" id="status">Flights are final. Hotel and stops are candidates, not booked yet.</p>
   </header>
 
-  <div class="controls" id="controls">
-    <div class="ctl">
-      <span id="lblDay">Day</span>
-      <div class="days" role="group" aria-labelledby="lblDay">
-        <button type="button" class="btn nav" id="prevDay"></button>
-        <span class="cur" id="curDay" aria-live="polite"></span>
-        <button type="button" class="btn nav" id="nextDay"></button>
-      </div>
-    </div>
-    <div class="ctl">
-      <span id="lblShow">Show</span>
-      <div class="seg" role="group" aria-labelledby="lblShow">
-        <button type="button" class="btn" id="modeDay" aria-pressed="true">This day</button>
-        <button type="button" class="btn" id="modeAll" aria-pressed="false">All of Oahu</button>
-      </div>
-    </div>
-  </div>
-
   <section class="sheet" id="sheet" aria-label="Map">
     <div class="sheet-in">
       <div class="map" id="map">
-        <div class="surface" id="surface">
-          <div class="tiles" id="tiles" aria-hidden="true"></div>
-          <div class="pane" id="pane">
-            <div class="gacc" id="gacc" hidden></div>
-            <div class="lds" id="lds" aria-hidden="true"></div>
-            <div class="gps" id="gps" hidden><i class="gwedge" id="gwedge" hidden></i><i class="gdot"></i></div>
-            <div class="pins" id="pins"></div>
+        <div class="strip" id="strip">
+          <div class="chipsw" id="chipsw"><div class="chips" id="chips" role="tablist" aria-label="Day shown on the map"></div></div>
+          <div class="dtitle" id="dtitle"></div>
+        </div>
+        <div class="stage" id="stage" role="tabpanel" aria-labelledby="dtitle">
+          <div class="surface" id="surface">
+            <div class="tiles" id="tiles" aria-hidden="true"></div>
+            <div class="pane" id="pane">
+              <div class="gacc" id="gacc" hidden></div>
+              <div class="lds" id="lds" aria-hidden="true"></div>
+              <div class="gps" id="gps" hidden><i class="gwedge" id="gwedge" hidden></i><i class="gdot"></i></div>
+              <div class="pins" id="pins"></div>
+            </div>
           </div>
+          <div class="edges" id="edges"></div>
+          <div class="mctl" id="mctl">
+            <button type="button" id="zin" aria-label="Zoom in" title="Zoom in"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button>
+            <button type="button" id="zout" aria-label="Zoom out" title="Zoom out"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12"/></svg></button>
+            <button type="button" id="loc" class="loc" hidden aria-label="Show my position" title="My position"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.2"/><circle class="c" cx="10" cy="10" r="1.9"/><path d="M10 1.5v3.3M10 15.2v3.3M1.5 10h3.3M15.2 10h3.3"/></svg></button>
+            <button type="button" id="lay" aria-label="Layers" title="Layers" aria-expanded="false" aria-controls="layPanel"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5 17.5 6.5 10 10.5 2.5 6.5z"/><path d="M3.5 10.5 10 14 16.5 10.5"/><path d="M3.5 14 10 17.5 16.5 14"/></svg><span class="lyn" id="layN" aria-hidden="true" hidden></span></button>
+            <button type="button" id="exp" aria-label="Expand map to full screen" title="Full screen"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="o" d="M3 8V3h5M12 3h5v5M17 12v5h-5M8 17H3v-5"/><path class="x" d="M4 4l12 12M16 4 4 16"/></svg></button>
+          </div>
+          <div class="lay" id="layPanel" role="group" aria-labelledby="layTitle" hidden>
+            <div class="lay-h"><span id="layTitle">Layers</span><button type="button" class="lay-x" id="layClose" aria-label="Close layers"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2l12 12M14 2 2 14"/></svg></button></div>
+            <div id="layRows"></div>
+            <p class="lay-note">Hotel, airport and car errands always show.</p>
+          </div>
+          <div class="scale" id="scale" aria-hidden="true"><span class="bar" id="scaleBar"><i></i><i></i></span><span class="n" id="scaleN"></span></div>
+          <div class="attr" id="attr">Map © OpenStreetMap contributors</div>
+          <div class="tilewarn" id="tilewarn" role="status" hidden></div>
+          <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+          <div class="card" id="card" hidden></div>
         </div>
-        <div class="edges" id="edges"></div>
-        <div class="tag" id="tag"></div>
-        <div class="mctl" id="mctl">
-          <button type="button" id="zin" aria-label="Zoom in" title="Zoom in"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button>
-          <button type="button" id="zout" aria-label="Zoom out" title="Zoom out"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12"/></svg></button>
-          <button type="button" id="loc" class="loc" hidden aria-label="Show my position" title="My position"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.2"/><circle class="c" cx="10" cy="10" r="1.9"/><path d="M10 1.5v3.3M10 15.2v3.3M1.5 10h3.3M15.2 10h3.3"/></svg></button>
-          <button type="button" id="exp" aria-label="Expand map to full screen" title="Full screen"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="o" d="M3 8V3h5M12 3h5v5M17 12v5h-5M8 17H3v-5"/><path class="x" d="M4 4l12 12M16 4 4 16"/></svg></button>
-        </div>
-        <div class="scale" id="scale" aria-hidden="true"><span class="bar" id="scaleBar"><i></i><i></i></span><span class="n" id="scaleN"></span></div>
-        <div class="attr" id="attr">Map © OpenStreetMap contributors</div>
-        <div class="tilewarn" id="tilewarn" role="status" hidden></div>
-        <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-        <div class="card" id="card" hidden></div>
       </div>
     </div>
   </section>
@@ -347,7 +391,7 @@ svg { display: block; }
     <p class="fine">Your position stays on this phone: it is drawn on the map and never stored or sent.</p>
   </footer>
 </main>
-<script type="application/json" id="data">{"source":{"title":"Hawaii Trip Map","checkedNote":"Places checked against official sites and Google Places, 22 Nov 2026"},"hotels":[{"id":"h1","name":"Aston Waikiki Sunset","lat":21.27436,"lng":-157.82054,"datum":"wgs84","from":"2027-02-06","to":"2027-02-12","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Aston%20Waikiki%20Sunset%2C%20Honolulu%20HI","notes":["Candidate, not booked","Condo-hotel at 229 Paoakalani Ave: 1- and 2-bedroom suites with full kitchens.","Idea for 8-9: two 2-bedroom suites (max 6 each), or one 2-bedroom plus one 1-bedroom.","Amenity fee $35 per night plus tax per suite (aquaaston.com, as found Nov 2026).","Parking: Aston says self-parking at extra charge; Expedia lists it free. Confirm. Max 6 ft.","Check-in 15:00, check-out 12:00 per Aston (Expedia says 16:00 and 11:00). 24-hour desk.","Baggage storage is listed; confirm a hold for all bags until 19:00 on 12 Feb.","Recent guest reviews mention dated rooms and a pool closure for renovation. Ask first."],"coordSource":"Google Places lookup, 22 Nov 2026"}],"days":[{"date":"2027-02-06","label":"Sat Feb 6","hotelId":"h1","title":"Arrive, car pickup, hotel","color":"#c81e4a","items":[{"id":"d0206-1","kind":"airport","badge":"✈","optional":false,"offsheet":false,"name":"Honolulu Airport (HNL), Terminal 2","sub":"Arrive 21:40","km":12.1,"lat":21.33098,"lng":-157.92048,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Daniel%20K.%20Inouye%20International%20Airport%20Terminal%202%2C%20Honolulu%20HI","notes":["AC1785 from Vancouver is scheduled to land 21:40.","Bag claims 19-31: walk across to the rental facility. Claims 16-18: use the shuttle."],"coordSource":"Google Places lookup, 22 Nov 2026 (Terminal 2 building point, not Lobby 4 itself)"},{"id":"d0206-2","kind":"stop","badge":"1","optional":false,"offsheet":false,"name":"HNL Consolidated Rent-A-Car Facility","sub":"Car pickup","km":12.0,"lat":21.33318,"lng":-157.91716,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Consolidated%20Car%20Rental%20Center%20HNL%20CONRAC%2C%20Honolulu%20HI","notes":["All airport rental brands are here; counters on Level 2. Facility runs 04:00-midnight.","Counter closing as found Nov 2026: Enterprise/National 23:00, Hertz 24:00, Avis 01:00.","Risk: a delayed flight can miss a 23:00 counter. Put AC1785 on the car booking."],"coordSource":"Google Places lookup, 22 Nov 2026; agrees with map link on Avis HNL page (21.33323, -157.9162)"},{"id":"d0206-3","kind":"hotel","badge":"H","optional":false,"offsheet":false,"name":"Aston Waikiki Sunset","sub":"Check in","km":0.0,"lat":21.27436,"lng":-157.82054,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Aston%20Waikiki%20Sunset%2C%20Honolulu%20HI","notes":["Candidate, not booked. About 20 min drive from the airport late at night.","Front desk is 24 hours; tell the hotel to expect arrival around 23:00."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0206-4","kind":"meal","badge":"2","optional":true,"offsheet":false,"name":"Lulu's Waikiki","sub":"Late bite","km":0.4,"lat":21.27192,"lng":-157.82268,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Lulu%27s%20Waikiki%2C%20Honolulu%20HI","notes":["Listed open until midnight daily; the kitchen may close earlier, check on the night.","About 5 min walk from the hotel, on Kalakaua Ave facing the beach."],"coordSource":"Google Places lookup, 22 Nov 2026"}]},{"date":"2027-02-07","label":"Sun Feb 7","hotelId":"h1","title":"Easy Waikiki and Kapiolani Park","color":"#0b6fb8","items":[{"id":"d0207-1","kind":"hotel","badge":"H","optional":false,"offsheet":false,"name":"Aston Waikiki Sunset","sub":"Base","km":0.0,"lat":21.27436,"lng":-157.82054,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Aston%20Waikiki%20Sunset%2C%20Honolulu%20HI","notes":["Candidate base, not booked. 24-hour front desk.","Keep the car empty when parked anywhere on the island."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0207-2","kind":"stop","badge":"1","optional":true,"offsheet":false,"name":"Diamond Head State Monument","sub":"Early morning hike","km":2.0,"lat":21.26349,"lng":-157.80527,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Diamond%20Head%20State%20Monument%2C%20Honolulu%20HI","notes":["Non-residents need entry and parking reservations; bookable 30 days ahead.","$5 entry, $10 parking per car (DLNR, as found Nov 2026). Open 6:00-18:00.","Steep 0.8 mi each way, 560 ft gain, many stairs; 1.5-2 h. Optional for parents."],"coordSource":"Google Places lookup, 22 Nov 2026 (Diamond Head Visitor Center, inside crater by car park); agrees with DLNR Street View link (21.263457, -157.805488)"},{"id":"d0207-3","kind":"meal","badge":"2","optional":false,"offsheet":false,"name":"Barefoot Beach Cafe","sub":"Breakfast","km":0.7,"lat":21.26791,"lng":-157.82247,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Barefoot%20Beach%20Cafe%20Queen%27s%20Surf%20Beach%2C%20Honolulu%20HI","notes":["Counter service with beachside tables; listed 8:00-20:30 daily.","About 10 min flat walk from the hotel, or use Kapiolani Park meters."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0207-4","kind":"stop","badge":"3","optional":false,"offsheet":false,"name":"Waikiki Aquarium","sub":"Morning","km":1.0,"lat":21.26581,"lng":-157.82165,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Waikiki%20Aquarium%2C%20Honolulu%20HI","notes":["Listed 9:00-17:00 daily. Small; allow about 1 hour.","Next to the cafe; walk through Kapiolani Park afterwards."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0207-5","kind":"meal","badge":"4","optional":false,"offsheet":false,"name":"Rainbow Drive-In","sub":"Lunch","km":0.6,"lat":21.27594,"lng":-157.81456,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Rainbow%20Drive-In%2C%20Honolulu%20HI","notes":["Counter-service plate lunches; usual hours 7:00-21:00 daily.","Easy for 9: order at the window. Short drive or 15 min walk from the hotel."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0207-6","kind":"stop","badge":"5","optional":true,"offsheet":false,"name":"Honolulu Zoo","sub":"Afternoon","km":0.4,"lat":21.27109,"lng":-157.82148,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Honolulu%20Zoo%2C%20Honolulu%20HI","notes":["Listed 10:00-16:00 daily; flat paths, 1.5-2 h. Skip for a rest at the hotel.","Entrance is 5 min walk from the hotel."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0207-7","kind":"stop","badge":"6","optional":false,"offsheet":false,"name":"Duke Kahanamoku Statue, Kuhio Beach","sub":"Sunset stroll","km":0.5,"lat":21.27552,"lng":-157.82532,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Duke%20Paoa%20Kahanamoku%20Statue%2C%20Honolulu%20HI","notes":["Flat beachfront walk along Kuhio Beach; nicest in the hour before sunset.","On the way to dinner; no parking needed from the hotel."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0207-8","kind":"meal","badge":"7","optional":false,"offsheet":false,"name":"Duke's Waikiki","sub":"Dinner","km":0.8,"lat":21.2769,"lng":-157.82789,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Duke%27s%20Waikiki%2C%20Honolulu%20HI","notes":["Reserve for 9 well ahead; beachfront at the Outrigger Waikiki. Listed 7:00-24:00.","About 15 min walk from the hotel; parking nearby is paid, walking is easier."],"coordSource":"Google Places lookup, 22 Nov 2026"}]},{"date":"2027-02-08","label":"Mon Feb 8","hotelId":"h1","title":"Windward coast loop","color":"#1a7a3c","items":[{"id":"d0208-1","kind":"hotel","badge":"H","optional":false,"offsheet":false,"name":"Aston Waikiki Sunset","sub":"Base","km":0.0,"lat":21.27436,"lng":-157.82054,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Aston%20Waikiki%20Sunset%2C%20Honolulu%20HI","notes":["Candidate base, not booked. 24-hour front desk.","Keep the car empty when parked anywhere on the island."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0208-2","kind":"meal","badge":"1","optional":false,"offsheet":false,"name":"Leonard's Bakery","sub":"Breakfast","km":1.4,"lat":21.28487,"lng":-157.81334,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Leonard%27s%20Bakery%2C%20Honolulu%20HI","notes":["Malasadas and coffee to go; counter service, listed 5:30-19:00 daily.","Tiny lot; one car can queue while the other waits nearby."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0208-3","kind":"stop","badge":"2","optional":false,"offsheet":false,"name":"Nuuanu Pali Lookout","sub":"Morning","km":10.6,"lat":21.3662,"lng":-157.79377,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Nuuanu%20Pali%20Lookout%2C%20Honolulu%20HI","notes":["Open 6:00-18:00 daily; non-resident parking $7 per car (DLNR, as found Nov 2026).","Short paved walk to the viewpoint, 20-30 min. Very windy, bring a layer."],"coordSource":"Google Places lookup, 22 Nov 2026 (lookout parking lot)"},{"id":"d0208-4","kind":"stop","badge":"3","optional":false,"offsheet":false,"name":"Byodo-In Temple","sub":"Morning","km":17.4,"lat":21.43071,"lng":-157.83223,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Byodo-In%20Temple%2C%20Kaneohe%20HI","notes":["Listed 8:30-16:30 daily; admission charged, check the price. Allow 45-60 min.","Flat grounds and koi ponds; small car park inside Valley of the Temples."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0208-5","kind":"meal","badge":"4","optional":false,"offsheet":false,"name":"Waiahole Poi Factory","sub":"Lunch","km":23.2,"lat":21.48204,"lng":-157.8452,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Waiahole%20Poi%20Factory%2C%20Kaneohe%20HI","notes":["Counter-service Hawaiian plates, outdoor seating; listed 10:00-18:00.","Closed Tuesdays as listed Nov 2026. Free parking on site."],"coordSource":"Google Places lookup, 22 Nov 2026 (original 48-140 Kamehameha Hwy site, not the Windward Mall outlet)"},{"id":"d0208-6","kind":"stop","badge":"5","optional":false,"offsheet":false,"name":"Kualoa Regional Park","sub":"Afternoon","km":26.5,"lat":21.51245,"lng":-157.83707,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Kualoa%20Regional%20Park%2C%20Kaneohe%20HI","notes":["Free beach park with views of Mokolii islet and the Kualoa cliffs; listed 7:00-20:00.","Flat lawn stroll, 30 min. Restrooms. Leave nothing visible in the cars."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0208-7","kind":"stop","badge":"6","optional":false,"offsheet":false,"name":"Kailua Beach Park","sub":"Afternoon","km":16.7,"lat":21.39625,"lng":-157.7259,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Kailua%20Beach%20Park%2C%20Kailua%20HI","notes":["Wide sandy beach for a rest or a swim; car parks are easier on a weekday.","Restrooms and showers. Roughly 35 min drive south from Kualoa (estimate)."],"coordSource":"Google Places lookup, 22 Nov 2026 (Kailua Beach parking lot, Kawailoa Rd)"},{"id":"d0208-8","kind":"meal","badge":"7","optional":true,"offsheet":false,"name":"Buzz's Original Steak House","sub":"Alternate early dinner","km":16.7,"lat":21.39599,"lng":-157.72654,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Buzz%27s%20Original%20Steak%20House%2C%20Kailua%20HI","notes":["Across the road from Kailua Beach Park. Lunch 11:00-15:00, dinner from 16:30.","Reserve for 9 if using this instead of dinner in Waikiki."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0208-9","kind":"meal","badge":"8","optional":false,"offsheet":false,"name":"Side Street Inn on Beach Walk","sub":"Dinner","km":1.3,"lat":21.28082,"lng":-157.83093,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Side%20Street%20Inn%20on%20Beach%20Walk%2C%20Honolulu%20HI","notes":["Family-style local dishes, well suited to groups; reserve for 9.","Listed Mon 16:00-20:30. In Waikiki, about 20 min walk or a short drive."],"coordSource":"Google Places lookup, 22 Nov 2026"}]},{"date":"2027-02-09","label":"Tue Feb 9","hotelId":"h1","title":"Pearl Harbor and downtown Honolulu","color":"#2b2622","items":[{"id":"d0209-1","kind":"hotel","badge":"H","optional":false,"offsheet":false,"name":"Aston Waikiki Sunset","sub":"Base","km":0.0,"lat":21.27436,"lng":-157.82054,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Aston%20Waikiki%20Sunset%2C%20Honolulu%20HI","notes":["Candidate base, not booked. 24-hour front desk.","Keep the car empty when parked anywhere on the island."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0209-2","kind":"stop","badge":"1","optional":false,"offsheet":false,"name":"Pearl Harbor National Memorial","sub":"Morning","km":16.0,"lat":21.36756,"lng":-157.93885,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Pearl%20Harbor%20National%20Memorial%2C%20Honolulu%20HI","notes":["USS Arizona program: book on Recreation.gov, released 8 weeks and 24 h ahead, 15:00 HST.","$1 fee per ticket, up to 10 tickets a day per account. Boats 8:00-12:00, 13:00-15:30.","Visitor center 7:00-17:00; parking $7. No bags allowed; paid bag storage at entrance.","Arrive 1 hour before the ticket time; allow 2.5-3 h in all."],"coordSource":"Google Places lookup, 22 Nov 2026 (visitor center, 1 Arizona Memorial Pl)"},{"id":"d0209-3","kind":"meal","badge":"2","optional":false,"offsheet":false,"name":"Liliha Bakery (Nimitz)","sub":"Lunch","km":6.7,"lat":21.31338,"lng":-157.86963,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Liliha%20Bakery%20Nimitz%2C%20Honolulu%20HI","notes":["Large local diner and bakery with its own car park; listed 6:30-22:00 daily.","Call ahead for a table of 9, or split across two tables."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0209-4","kind":"stop","badge":"3","optional":false,"offsheet":false,"name":"Iolani Palace","sub":"Afternoon","km":5.4,"lat":21.30676,"lng":-157.85877,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Iolani%20Palace%2C%20Honolulu%20HI","notes":["Open Tue-Sat 9:00-16:00; Tuesday is a self-led audio tour day. Book timed tickets.","Allow 60-90 min. Check the palace site for parking and current prices."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0209-5","kind":"stop","badge":"4","optional":true,"offsheet":false,"name":"King Kamehameha Statue at Aliiolani Hale","sub":"Photo stop","km":5.4,"lat":21.3052,"lng":-157.86039,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=King%20Kamehameha%20Statue%20Aliiolani%20Hale%2C%20Honolulu%20HI","notes":["Across King St from the palace; outdoor statue, 10 min on foot."],"coordSource":"Google Places lookup, 22 Nov 2026 (Aliiolani Hale building; the statue stands in its forecourt)"},{"id":"d0209-6","kind":"meal","badge":"5","optional":false,"offsheet":false,"name":"Maui Brewing Co. Waikiki","sub":"Dinner","km":0.8,"lat":21.27788,"lng":-157.8272,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Maui%20Brewing%20Co.%20Waikiki%2C%20Honolulu%20HI","notes":["Big brewpub in central Waikiki; reserve for 9. Listed 11:00-23:00 daily.","15 min walk from the hotel."],"coordSource":"Google Places lookup, 22 Nov 2026"}]},{"date":"2027-02-10","label":"Wed Feb 10","hotelId":"h1","title":"North Shore day","color":"#6a2fb3","items":[{"id":"d0210-1","kind":"hotel","badge":"H","optional":false,"offsheet":false,"name":"Aston Waikiki Sunset","sub":"Base","km":0.0,"lat":21.27436,"lng":-157.82054,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Aston%20Waikiki%20Sunset%2C%20Honolulu%20HI","notes":["Candidate base, not booked. 24-hour front desk.","Keep the car empty when parked anywhere on the island."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-2","kind":"meal","badge":"1","optional":false,"offsheet":false,"name":"Green World Coffee Farm","sub":"Coffee and breakfast stop","km":35.0,"lat":21.51295,"lng":-158.04121,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Green%20World%20Coffee%20Farm%2C%20Wahiawa%20HI","notes":["Coffee, pastries and free samples; usual hours 7:00-18:00.","On the route north; roughly 45 min from Waikiki outside rush hour (estimate)."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-3","kind":"stop","badge":"2","optional":true,"offsheet":false,"name":"Dole Plantation","sub":"Morning","km":35.9,"lat":21.52605,"lng":-158.03765,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Dole%20Plantation%2C%20Wahiawa%20HI","notes":["Listed 9:30-17:30 daily; shop and Dole Whip, plus ticketed train and garden (check prices).","30-60 min. Skip if the group wants more beach time."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-4","kind":"stop","badge":"3","optional":false,"offsheet":false,"name":"Matsumoto Shave Ice, Haleiwa Town","sub":"Haleiwa town","km":45.8,"lat":21.59111,"lng":-158.10286,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Matsumoto%20Shave%20Ice%2C%20Haleiwa%20HI","notes":["Listed 10:00-18:00 daily; counter service, the queue moves quickly.","Stroll the Haleiwa shops afterwards; parking is tight around midday (visitor reports)."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-5","kind":"meal","badge":"4","optional":false,"offsheet":false,"name":"Haleiwa Beach House","sub":"Lunch","km":46.2,"lat":21.59607,"lng":-158.10286,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Haleiwa%20Beach%20House%2C%20Haleiwa%20HI","notes":["Reserve for 9. Listed Wed 11:00-20:00 (closed Tue).","Visitor reports say they seat only complete parties, so arrive together."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-6","kind":"meal","badge":"5","optional":true,"offsheet":false,"name":"Giovanni's Shrimp Truck (Haleiwa)","sub":"Alternate lunch","km":45.0,"lat":21.58078,"lng":-158.10473,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Giovanni%27s%20Shrimp%20Truck%2C%20Haleiwa%20HI","notes":["Counter-service garlic shrimp plates at picnic tables; listed 10:30-17:00 daily.","Use instead of the sit-down lunch; small fee for the lot in front."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-7","kind":"stop","badge":"6","optional":true,"offsheet":false,"name":"Laniakea Beach","sub":"Turtle beach","km":47.1,"lat":21.61877,"lng":-158.08543,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Laniakea%20Beach%2C%20Haleiwa%20HI","notes":["Green sea turtles often rest here. Parking is across a busy highway; cross carefully.","Stay well back from turtles. Skip if the roadside lot is full."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-8","kind":"stop","badge":"7","optional":false,"offsheet":false,"name":"Waimea Bay Beach Park","sub":"Afternoon","km":47.8,"lat":21.63983,"lng":-158.06336,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Waimea%20Bay%20Beach%20Park%2C%20Haleiwa%20HI","notes":["Watch the winter surf from the sand; do not swim when the surf is up.","Small lot fills early. If full, continue to the next stop and try again later."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-9","kind":"stop","badge":"8","optional":true,"offsheet":false,"name":"Waimea Valley","sub":"Garden walk","km":46.8,"lat":21.63528,"lng":-158.05293,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Waimea%20Valley%2C%20Haleiwa%20HI","notes":["Paved garden path, about 1.5 mi round trip to the waterfall (visitor reports).","Usual hours Tue-Sun 9:00-16:00; admission charged, check price and last entry."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-10","kind":"stop","badge":"9","optional":false,"offsheet":false,"name":"Ehukai Beach Park (Banzai Pipeline)","sub":"Surf watching","km":49.5,"lat":21.66502,"lng":-158.0508,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Ehukai%20Beach%20Park%2C%20Haleiwa%20HI","notes":["Best spot to watch Banzai Pipeline in winter; free lot, listed 6:30-20:00.","Sit well back from the shorebreak. Roughly 75 min drive back to Waikiki (estimate)."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-11","kind":"meal","badge":"10","optional":false,"offsheet":false,"name":"Marugame Udon Waikiki","sub":"Dinner","km":0.8,"lat":21.27965,"lng":-157.82584,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Marugame%20Udon%20Waikiki%2C%20Honolulu%20HI","notes":["Cafeteria-style fresh udon, inexpensive; listed 10:00-23:00 daily.","Long queue that moves fast; seat yourselves, the group may split across tables."],"coordSource":"Google Places lookup, 22 Nov 2026"}]},{"date":"2027-02-11","label":"Thu Feb 11","hotelId":"h1","title":"Southeast coast and sunset hula","color":"#8a4a12","items":[{"id":"d0211-1","kind":"hotel","badge":"H","optional":false,"offsheet":false,"name":"Aston Waikiki Sunset","sub":"Base","km":0.0,"lat":21.27436,"lng":-157.82054,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Aston%20Waikiki%20Sunset%2C%20Honolulu%20HI","notes":["Candidate base, not booked. 24-hour front desk.","Keep the car empty when parked anywhere on the island."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0211-2","kind":"meal","badge":"1","optional":false,"offsheet":false,"name":"Eggs 'n Things Waikiki Beach Eggspress","sub":"Breakfast","km":0.4,"lat":21.27487,"lng":-157.82427,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Eggs%20%27n%20Things%20Waikiki%20Beach%20Eggspress%2C%20Honolulu%20HI","notes":["Listed 6:00-14:00; tablet check-in and queues are common, go before 7:30.","5 min walk from the hotel. A party of 9 may be split across tables."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0211-3","kind":"stop","badge":"2","optional":true,"offsheet":false,"name":"Hanauma Bay Nature Preserve","sub":"Snorkel morning","km":13.0,"lat":21.2713,"lng":-157.6949,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Hanauma%20Bay%20Nature%20Preserve%2C%20Honolulu%20HI","notes":["Open Wed-Sun, closed Mon-Tue. Entry 6:45-13:30; beach cleared at 15:30.","Non-residents book online 2 days ahead at 7:00 HST; $25 each plus fee (Nov 2026).","Max 5 adults per booking, so a group of 9 needs two bookings. Parking $3 cash.","Mandatory video first, then walk or ride the tram down. Optional, for those who snorkel."],"coordSource":"Google Places lookup, 22 Nov 2026 (100 Hanauma Bay Rd, upper entrance area)"},{"id":"d0211-4","kind":"stop","badge":"3","optional":false,"offsheet":false,"name":"Halona Blowhole Lookout","sub":"Morning","km":14.9,"lat":21.2824,"lng":-157.67703,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Halona%20Blowhole%20Lookout%2C%20Honolulu%20HI","notes":["Roadside lookout with a car park, 15-20 min. A known spot for seeing whales in Feb.","Lock the cars and leave nothing inside."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0211-5","kind":"stop","badge":"4","optional":false,"offsheet":false,"name":"Makapuu Lookout","sub":"Morning","km":17.4,"lat":21.3094,"lng":-157.65683,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Makapuu%20Lookout%2C%20Waimanalo%20HI","notes":["Roadside viewpoint over Makapuu Beach and the offshore islets; 15 min.","Humpback season peaks Jan-Feb; bring binoculars."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0211-6","kind":"stop","badge":"5","optional":true,"offsheet":false,"name":"Makapuu Point Lighthouse Trail","sub":"Paved uphill walk","km":18.0,"lat":21.30874,"lng":-157.65048,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Makapuu%20Point%20Lighthouse%20Trail%2C%20Waimanalo%20HI","notes":["Paved but steady uphill, about 2 mi round trip (visitor reports); no shade or toilets.","Gate hours listed 7:00-18:45. Map point is on the trail; park at the trailhead lot."],"coordSource":"Google Places lookup, 22 Nov 2026 (point is on the trail, not the trailhead car park)"},{"id":"d0211-7","kind":"meal","badge":"6","optional":false,"offsheet":false,"name":"Kona Brewing Hawaii Kai","sub":"Lunch","km":11.9,"lat":21.27806,"lng":-157.70572,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Kona%20Brewing%20Hawaii%20Kai%2C%20Honolulu%20HI","notes":["Marina-side pub at Koko Marina Center; usual hours 11:00-20:00.","Call ahead for a table of 9. On the way back toward Waikiki."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0211-8","kind":"meal","badge":"7","optional":false,"offsheet":false,"name":"House Without A Key (Halekulani)","sub":"Dinner","km":1.2,"lat":21.2775,"lng":-157.83194,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=House%20Without%20A%20Key%20Halekulani%2C%20Honolulu%20HI","notes":["Open-air oceanfront at Halekulani with evening Hawaiian music; reserve for 9.","Listed 11:30-21:00. Ask about large-party seating and hotel parking charges."],"coordSource":"Google Places lookup, 22 Nov 2026"}]},{"date":"2027-02-12","label":"Fri Feb 12","hotelId":"h1","title":"Checkout, museum, late flight","color":"#00707a","items":[{"id":"d0212-1","kind":"meal","badge":"1","optional":false,"offsheet":false,"name":"Lulu's Waikiki","sub":"Breakfast","km":0.4,"lat":21.27192,"lng":-157.82268,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Lulu%27s%20Waikiki%2C%20Honolulu%20HI","notes":["Listed from 7:00 daily; open-air upstairs room facing the beach.","5 min walk from the hotel. Pack before or after, checkout is late morning."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0212-2","kind":"hotel","badge":"H","optional":false,"offsheet":false,"name":"Aston Waikiki Sunset","sub":"Check out, store bags","km":0.0,"lat":21.27436,"lng":-157.82054,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Aston%20Waikiki%20Sunset%2C%20Honolulu%20HI","notes":["Check out by 11:00 or 12:00 (sources differ). Leave all bags with the front desk.","Collect bags about 18:30. Never leave luggage in the parked car, even in the trunk.","Ask whether the cars may stay in the hotel garage until evening."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0212-3","kind":"stop","badge":"2","optional":false,"offsheet":false,"name":"Honolulu Museum of Art","sub":"Late morning","km":4.4,"lat":21.3038,"lng":-157.8487,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Honolulu%20Museum%20of%20Art%2C%20Honolulu%20HI","notes":["Fri 10:00-21:00 (closed Mon-Tue). Air-conditioned galleries, courtyards and a cafe.","Allow 1.5-2 h. The hotel amenity fee lists admission for 1 adult (as found Nov 2026)."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0212-4","kind":"stop","badge":"3","optional":true,"offsheet":false,"name":"Bishop Museum","sub":"Alternate museum","km":8.3,"lat":21.33292,"lng":-157.87061,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Bishop%20Museum%2C%20Honolulu%20HI","notes":["Usual hours 9:00-17:00 daily; Hawaiian and Pacific halls, about 2 h.","Use instead of the art museum; it is on the airport side of town."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0212-5","kind":"meal","badge":"4","optional":false,"offsheet":false,"name":"Ala Moana Center","sub":"Lunch and browsing","km":3.0,"lat":21.2911,"lng":-157.84346,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Ala%20Moana%20Center%2C%20Honolulu%20HI","notes":["Open-air mall with a large food court that suits 9; listed 10:00-20:00.","Large parking structures. Leave nothing in the cars."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0212-6","kind":"stop","badge":"5","optional":false,"offsheet":false,"name":"Ala Moana Regional Park and Magic Island","sub":"Afternoon stroll","km":3.3,"lat":21.28997,"lng":-157.84766,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Ala%20Moana%20Regional%20Park%2C%20Honolulu%20HI","notes":["Flat seaside paths with Diamond Head views; car parks and restrooms. 30-45 min."],"coordSource":"Google Places lookup, 22 Nov 2026 (park point; Magic Island is its east end)"},{"id":"d0212-7","kind":"meal","badge":"6","optional":false,"offsheet":false,"name":"Tiki's Grill & Bar","sub":"Early dinner 17:00","km":0.3,"lat":21.27216,"lng":-157.82285,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Tiki%27s%20Grill%20%26%20Bar%2C%20Honolulu%20HI","notes":["Reserve for 9 at 17:00; about 5 min walk from the hotel. Listed 11:00-24:00 daily.","Finish by 18:30, collect bags at the hotel, leave Waikiki by 19:00."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0212-8","kind":"stop","badge":"7","optional":false,"offsheet":false,"name":"HNL Consolidated Rent-A-Car Facility","sub":"Car return","km":12.0,"lat":21.33318,"lng":-157.91716,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Consolidated%20Car%20Rental%20Center%20HNL%20CONRAC%2C%20Honolulu%20HI","notes":["Leave Waikiki by 19:00, refuel near the airport, return the cars by about 19:45.","Then a 5-10 min walk across to Terminal 2. Rental counters close 23:00-01:00."],"coordSource":"Google Places lookup, 22 Nov 2026; agrees with map link on Avis HNL page (21.33323, -157.9162)"},{"id":"d0212-9","kind":"airport","badge":"✈","optional":false,"offsheet":false,"name":"Honolulu Airport (HNL), Terminal 2","sub":"Depart 22:55","km":12.1,"lat":21.33098,"lng":-157.92048,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Daniel%20K.%20Inouye%20International%20Airport%20Terminal%202%2C%20Honolulu%20HI","notes":["AC1784 to Vancouver departs 22:55. Air Canada checks in at Terminal 2, Lobby 4.","Bag drop closes 21:55 (60 min before); counters open about 19:55."],"coordSource":"Google Places lookup, 22 Nov 2026 (Terminal 2 building point, not Lobby 4 itself)"}]}]}</script>
+<script type="application/json" id="data">{"source":{"title":"Hawaii Trip Map","checkedNote":"Places checked against official sites and Google Places, 22 Nov 2026"},"hotels":[{"id":"h1","name":"Aston Waikiki Sunset","lat":21.27436,"lng":-157.82054,"datum":"wgs84","from":"2027-02-06","to":"2027-02-12","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Aston%20Waikiki%20Sunset%2C%20Honolulu%20HI","notes":["Candidate, not booked","Condo-hotel at 229 Paoakalani Ave: 1- and 2-bedroom suites with full kitchens.","Idea for 8-9: two 2-bedroom suites (max 6 each), or one 2-bedroom plus one 1-bedroom.","Amenity fee $35 per night plus tax per suite (aquaaston.com, as found Nov 2026).","Parking: Aston says self-parking at extra charge; Expedia lists it free. Confirm. Max 6 ft.","Check-in 15:00, check-out 12:00 per Aston (Expedia says 16:00 and 11:00). 24-hour desk.","Baggage storage is listed; confirm a hold for all bags until 19:00 on 12 Feb.","Recent guest reviews mention dated rooms and a pool closure for renovation. Ask first."],"coordSource":"Google Places lookup, 22 Nov 2026"}],"days":[{"date":"2027-02-06","label":"Sat Feb 6","hotelId":"h1","title":"Arrive, car pickup, hotel","color":"#c81e4a","items":[{"id":"d0206-1","kind":"airport","badge":"✈","optional":false,"offsheet":false,"name":"Honolulu Airport (HNL), Terminal 2","sub":"Arrive 21:40","km":12.1,"lat":21.33098,"lng":-157.92048,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Daniel%20K.%20Inouye%20International%20Airport%20Terminal%202%2C%20Honolulu%20HI","notes":["AC1785 from Vancouver is scheduled to land 21:40.","Bag claims 19-31: walk across to the rental facility. Claims 16-18: use the shuttle."],"coordSource":"Google Places lookup, 22 Nov 2026 (Terminal 2 building point, not Lobby 4 itself)"},{"id":"d0206-2","kind":"logistics","badge":"1","optional":false,"offsheet":false,"name":"HNL Consolidated Rent-A-Car Facility","sub":"Car pickup","km":12.0,"lat":21.33318,"lng":-157.91716,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Consolidated%20Car%20Rental%20Center%20HNL%20CONRAC%2C%20Honolulu%20HI","notes":["All airport rental brands are here; counters on Level 2. Facility runs 04:00-midnight.","Counter closing as found Nov 2026: Enterprise/National 23:00, Hertz 24:00, Avis 01:00.","Risk: a delayed flight can miss a 23:00 counter. Put AC1785 on the car booking."],"coordSource":"Google Places lookup, 22 Nov 2026; agrees with map link on Avis HNL page (21.33323, -157.9162)"},{"id":"d0206-3","kind":"hotel","badge":"H","optional":false,"offsheet":false,"name":"Aston Waikiki Sunset","sub":"Check in","km":0.0,"lat":21.27436,"lng":-157.82054,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Aston%20Waikiki%20Sunset%2C%20Honolulu%20HI","notes":["Candidate, not booked. About 20 min drive from the airport late at night.","Front desk is 24 hours; tell the hotel to expect arrival around 23:00."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0206-4","kind":"meal","badge":"2","optional":true,"offsheet":false,"name":"Lulu's Waikiki","sub":"Late bite","km":0.4,"lat":21.27192,"lng":-157.82268,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Lulu%27s%20Waikiki%2C%20Honolulu%20HI","notes":["Listed open until midnight daily; the kitchen may close earlier, check on the night.","About 5 min walk from the hotel, on Kalakaua Ave facing the beach."],"coordSource":"Google Places lookup, 22 Nov 2026"}]},{"date":"2027-02-07","label":"Sun Feb 7","hotelId":"h1","title":"Easy Waikiki and Kapiolani Park","color":"#0b6fb8","items":[{"id":"d0207-1","kind":"hotel","badge":"H","optional":false,"offsheet":false,"name":"Aston Waikiki Sunset","sub":"Base","km":0.0,"lat":21.27436,"lng":-157.82054,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Aston%20Waikiki%20Sunset%2C%20Honolulu%20HI","notes":["Candidate base, not booked. 24-hour front desk.","Keep the car empty when parked anywhere on the island."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0207-2","kind":"stop","badge":"1","optional":true,"offsheet":false,"name":"Diamond Head State Monument","sub":"Early morning hike","km":2.0,"lat":21.26349,"lng":-157.80527,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Diamond%20Head%20State%20Monument%2C%20Honolulu%20HI","notes":["Non-residents need entry and parking reservations; bookable 30 days ahead.","$5 entry, $10 parking per car (DLNR, as found Nov 2026). Open 6:00-18:00.","Steep 0.8 mi each way, 560 ft gain, many stairs; 1.5-2 h. Optional for parents."],"coordSource":"Google Places lookup, 22 Nov 2026 (Diamond Head Visitor Center, inside crater by car park); agrees with DLNR Street View link (21.263457, -157.805488)"},{"id":"d0207-3","kind":"meal","badge":"2","optional":false,"offsheet":false,"name":"Barefoot Beach Cafe","sub":"Breakfast","km":0.7,"lat":21.26791,"lng":-157.82247,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Barefoot%20Beach%20Cafe%20Queen%27s%20Surf%20Beach%2C%20Honolulu%20HI","notes":["Counter service with beachside tables; listed 8:00-20:30 daily.","About 10 min flat walk from the hotel, or use Kapiolani Park meters."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0207-4","kind":"stop","badge":"3","optional":false,"offsheet":false,"name":"Waikiki Aquarium","sub":"Morning","km":1.0,"lat":21.26581,"lng":-157.82165,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Waikiki%20Aquarium%2C%20Honolulu%20HI","notes":["Listed 9:00-17:00 daily. Small; allow about 1 hour.","Next to the cafe; walk through Kapiolani Park afterwards."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0207-5","kind":"meal","badge":"4","optional":false,"offsheet":false,"name":"Rainbow Drive-In","sub":"Lunch","km":0.6,"lat":21.27594,"lng":-157.81456,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Rainbow%20Drive-In%2C%20Honolulu%20HI","notes":["Counter-service plate lunches; usual hours 7:00-21:00 daily.","Easy for 9: order at the window. Short drive or 15 min walk from the hotel."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0207-6","kind":"stop","badge":"5","optional":true,"offsheet":false,"name":"Honolulu Zoo","sub":"Afternoon","km":0.4,"lat":21.27109,"lng":-157.82148,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Honolulu%20Zoo%2C%20Honolulu%20HI","notes":["Listed 10:00-16:00 daily; flat paths, 1.5-2 h. Skip for a rest at the hotel.","Entrance is 5 min walk from the hotel."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0207-7","kind":"stop","badge":"6","optional":false,"offsheet":false,"name":"Duke Kahanamoku Statue, Kuhio Beach","sub":"Sunset stroll","km":0.5,"lat":21.27552,"lng":-157.82532,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Duke%20Paoa%20Kahanamoku%20Statue%2C%20Honolulu%20HI","notes":["Flat beachfront walk along Kuhio Beach; nicest in the hour before sunset.","On the way to dinner; no parking needed from the hotel."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0207-8","kind":"meal","badge":"7","optional":false,"offsheet":false,"name":"Duke's Waikiki","sub":"Dinner","km":0.8,"lat":21.2769,"lng":-157.82789,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Duke%27s%20Waikiki%2C%20Honolulu%20HI","notes":["Reserve for 9 well ahead; beachfront at the Outrigger Waikiki. Listed 7:00-24:00.","About 15 min walk from the hotel; parking nearby is paid, walking is easier."],"coordSource":"Google Places lookup, 22 Nov 2026"}]},{"date":"2027-02-08","label":"Mon Feb 8","hotelId":"h1","title":"Windward coast loop","color":"#1a7a3c","items":[{"id":"d0208-1","kind":"hotel","badge":"H","optional":false,"offsheet":false,"name":"Aston Waikiki Sunset","sub":"Base","km":0.0,"lat":21.27436,"lng":-157.82054,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Aston%20Waikiki%20Sunset%2C%20Honolulu%20HI","notes":["Candidate base, not booked. 24-hour front desk.","Keep the car empty when parked anywhere on the island."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0208-2","kind":"meal","badge":"1","optional":false,"offsheet":false,"name":"Leonard's Bakery","sub":"Breakfast","km":1.4,"lat":21.28487,"lng":-157.81334,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Leonard%27s%20Bakery%2C%20Honolulu%20HI","notes":["Malasadas and coffee to go; counter service, listed 5:30-19:00 daily.","Tiny lot; one car can queue while the other waits nearby."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0208-3","kind":"stop","badge":"2","optional":false,"offsheet":false,"name":"Nuuanu Pali Lookout","sub":"Morning","km":10.6,"lat":21.3662,"lng":-157.79377,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Nuuanu%20Pali%20Lookout%2C%20Honolulu%20HI","notes":["Open 6:00-18:00 daily; non-resident parking $7 per car (DLNR, as found Nov 2026).","Short paved walk to the viewpoint, 20-30 min. Very windy, bring a layer."],"coordSource":"Google Places lookup, 22 Nov 2026 (lookout parking lot)"},{"id":"d0208-4","kind":"stop","badge":"3","optional":false,"offsheet":false,"name":"Byodo-In Temple","sub":"Morning","km":17.4,"lat":21.43071,"lng":-157.83223,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Byodo-In%20Temple%2C%20Kaneohe%20HI","notes":["Listed 8:30-16:30 daily; admission charged, check the price. Allow 45-60 min.","Flat grounds and koi ponds; small car park inside Valley of the Temples."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0208-5","kind":"meal","badge":"4","optional":false,"offsheet":false,"name":"Waiahole Poi Factory","sub":"Lunch","km":23.2,"lat":21.48204,"lng":-157.8452,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Waiahole%20Poi%20Factory%2C%20Kaneohe%20HI","notes":["Counter-service Hawaiian plates, outdoor seating; listed 10:00-18:00.","Closed Tuesdays as listed Nov 2026. Free parking on site."],"coordSource":"Google Places lookup, 22 Nov 2026 (original 48-140 Kamehameha Hwy site, not the Windward Mall outlet)"},{"id":"d0208-6","kind":"stop","badge":"5","optional":false,"offsheet":false,"name":"Kualoa Regional Park","sub":"Afternoon","km":26.5,"lat":21.51245,"lng":-157.83707,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Kualoa%20Regional%20Park%2C%20Kaneohe%20HI","notes":["Free beach park with views of Mokolii islet and the Kualoa cliffs; listed 7:00-20:00.","Flat lawn stroll, 30 min. Restrooms. Leave nothing visible in the cars."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0208-7","kind":"stop","badge":"6","optional":false,"offsheet":false,"name":"Kailua Beach Park","sub":"Afternoon","km":16.7,"lat":21.39625,"lng":-157.7259,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Kailua%20Beach%20Park%2C%20Kailua%20HI","notes":["Wide sandy beach for a rest or a swim; car parks are easier on a weekday.","Restrooms and showers. Roughly 35 min drive south from Kualoa (estimate)."],"coordSource":"Google Places lookup, 22 Nov 2026 (Kailua Beach parking lot, Kawailoa Rd)"},{"id":"d0208-8","kind":"meal","badge":"7","optional":true,"offsheet":false,"name":"Buzz's Original Steak House","sub":"Alternate early dinner","km":16.7,"lat":21.39599,"lng":-157.72654,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Buzz%27s%20Original%20Steak%20House%2C%20Kailua%20HI","notes":["Across the road from Kailua Beach Park. Lunch 11:00-15:00, dinner from 16:30.","Reserve for 9 if using this instead of dinner in Waikiki."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0208-9","kind":"meal","badge":"8","optional":false,"offsheet":false,"name":"Side Street Inn on Beach Walk","sub":"Dinner","km":1.3,"lat":21.28082,"lng":-157.83093,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Side%20Street%20Inn%20on%20Beach%20Walk%2C%20Honolulu%20HI","notes":["Family-style local dishes, well suited to groups; reserve for 9.","Listed Mon 16:00-20:30. In Waikiki, about 20 min walk or a short drive."],"coordSource":"Google Places lookup, 22 Nov 2026"}]},{"date":"2027-02-09","label":"Tue Feb 9","hotelId":"h1","title":"Pearl Harbor and downtown Honolulu","color":"#2b2622","items":[{"id":"d0209-1","kind":"hotel","badge":"H","optional":false,"offsheet":false,"name":"Aston Waikiki Sunset","sub":"Base","km":0.0,"lat":21.27436,"lng":-157.82054,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Aston%20Waikiki%20Sunset%2C%20Honolulu%20HI","notes":["Candidate base, not booked. 24-hour front desk.","Keep the car empty when parked anywhere on the island."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0209-2","kind":"stop","badge":"1","optional":false,"offsheet":false,"name":"Pearl Harbor National Memorial","sub":"Morning","km":16.0,"lat":21.36756,"lng":-157.93885,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Pearl%20Harbor%20National%20Memorial%2C%20Honolulu%20HI","notes":["USS Arizona program: book on Recreation.gov, released 8 weeks and 24 h ahead, 15:00 HST.","$1 fee per ticket, up to 10 tickets a day per account. Boats 8:00-12:00, 13:00-15:30.","Visitor center 7:00-17:00; parking $7. No bags allowed; paid bag storage at entrance.","Arrive 1 hour before the ticket time; allow 2.5-3 h in all."],"coordSource":"Google Places lookup, 22 Nov 2026 (visitor center, 1 Arizona Memorial Pl)"},{"id":"d0209-3","kind":"meal","badge":"2","optional":false,"offsheet":false,"name":"Liliha Bakery (Nimitz)","sub":"Lunch","km":6.7,"lat":21.31338,"lng":-157.86963,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Liliha%20Bakery%20Nimitz%2C%20Honolulu%20HI","notes":["Large local diner and bakery with its own car park; listed 6:30-22:00 daily.","Call ahead for a table of 9, or split across two tables."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0209-4","kind":"stop","badge":"3","optional":false,"offsheet":false,"name":"Iolani Palace","sub":"Afternoon","km":5.4,"lat":21.30676,"lng":-157.85877,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Iolani%20Palace%2C%20Honolulu%20HI","notes":["Open Tue-Sat 9:00-16:00; Tuesday is a self-led audio tour day. Book timed tickets.","Allow 60-90 min. Check the palace site for parking and current prices."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0209-5","kind":"stop","badge":"4","optional":true,"offsheet":false,"name":"King Kamehameha Statue at Aliiolani Hale","sub":"Photo stop","km":5.4,"lat":21.3052,"lng":-157.86039,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=King%20Kamehameha%20Statue%20Aliiolani%20Hale%2C%20Honolulu%20HI","notes":["Across King St from the palace; outdoor statue, 10 min on foot."],"coordSource":"Google Places lookup, 22 Nov 2026 (Aliiolani Hale building; the statue stands in its forecourt)"},{"id":"d0209-6","kind":"meal","badge":"5","optional":false,"offsheet":false,"name":"Maui Brewing Co. Waikiki","sub":"Dinner","km":0.8,"lat":21.27788,"lng":-157.8272,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Maui%20Brewing%20Co.%20Waikiki%2C%20Honolulu%20HI","notes":["Big brewpub in central Waikiki; reserve for 9. Listed 11:00-23:00 daily.","15 min walk from the hotel."],"coordSource":"Google Places lookup, 22 Nov 2026"}]},{"date":"2027-02-10","label":"Wed Feb 10","hotelId":"h1","title":"North Shore day","color":"#6a2fb3","items":[{"id":"d0210-1","kind":"hotel","badge":"H","optional":false,"offsheet":false,"name":"Aston Waikiki Sunset","sub":"Base","km":0.0,"lat":21.27436,"lng":-157.82054,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Aston%20Waikiki%20Sunset%2C%20Honolulu%20HI","notes":["Candidate base, not booked. 24-hour front desk.","Keep the car empty when parked anywhere on the island."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-2","kind":"meal","badge":"1","optional":false,"offsheet":false,"name":"Green World Coffee Farm","sub":"Coffee and breakfast stop","km":35.0,"lat":21.51295,"lng":-158.04121,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Green%20World%20Coffee%20Farm%2C%20Wahiawa%20HI","notes":["Coffee, pastries and free samples; usual hours 7:00-18:00.","On the route north; roughly 45 min from Waikiki outside rush hour (estimate)."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-3","kind":"stop","badge":"2","optional":true,"offsheet":false,"name":"Dole Plantation","sub":"Morning","km":35.9,"lat":21.52605,"lng":-158.03765,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Dole%20Plantation%2C%20Wahiawa%20HI","notes":["Listed 9:30-17:30 daily; shop and Dole Whip, plus ticketed train and garden (check prices).","30-60 min. Skip if the group wants more beach time."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-4","kind":"stop","badge":"3","optional":false,"offsheet":false,"name":"Matsumoto Shave Ice, Haleiwa Town","sub":"Haleiwa town","km":45.8,"lat":21.59111,"lng":-158.10286,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Matsumoto%20Shave%20Ice%2C%20Haleiwa%20HI","notes":["Listed 10:00-18:00 daily; counter service, the queue moves quickly.","Stroll the Haleiwa shops afterwards; parking is tight around midday (visitor reports)."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-5","kind":"meal","badge":"4","optional":false,"offsheet":false,"name":"Haleiwa Beach House","sub":"Lunch","km":46.2,"lat":21.59607,"lng":-158.10286,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Haleiwa%20Beach%20House%2C%20Haleiwa%20HI","notes":["Reserve for 9. Listed Wed 11:00-20:00 (closed Tue).","Visitor reports say they seat only complete parties, so arrive together."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-6","kind":"meal","badge":"5","optional":true,"offsheet":false,"name":"Giovanni's Shrimp Truck (Haleiwa)","sub":"Alternate lunch","km":45.0,"lat":21.58078,"lng":-158.10473,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Giovanni%27s%20Shrimp%20Truck%2C%20Haleiwa%20HI","notes":["Counter-service garlic shrimp plates at picnic tables; listed 10:30-17:00 daily.","Use instead of the sit-down lunch; small fee for the lot in front."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-7","kind":"stop","badge":"6","optional":true,"offsheet":false,"name":"Laniakea Beach","sub":"Turtle beach","km":47.1,"lat":21.61877,"lng":-158.08543,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Laniakea%20Beach%2C%20Haleiwa%20HI","notes":["Green sea turtles often rest here. Parking is across a busy highway; cross carefully.","Stay well back from turtles. Skip if the roadside lot is full."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-8","kind":"stop","badge":"7","optional":false,"offsheet":false,"name":"Waimea Bay Beach Park","sub":"Afternoon","km":47.8,"lat":21.63983,"lng":-158.06336,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Waimea%20Bay%20Beach%20Park%2C%20Haleiwa%20HI","notes":["Watch the winter surf from the sand; do not swim when the surf is up.","Small lot fills early. If full, continue to the next stop and try again later."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-9","kind":"stop","badge":"8","optional":true,"offsheet":false,"name":"Waimea Valley","sub":"Garden walk","km":46.8,"lat":21.63528,"lng":-158.05293,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Waimea%20Valley%2C%20Haleiwa%20HI","notes":["Paved garden path, about 1.5 mi round trip to the waterfall (visitor reports).","Usual hours Tue-Sun 9:00-16:00; admission charged, check price and last entry."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-10","kind":"stop","badge":"9","optional":false,"offsheet":false,"name":"Ehukai Beach Park (Banzai Pipeline)","sub":"Surf watching","km":49.5,"lat":21.66502,"lng":-158.0508,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Ehukai%20Beach%20Park%2C%20Haleiwa%20HI","notes":["Best spot to watch Banzai Pipeline in winter; free lot, listed 6:30-20:00.","Sit well back from the shorebreak. Roughly 75 min drive back to Waikiki (estimate)."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0210-11","kind":"meal","badge":"10","optional":false,"offsheet":false,"name":"Marugame Udon Waikiki","sub":"Dinner","km":0.8,"lat":21.27965,"lng":-157.82584,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Marugame%20Udon%20Waikiki%2C%20Honolulu%20HI","notes":["Cafeteria-style fresh udon, inexpensive; listed 10:00-23:00 daily.","Long queue that moves fast; seat yourselves, the group may split across tables."],"coordSource":"Google Places lookup, 22 Nov 2026"}]},{"date":"2027-02-11","label":"Thu Feb 11","hotelId":"h1","title":"Southeast coast and sunset hula","color":"#8a4a12","items":[{"id":"d0211-1","kind":"hotel","badge":"H","optional":false,"offsheet":false,"name":"Aston Waikiki Sunset","sub":"Base","km":0.0,"lat":21.27436,"lng":-157.82054,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Aston%20Waikiki%20Sunset%2C%20Honolulu%20HI","notes":["Candidate base, not booked. 24-hour front desk.","Keep the car empty when parked anywhere on the island."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0211-2","kind":"meal","badge":"1","optional":false,"offsheet":false,"name":"Eggs 'n Things Waikiki Beach Eggspress","sub":"Breakfast","km":0.4,"lat":21.27487,"lng":-157.82427,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Eggs%20%27n%20Things%20Waikiki%20Beach%20Eggspress%2C%20Honolulu%20HI","notes":["Listed 6:00-14:00; tablet check-in and queues are common, go before 7:30.","5 min walk from the hotel. A party of 9 may be split across tables."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0211-3","kind":"stop","badge":"2","optional":true,"offsheet":false,"name":"Hanauma Bay Nature Preserve","sub":"Snorkel morning","km":13.0,"lat":21.2713,"lng":-157.6949,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Hanauma%20Bay%20Nature%20Preserve%2C%20Honolulu%20HI","notes":["Open Wed-Sun, closed Mon-Tue. Entry 6:45-13:30; beach cleared at 15:30.","Non-residents book online 2 days ahead at 7:00 HST; $25 each plus fee (Nov 2026).","Max 5 adults per booking, so a group of 9 needs two bookings. Parking $3 cash.","Mandatory video first, then walk or ride the tram down. Optional, for those who snorkel."],"coordSource":"Google Places lookup, 22 Nov 2026 (100 Hanauma Bay Rd, upper entrance area)"},{"id":"d0211-4","kind":"stop","badge":"3","optional":false,"offsheet":false,"name":"Halona Blowhole Lookout","sub":"Morning","km":14.9,"lat":21.2824,"lng":-157.67703,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Halona%20Blowhole%20Lookout%2C%20Honolulu%20HI","notes":["Roadside lookout with a car park, 15-20 min. A known spot for seeing whales in Feb.","Lock the cars and leave nothing inside."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0211-5","kind":"stop","badge":"4","optional":false,"offsheet":false,"name":"Makapuu Lookout","sub":"Morning","km":17.4,"lat":21.3094,"lng":-157.65683,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Makapuu%20Lookout%2C%20Waimanalo%20HI","notes":["Roadside viewpoint over Makapuu Beach and the offshore islets; 15 min.","Humpback season peaks Jan-Feb; bring binoculars."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0211-6","kind":"stop","badge":"5","optional":true,"offsheet":false,"name":"Makapuu Point Lighthouse Trail","sub":"Paved uphill walk","km":18.0,"lat":21.30874,"lng":-157.65048,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Makapuu%20Point%20Lighthouse%20Trail%2C%20Waimanalo%20HI","notes":["Paved but steady uphill, about 2 mi round trip (visitor reports); no shade or toilets.","Gate hours listed 7:00-18:45. Map point is on the trail; park at the trailhead lot."],"coordSource":"Google Places lookup, 22 Nov 2026 (point is on the trail, not the trailhead car park)"},{"id":"d0211-7","kind":"meal","badge":"6","optional":false,"offsheet":false,"name":"Kona Brewing Hawaii Kai","sub":"Lunch","km":11.9,"lat":21.27806,"lng":-157.70572,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Kona%20Brewing%20Hawaii%20Kai%2C%20Honolulu%20HI","notes":["Marina-side pub at Koko Marina Center; usual hours 11:00-20:00.","Call ahead for a table of 9. On the way back toward Waikiki."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0211-8","kind":"meal","badge":"7","optional":false,"offsheet":false,"name":"House Without A Key (Halekulani)","sub":"Dinner","km":1.2,"lat":21.2775,"lng":-157.83194,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=House%20Without%20A%20Key%20Halekulani%2C%20Honolulu%20HI","notes":["Open-air oceanfront at Halekulani with evening Hawaiian music; reserve for 9.","Listed 11:30-21:00. Ask about large-party seating and hotel parking charges."],"coordSource":"Google Places lookup, 22 Nov 2026"}]},{"date":"2027-02-12","label":"Fri Feb 12","hotelId":"h1","title":"Checkout, museum, late flight","color":"#00707a","items":[{"id":"d0212-1","kind":"meal","badge":"1","optional":false,"offsheet":false,"name":"Lulu's Waikiki","sub":"Breakfast","km":0.4,"lat":21.27192,"lng":-157.82268,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Lulu%27s%20Waikiki%2C%20Honolulu%20HI","notes":["Listed from 7:00 daily; open-air upstairs room facing the beach.","5 min walk from the hotel. Pack before or after, checkout is late morning."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0212-2","kind":"hotel","badge":"H","optional":false,"offsheet":false,"name":"Aston Waikiki Sunset","sub":"Check out, store bags","km":0.0,"lat":21.27436,"lng":-157.82054,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Aston%20Waikiki%20Sunset%2C%20Honolulu%20HI","notes":["Check out by 11:00 or 12:00 (sources differ). Leave all bags with the front desk.","Collect bags about 18:30. Never leave luggage in the parked car, even in the trunk.","Ask whether the cars may stay in the hotel garage until evening."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0212-3","kind":"stop","badge":"2","optional":false,"offsheet":false,"name":"Honolulu Museum of Art","sub":"Late morning","km":4.4,"lat":21.3038,"lng":-157.8487,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Honolulu%20Museum%20of%20Art%2C%20Honolulu%20HI","notes":["Fri 10:00-21:00 (closed Mon-Tue). Air-conditioned galleries, courtyards and a cafe.","Allow 1.5-2 h. The hotel amenity fee lists admission for 1 adult (as found Nov 2026)."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0212-4","kind":"stop","badge":"3","optional":true,"offsheet":false,"name":"Bishop Museum","sub":"Alternate museum","km":8.3,"lat":21.33292,"lng":-157.87061,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Bishop%20Museum%2C%20Honolulu%20HI","notes":["Usual hours 9:00-17:00 daily; Hawaiian and Pacific halls, about 2 h.","Use instead of the art museum; it is on the airport side of town."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0212-5","kind":"meal","badge":"4","optional":false,"offsheet":false,"name":"Ala Moana Center","sub":"Lunch and browsing","km":3.0,"lat":21.2911,"lng":-157.84346,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Ala%20Moana%20Center%2C%20Honolulu%20HI","notes":["Open-air mall with a large food court that suits 9; listed 10:00-20:00.","Large parking structures. Leave nothing in the cars."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0212-6","kind":"stop","badge":"5","optional":false,"offsheet":false,"name":"Ala Moana Regional Park and Magic Island","sub":"Afternoon stroll","km":3.3,"lat":21.28997,"lng":-157.84766,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Ala%20Moana%20Regional%20Park%2C%20Honolulu%20HI","notes":["Flat seaside paths with Diamond Head views; car parks and restrooms. 30-45 min."],"coordSource":"Google Places lookup, 22 Nov 2026 (park point; Magic Island is its east end)"},{"id":"d0212-7","kind":"meal","badge":"6","optional":false,"offsheet":false,"name":"Tiki's Grill & Bar","sub":"Early dinner 17:00","km":0.3,"lat":21.27216,"lng":-157.82285,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Tiki%27s%20Grill%20%26%20Bar%2C%20Honolulu%20HI","notes":["Reserve for 9 at 17:00; about 5 min walk from the hotel. Listed 11:00-24:00 daily.","Finish by 18:30, collect bags at the hotel, leave Waikiki by 19:00."],"coordSource":"Google Places lookup, 22 Nov 2026"},{"id":"d0212-8","kind":"logistics","badge":"7","optional":false,"offsheet":false,"name":"HNL Consolidated Rent-A-Car Facility","sub":"Car return","km":12.0,"lat":21.33318,"lng":-157.91716,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Consolidated%20Car%20Rental%20Center%20HNL%20CONRAC%2C%20Honolulu%20HI","notes":["Leave Waikiki by 19:00, refuel near the airport, return the cars by about 19:45.","Then a 5-10 min walk across to Terminal 2. Rental counters close 23:00-01:00."],"coordSource":"Google Places lookup, 22 Nov 2026; agrees with map link on Avis HNL page (21.33323, -157.9162)"},{"id":"d0212-9","kind":"airport","badge":"✈","optional":false,"offsheet":false,"name":"Honolulu Airport (HNL), Terminal 2","sub":"Depart 22:55","km":12.1,"lat":21.33098,"lng":-157.92048,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Daniel%20K.%20Inouye%20International%20Airport%20Terminal%202%2C%20Honolulu%20HI","notes":["AC1784 to Vancouver departs 22:55. Air Canada checks in at Terminal 2, Lobby 4.","Bag drop closes 21:55 (60 min before); counters open about 19:55."],"coordSource":"Google Places lookup, 22 Nov 2026 (Terminal 2 building point, not Lobby 4 itself)"}]},{"date":null,"backlog":true,"label":"Backlog","color":"#6b655d","hotelId":"h1","title":"Ideas, not planned yet","items":[{"id":"bl-1","kind":"meal","badge":"1","optional":true,"offsheet":false,"name":"Waiola Shave Ice (Kapahulu)","sub":"Shave ice","km":1.2,"lat":21.28291,"lng":-157.81359,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Waiola%20Shave%20Ice%2C%203113%20Mokihana%20St%2C%20Honolulu%20HI","notes":["Old-school local shave ice with very fine, soft ice; about 1 km from the hotel, 20-30 min.","Mokihana St shop listed 11:00-18:00, closed Tue. Walk-up window, picnic tables, a few stalls.","Original shop at 2135 Waiola St is listed 11:00-18:00 daily. Bring cash in case (not checked).","About 200 m from Leonard's Bakery (Mon breakfast), so the two pair easily."],"coordSource":"Google Places lookup, 24 Nov 2026 (3113 Mokihana St shop, not the original Waiola St shop)"},{"id":"bl-2","kind":"meal","badge":"2","optional":true,"offsheet":false,"name":"Helena's Hawaiian Food","sub":"Hawaiian lunch idea","km":7.8,"lat":21.33092,"lng":-157.86509,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Helena%27s%20Hawaiian%20Food%2C%20Honolulu%20HI","notes":["Classic Hawaiian plates to share: pipikaula short ribs, kalua pig, laulau, poi, haupia.","Open Tue-Fri 10:00-19:30 only (official site); closed Sat-Mon. Near Bishop Museum.","Small walk-in diner: for 9 expect split tables, or phone a takeout order (808-845-8044).","Reported cash only (not confirmed), so bring cash. Few stalls; go at 10:00 or mid-afternoon."],"coordSource":"Google Places lookup, 24 Nov 2026"},{"id":"bl-3","kind":"meal","badge":"3","optional":true,"offsheet":false,"name":"Monkeypod Kitchen by Merriman (Ko Olina)","sub":"Lunch or dinner idea","km":32.2,"lat":21.34158,"lng":-158.12337,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Monkeypod%20Kitchen%20by%20Merriman%2C%20Ko%20Olina%2C%20Kapolei%20HI","notes":["West-side sit-down option with live music and mai tais; pairs with the Ko Olina lagoons.","Lunch 11:00-15:30, dinner to 22:00 daily; happy hour from 15:30 (end time varies by source).","Reserve for 9 on OpenTable (form allows up to 20) or send the group request form.","Shopping-centre car park on Olani St; fee or validation not checked."],"coordSource":"Google Places lookup, 24 Nov 2026"},{"id":"bl-4","kind":"meal","badge":"4","optional":true,"offsheet":false,"name":"Ted's Bakery","sub":"Bakery and pie stop","km":50.1,"lat":21.67747,"lng":-158.03641,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Ted%27s%20Bakery%2C%20Sunset%20Beach%2C%20Haleiwa%20HI","notes":["North Shore bakery known for chocolate haupia cream pie; also breakfast and plate lunches.","Listed 8:00-18:30 daily. Counter service, covered outdoor tables, no indoor seating.","About 2 km past Ehukai Beach Park on the Wed route. Small car park, tight at lunch (reviews)."],"coordSource":"Google Places lookup, 24 Nov 2026"},{"id":"bl-5","kind":"meal","badge":"5","optional":true,"offsheet":false,"name":"Kahuku Farms","sub":"Farm cafe","km":47.7,"lat":21.68315,"lng":-157.96037,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Kahuku%20Farms%2C%20Kahuku%20HI","notes":["Family farm cafe: acai bowls, smoothies, grilled banana bread; covered outdoor seating.","Cafe 11:00-16:00, closed Tue and Wed (official site), so not on the planned Wed North Shore day.","Free parking at the entrance (older report). 20 min drive past Sunset Beach (estimate).","Wagon farm tour is extra, about 90 min, with steps to board; check days and book ahead."],"coordSource":"Google Places lookup, 24 Nov 2026"},{"id":"bl-6","kind":"stop","badge":"6","optional":true,"offsheet":false,"name":"Puu Ualakaa State Wayside (Tantalus Lookout)","sub":"Photo stop","km":4.4,"lat":21.31343,"lng":-157.82285,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Tantalus%20Lookout%2C%20Puu%20Ualakaa%20State%20Park%2C%20Honolulu%20HI","notes":["Wide view over Diamond Head, Waikiki and downtown; short paved path from the car park.","Winter hours 7:00-18:45 (DLNR). Non-resident parking $7 per car, credit card only.","Narrow, winding Round Top Dr; allow 20-30 min at the top plus the drive.","Signs warn of car break-ins: leave nothing in the cars."],"coordSource":"Google Places lookup, 24 Nov 2026 (the lookout point, not the park gate)"},{"id":"bl-7","kind":"stop","badge":"7","optional":true,"offsheet":false,"name":"Queen Emma Summer Palace","sub":"Royal home museum","km":7.1,"lat":21.33606,"lng":-157.83915,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Queen%20Emma%20Summer%20Palace%2C%20Honolulu%20HI","notes":["Small royal summer home with feather capes and heirlooms; about 1 hour, shoes off inside.","Open Wed-Sat 10:00-15:00, last entry 14:30; closed Sun-Tue. On Pali Hwy toward Pali Lookout.","Visitors $16, age 65+ $12 (official site, Nov 2026). Book online; walk-ins if space allows.","Limited on-site parking. Historic house with steps: call 808-595-6291 two days ahead if needed."],"coordSource":"Google Places lookup, 24 Nov 2026"},{"id":"bl-8","kind":"stop","badge":"8","optional":true,"offsheet":false,"name":"Hoomaluhia Botanical Garden","sub":"Garden","km":12.7,"lat":21.38717,"lng":-157.80382,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Hoomaluhia%20Botanical%20Garden%2C%20Kaneohe%20HI","notes":["Free city garden under the Koolau cliffs; drive between car parks, easy walks to the lake.","Open 9:00-16:00, last car in 15:30; closed every Thursday (official site). Allow 1-2 hours.","No stopping or parking on the road for photos; parking is limited. Often wet and muddy.","One blog reports a weekend car reservation; the city page lists none. Check before a Sat or Sun."],"coordSource":"Google Places lookup, 24 Nov 2026 (garden point at 45-680 Luluku Rd)"},{"id":"bl-9","kind":"stop","badge":"9","optional":true,"offsheet":false,"name":"Kualoa Ranch","sub":"Movie sites bus tour","km":27.5,"lat":21.52078,"lng":-157.83723,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Kualoa%20Ranch%2C%2049-560%20Kamehameha%20Hwy%2C%20Kaneohe%20HI","notes":["Movie Sites and Ranch Tour: 1.5 h by bus past film locations, with minimal walking.","Adults $59.95 plus tax (official site, Nov 2026). Book ahead for 9 seats; tours sell out.","Check-in counter listed 8:00-16:30 daily. Allow about 2.5 h with check-in (estimate).","A paid add-on across the highway from Kualoa Regional Park (Mon), not the same stop."],"coordSource":"Google Places lookup, 24 Nov 2026 (check-in counter at 49-560 Kamehameha Hwy, not the valley point)"},{"id":"bl-10","kind":"stop","badge":"10","optional":true,"offsheet":false,"name":"Polynesian Cultural Center","sub":"Cultural park and show","km":42.0,"lat":21.64036,"lng":-157.92107,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Polynesian%20Cultural%20Center%2C%20Laie%20HI","notes":["Six Polynesian island villages with cultural presentations, plus an evening stage show.","Closed Sun and Wed. Villages 12:15-17:30; evening show about 19:15-20:35 (official site).","Adults from $94.95 villages only to $197.95 with luau and show (Nov 2026); book ahead for 9.","A long day: over 1 h drive each way (visitor estimate), lots of walking, night drive back."],"coordSource":"Google Places lookup, 24 Nov 2026"},{"id":"bl-11","kind":"stop","badge":"11","optional":true,"offsheet":false,"name":"Ko Olina Lagoon 4 (Ulua Lagoon)","sub":"Calm swimming lagoon","km":31.8,"lat":21.32832,"lng":-158.12202,"datum":"wgs84","mapsUrl":"https://www.google.com/maps/search/?api=1&query=Ko%20Olina%20Lagoon%204%2C%20Ulua%20Lagoon%2C%20Kapolei%20HI","notes":["Rock-sheltered lagoon with gentle water, a paved shore path, restrooms and showers.","A calm-water swim for a day when north shore surf is up. No lifeguards (resort page).","Free public car park, sunrise to sunset, first come; about 100 stalls (blog), come before 9:00.","No tents, big shades, alcohol or ball games on the sand (resort rules). Allow 2-3 hours."],"coordSource":"Google Places lookup, 24 Nov 2026"}]}]}</script>
 <script>
 /* Projection and distance maths. Every coordinate on this page is WGS-84 (the datum of OpenStreetMap and of phone GPS).
    Plain script: defines Geo. Also loadable from node for unit tests. */
@@ -394,7 +438,6 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     plane: function () { return svg('0 0 20 20', ['M10 1.2c.9 0 1.5 1 1.5 2.4v4l6.7 4v1.9l-6.7-2v3.6l2 1.5v1.5L10 17.3l-3.5.8v-1.5l2-1.5v-3.6l-6.7 2v-1.9l6.7-4v-4c0-1.4.6-2.4 1.5-2.4z']); },
     ne: function () { return svg('0 0 10 10', ['M1 9 9 1M3 1h6v6']); },
     chev: function () { return svg('0 0 12 12', ['M4 1.5 8.5 6 4 10.5']); },
-    chevL: function () { return svg('0 0 12 12', ['M8 1.5 3.5 6 8 10.5']); },
     x: function () { return svg('0 0 16 16', ['M2 2l12 12M14 2 2 14']); },
     bulb: function () { return svg('0 0 16 16', ['M5.6 10.6C4.3 9.8 3.5 8.5 3.5 7a4.5 4.5 0 0 1 9 0c0 1.5-.8 2.8-2.1 3.6v1.1H5.6zM6 13.6h4M6.8 15.3h2.4']); },
     tri: function () { return svg('0 0 12 12', ['M11.5 6 .8 1.6 3.8 6 .8 10.4z']); }
@@ -423,17 +466,33 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
   /* ---------- data ---------- */
   /* Inks, the same values as --lava, --ink and --accent in the stylesheet. */
   var LAVA = '#1f1a17', OCEAN = '#093842', ACCENT = '#bc3125';
+  /* A day flagged "backlog" is the list of ideas not placed in any day yet. It has no date; in every other way it is one more day. */
   var DAYS = (DATA.days || []).map(function (d, i) {
-    return { i: i, date: String(d.date || ''), label: String(d.label || d.date || ''), title: typeof d.title === 'string' ? d.title.trim() : '',
-      color: safeColor(d.color), hotelId: d.hotelId || null, items: (d.items || []).slice() };
+    var backlog = !!d.backlog, date = backlog ? '' : String(d.date || '');
+    return { i: i, backlog: backlog, date: date, key: backlog ? 'backlog' : date, label: String(d.label || date || (backlog ? 'Backlog' : '')), title: typeof d.title === 'string' ? d.title.trim() : '',
+      color: safeColor(d.color), hotelId: d.hotelId || null, items: (Array.isArray(d.items) ? d.items : []).filter(function (x) { return x && typeof x === 'object'; }) };
   });
   var HOTELS = (DATA.hotels || []).slice();
   function safeColor(c) { return /^#[0-9a-fA-F]{3,8}$/.test(String(c || '')) ? c : LAVA; }
-  function shortLabel(d) { var p = d.label.split(/\s+/); return p.length >= 3 ? p.slice(1).join(' ') : d.label; }
+  /* Layers: four switches over the places, planned or optional, food or things to do. Hotel, airport and logistics (car pickup,
+     car return and the like) are in no layer and always show. Every page load starts with all four on; nothing is stored. */
+  var LAYERS = [
+    { id: 'food', name: 'Food', hint: 'Restaurants, cafes, desserts, drinks' },
+    { id: 'todo', name: 'Todo', hint: 'Sights, activities, photo stops' },
+    { id: 'optfood', name: 'Optional Food', hint: 'Places to eat, if time allows' },
+    { id: 'opttodo', name: 'Optional Todo', hint: 'Things to do, if time allows' }
+  ], LON = { food: true, todo: true, optfood: true, opttodo: true };
+  function layerOf(kind, optional) { return kind === 'meal' ? (optional ? 'optfood' : 'food') : kind === 'stop' ? (optional ? 'opttodo' : 'todo') : null; }
+  function layerOn(id) { return !id || !!LON[id]; }
   function hasLL(o) { return o && isNum(o.lat) && isNum(o.lng) && Math.abs(o.lat) <= 85 && Math.abs(o.lng) <= 180; }
   function safeUrl(u) { return typeof u === 'string' && /^https?:\/\//i.test(u) ? u : null; }
   function cleanNotes(v) { return Array.isArray(v) ? v.filter(function (s) { return typeof s === 'string' && s.trim(); }) : []; }
-  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  /* A dated day's chip reads weekday over day of month, worked out from the ISO date alone (no time zone involved). */
+  function chipParts(d) {
+    var m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(d.date), t = m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : null;
+    return t && !isNaN(t.getTime()) ? { dw: WEEKDAYS[t.getUTCDay()], dn: String(+m[3]) } : null;
+  }
   function shortDate(iso) { var m = /^\d{4}-(\d\d)-(\d\d)$/.exec(String(iso || '')); return m && MONTHS[+m[1] - 1] ? MONTHS[+m[1] - 1] + ' ' + (+m[2]) : null; }
   function stayText(h) { var a = shortDate(h.from), b = shortDate(h.to); return a && b ? a + ' to ' + b : null; }
   /* Outbound links, both to Google Maps and both opened in a new tab (on a phone they hand over to the Google Maps app).
@@ -490,7 +549,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
         if (it.id == null || ITEMS[it.id]) it.id = 'x' + d.i + '_' + n;
         it.id = String(it.id); it.name = String(it.name == null ? '' : it.name); it.badge = String(it.badge == null ? '' : it.badge);
         it.notes = cleanNotes(it.notes);
-        ITEMS[it.id] = { item: it, day: d };
+        ITEMS[it.id] = { item: it, day: d, layer: layerOf(it.kind || 'stop', !!it.optional) };
       });
     });
     HOTELS.forEach(function (h) {
@@ -503,9 +562,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
       var withLL = rows.filter(function (r) { return hasLL(r.item); })[0];
       var src = hasLL(h) ? h : (withLL ? withLL.item : null);
       if (!src) return;
-      var color = first ? first.color : LAVA;
-      /* rows: the hotel's legend row on each day that has one, by day index */
-      var p = { id: 'hotel:' + h.id, hotel: h, rows: {}, day: first ? first.i : -1, color: color, baseColor: color, kind: 'hotel', badge: 'H', optional: false, offsheet: false,
+      /* rows: the hotel's legend row on each day that has one, by day index. Its ink is set by the view (see syncVisibility). */
+      var p = { id: 'hotel:' + h.id, hotel: h, rows: {}, day: first ? first.i : -1, color: OCEAN, layer: null, kind: 'hotel', badge: 'H', optional: false, offsheet: false,
         name: name, lat: src.lat, lng: src.lng, km: null, sub: stayText(h) || (rows[0] && rows[0].item.sub) || null, label: 'Hotel', notes: cleanNotes(h.notes),
         href: mapsHref(name, h.mapsUrl || (rows[0] && rows[0].item.mapsUrl)), dir: dirHref(src) };
       rows.forEach(function (r) { ITEM_PIN[r.item.id] = p; if (!p.rows[r.day.i]) p.rows[r.day.i] = r.item; });
@@ -513,10 +571,12 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     });
     DAYS.forEach(function (d) {
       d.hotelPin = d.hotelId && hotelPins[d.hotelId] || null;
+      d.items.forEach(function (it) { if (!d.hotelPin && ITEM_PIN[it.id]) d.hotelPin = ITEM_PIN[it.id]; });
       d.items.forEach(function (it) {
-        if (ITEM_PIN[it.id]) { if (!d.hotelPin) d.hotelPin = ITEM_PIN[it.id]; return; }
-        if (!hasLL(it)) return;
-        var p = { id: 'item:' + it.id, item: it, day: d.i, color: d.color, kind: it.kind || 'stop', badge: it.badge, optional: !!it.optional, offsheet: !!it.offsheet,
+        if (ITEM_PIN[it.id] || !hasLL(it)) return;
+        /* km is the straight line from the day's hotel; an item that comes without one gets it worked out here */
+        if (!isNum(it.km) && d.hotelPin) it.km = Geo.haversine(d.hotelPin.lat, d.hotelPin.lng, it.lat, it.lng) / 1000;
+        var p = { id: 'item:' + it.id, item: it, day: d.i, color: d.color, layer: ITEMS[it.id].layer, kind: it.kind || 'stop', badge: it.badge, optional: !!it.optional, offsheet: !!it.offsheet,
           name: it.name, lat: it.lat, lng: it.lng, km: it.km, sub: it.sub || null, label: d.label, notes: it.notes,
           approx: !!it.approxPos, approxNote: it.approxPos ? String(it.approxNote || 'Position approximate.') : null,
           href: mapsHref(it.name, it.mapsUrl), dir: dirHref(it) };
@@ -527,8 +587,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
   })();
 
   /* ---------- elements ---------- */
-  var mapEl = $('map'), surface = $('surface'), tilesEl = $('tiles'), pane = $('pane'), pinsEl = $('pins'), ldsEl = $('lds'), edgesEl = $('edges'),
-    cardEl = $('card'), toastEl = $('toast'), warnEl = $('tilewarn'), tagEl = $('tag'), mctl = $('mctl');
+  var mapEl = $('map'), stageEl = $('stage'), surface = $('surface'), tilesEl = $('tiles'), pane = $('pane'), pinsEl = $('pins'), ldsEl = $('lds'), edgesEl = $('edges'),
+    cardEl = $('card'), toastEl = $('toast'), warnEl = $('tilewarn'), mctl = $('mctl'), chipsEl = $('chips'), chipsWrap = $('chipsw'), titleEl = $('dtitle');
 
   /* ---------- view maths ---------- */
   function scaleAt(z) { return 256 * Math.pow(2, z); }
@@ -560,7 +620,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
   }
 
   /* ---------- pins: layout, declutter, leaders ---------- */
+  /* A pin shows when its layer is on and it belongs to the view: every pin in All, otherwise the chosen day's own and that day's hotel. */
   function pinVisible(p) {
+    if (!layerOn(p.layer)) return false;
     if (S.mode === 'all') return true;
     var d = DAYS[S.day];
     if (!d) return false;
@@ -587,15 +649,15 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     p.color = color; p.keyEl.style.setProperty('--dc', color); p.ld.style.setProperty('--dc', color);
   }
   function syncVisibility() {
-    var d = DAYS[S.day];
+    var d = S.mode === 'all' ? null : DAYS[S.day];
     PINS.forEach(function (p) {
-      var v = pinVisible(p), mine = p.hotel ? !!d && d.hotelPin === p : p.day === S.day;
+      var v = pinVisible(p), mine = !!d && (p.hotel ? d.hotelPin === p : p.day === d.i);
       if (v !== p.vis) { p.vis = v; p.ox = 0; p.oy = 0; }
       p.el.hidden = !v; p.ld.hidden = !v;
       p.el.classList.toggle('today', mine);
       p.el.tabIndex = v ? 0 : -1;
-      /* a hotel pin takes the ink of the day being shown, on every day of the stay */
-      if (p.hotel) inkPin(p, mine ? d.color : p.baseColor);
+      /* a hotel pin takes the ink of the day being shown, on every day of the stay; in All it is in the All chip's ink */
+      if (p.hotel) inkPin(p, mine ? d.color : OCEAN);
     });
     pinsEl.classList.toggle('small', S.mode === 'all');
     if (S.sel && !PIN_BY_ID[S.sel].vis) closeCard();
@@ -782,7 +844,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     zoomAbout(to, S.w / 2, S.h / 2);
   }
   /* r: the controls take 50 px; a pin at the right edge of the fit, with its selection ring, must stay clear of them */
-  var PAD = { l: 30, t: 44, r: 74, b: 46 };
+  var PAD = { l: 30, t: 34, r: 74, b: 46 };
   function fit(list, opts) {
     var pts = list.filter(function (p) { return isNum(p.mx); });
     if (!pts.length || !S.w) return false;
@@ -806,7 +868,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
       if (l > r) break;
       var k = Math.min(1, aw / Math.max(1, r - l), ah / Math.max(1, b - t));
       s = scaleAt(z);
-      /* centre the pins in the padded area; if they are too wide or tall for it, keep the controls (right) and the day tag (top) clear */
+      /* centre the pins in the padded area; if they are too wide or tall for it, keep the controls (right) and the top edge clear */
       cx += (r - l > aw ? r - (S.w - PAD.r) : (l + r) / 2 - (PAD.l + aw / 2)) / s;
       cy += (b - t > ah ? t - PAD.t : (t + b) / 2 - (PAD.t + ah / 2)) / s;
       if (k > 0.995 || z <= zFloor) break;
@@ -816,14 +878,13 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     if (opts && opts.instant) { stopAnim(); S.cx = cx; S.cy = cy; S.zoom = z; invalidate(true); } else flyTo(cx, cy, z);
     return true;
   }
-  /* Oahu and its near shore. "All of Oahu" fits every pin inside this box, flagged offsheet or not; "This day" leaves offsheet pins to the edge chips. */
+  /* Oahu and its near shore. All fits every pin inside this box, flagged offsheet or not; a day leaves offsheet pins to the edge chips.
+     Only pins that are showing count, so a fit follows the layers; a view with nothing to show falls back to every pin. */
   function onOahu(p) { return p.lat > 21.2 && p.lat < 21.75 && p.lng > -158.33 && p.lng < -157.6; }
   function refit(instant) {
-    var o = { instant: instant }, d = DAYS[S.day], near = function (p) { return !p.offsheet; };
-    if (S.mode === 'all') { if (!fit(PINS.filter(function (p) { return !p.offsheet || onOahu(p); }), o)) fit(PINS, o); return; }
-    var mine = PINS.filter(function (p) { return d && (p.hotel ? d.hotelPin === p : p.day === S.day); });
-    if (fit(mine.filter(near), o)) return;
-    if (fit(mine, o)) return;
+    var o = { instant: instant }, all = S.mode === 'all', shown = PINS.filter(pinVisible), near = function (p) { return !p.offsheet; };
+    if (fit(shown.filter(all ? function (p) { return !p.offsheet || onOahu(p); } : near), o)) return;
+    if (fit(shown, o)) return;
     if (!fit(PINS.filter(near), o)) fit(PINS, o);
   }
 
@@ -998,7 +1059,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     if (S.sel && S.sel !== p.id) closeCard();
     S.sel = p.id;
     p.el.classList.add('sel');
-    fillCard(p, p.hotel ? opts.item || p.rows[S.day] || null : null);
+    fillCard(p, p.hotel ? opts.item || (S.mode === 'day' && p.rows[S.day]) || null : null);
     var ch = cardEl.offsetHeight + 8, free = Math.max(80, S.h - ch);
     if (opts.center) {
       userMoved();
@@ -1040,8 +1101,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
       targets.push({ key: key, name: p.name, mx: p.mx, my: p.my });
     });
     if (G.fix && G.state !== 'off' && G.state !== 'locating') targets.push({ key: 'gps', name: 'You', mx: G.fix.mx, my: G.fix.my, gps: true, cls: 'you' });
-    var live = {}, placed = [], mr = mapEl.getBoundingClientRect();
-    [mctl, tagEl, $('scale')].forEach(function (o) { var r = o.getBoundingClientRect(); if (r.width) placed.push({ l: r.left - mr.left - 4, t: r.top - mr.top - 4, r: r.right - mr.left + 4, b: r.bottom - mr.top + 4 }); });
+    var live = {}, placed = [], mr = stageEl.getBoundingClientRect();
+    [mctl, $('scale')].forEach(function (o) { var r = o.getBoundingClientRect(); if (r.width) placed.push({ l: r.left - mr.left - 4, t: r.top - mr.top - 4, r: r.right - mr.left + 4, b: r.bottom - mr.top + 4 }); });
     if (!cardEl.hidden) { var cr = cardEl.getBoundingClientRect(); placed.push({ l: 0, t: cr.top - mr.top - 4, r: S.w, b: S.h }); }
     var cLat = Geo.latOf(S.cy), cLng = Geo.lngOf(S.cx), cx = S.w / 2, cy = S.h / 2, pinPts = [];
     PINS.forEach(function (p) { if (!p.vis) return; var q = pinScreen(p); if (q[0] > -20 && q[0] < S.w + 20 && q[1] > -20 && q[1] < S.h + 20) pinPts.push(q); });
@@ -1168,29 +1229,105 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
   }
   setGpsState('off');
 
-  /* ---------- controls ---------- */
-  function navLabel(btn, d, dir) {
-    btn.textContent = '';
-    if (dir < 0) btn.appendChild(ICON.chevL());
-    btn.appendChild(el('span', null, d ? shortLabel(d) : '—'));
-    if (dir > 0) btn.appendChild(ICON.chev());
-    btn.disabled = !d;
-    btn.setAttribute('aria-label', d ? (dir < 0 ? 'Previous day, ' : 'Next day, ') + d.label : (dir < 0 ? 'No earlier day' : 'No later day'));
+  /* ---------- day strip ---------- */
+  /* One chip per view: All, each day, Backlog. The strip is part of the map frame, so it is there in full screen too. */
+  var CHIPS = [];
+  function buildStrip() {
+    function add(day) {
+      var b = el('button', 'chip'), parts = day ? chipParts(day) : null, c = { el: b, day: day || null };
+      b.type = 'button'; b.id = 'chip-' + (day ? day.i : 'all'); b.dataset.view = day ? day.key : 'all';
+      b.setAttribute('role', 'tab'); b.setAttribute('aria-controls', 'stage'); b.setAttribute('aria-selected', 'false'); b.tabIndex = -1;
+      b.setAttribute('aria-label', day ? day.label + (day.title ? ', ' + day.title : '') : 'All of Oahu, every day');
+      b.style.setProperty('--dc', day ? day.color : OCEAN);
+      if (parts) { b.appendChild(el('span', 'dw', parts.dw)); b.appendChild(el('span', 'dn', parts.dn)); }
+      else { if (day) b.classList.add('wide'); b.appendChild(el('span', 'one', day ? day.label : 'All')); }
+      b.addEventListener('click', function () { pickChip(c); });
+      chipsEl.appendChild(b); CHIPS.push(c);
+    }
+    add(null); DAYS.forEach(add);
   }
-  function syncControls() {
-    var d = DAYS[S.day], all = S.mode === 'all';
-    navLabel($('prevDay'), DAYS[S.day - 1], -1); navLabel($('nextDay'), DAYS[S.day + 1], 1);
-    var cur = $('curDay');
-    cur.textContent = d ? d.label : ''; cur.style.setProperty('--dc', d ? d.color : LAVA);
-    $('modeDay').setAttribute('aria-pressed', String(!all));
-    $('modeAll').setAttribute('aria-pressed', String(all));
-    /* the tag on the map: the day and its title, or the whole-island view */
-    tagEl.textContent = '';
-    tagEl.appendChild(el('b', null, all ? 'All of Oahu' : (d ? d.label : '')));
-    if (!all && d && d.title) { tagEl.appendChild(document.createTextNode(' ')); tagEl.appendChild(el('span', 'tt', d.title)); }
-    tagEl.style.setProperty('--dc', all || !d ? LAVA : d.color);
-    document.documentElement.dataset.day = d ? d.date : '';
+  function curChip() { return CHIPS[S.mode === 'all' ? 0 : S.day + 1]; }
+  function pickChip(c) { if (c.day) setDay(c.day.i, 'day'); else setMode('all'); }
+  /* fade the edge of the strip that has more chips beyond it */
+  function stripFade() {
+    var max = chipsEl.scrollWidth - chipsEl.clientWidth, x = chipsEl.scrollLeft;
+    chipsWrap.classList.toggle('more-l', x > 3);
+    chipsWrap.classList.toggle('more-r', x < max - 3);
+  }
+  /* Bring a chip into view, with a little of its neighbours. how: 'centre' on load, 'jump' after a resize; otherwise a smooth scroll. Only the strip moves, never the page. */
+  function revealChip(c, how) {
+    var w = chipsEl.clientWidth, max = chipsEl.scrollWidth - w;
+    if (!c || max <= 0) { stripFade(); return; }
+    var l = c.el.offsetLeft, r = l + c.el.offsetWidth, x = chipsEl.scrollLeft, peek = Math.min(40, (w - c.el.offsetWidth) / 2);
+    if (how === 'centre') x = l - (w - c.el.offsetWidth) / 2;
+    else if (l - peek < x) x = l - peek;
+    else if (r + peek > x + w) x = r + peek - w;
+    x = Math.round(clamp(x, 0, max));
+    if (Math.abs(x - chipsEl.scrollLeft) >= 1) {
+      if (how || REDUCED || !chipsEl.scrollTo) chipsEl.scrollLeft = x; else chipsEl.scrollTo({ left: x, behavior: 'smooth' });
+    }
+    stripFade();
+  }
+  chipsEl.addEventListener('scroll', stripFade, { passive: true });
+  /* Touch scrolls the strip natively. A mouse gets the wheel and a drag. The strip is outside the map surface, so none of this pans or zooms the map. */
+  chipsEl.addEventListener('wheel', function (e) {
+    var max = chipsEl.scrollWidth - chipsEl.clientWidth;
+    if (max <= 0 || e.ctrlKey) return;
+    var d = (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * (e.deltaMode === 1 ? 18 : 1), x = chipsEl.scrollLeft;
+    if (!d || (d < 0 && x <= 0) || (d > 0 && x >= max - 1)) return; /* at an end: the page may scroll */
+    e.preventDefault();
+    chipsEl.scrollLeft = x + d;
+  }, { passive: false });
+  var sdrag = null, sdragged = false;
+  chipsEl.addEventListener('pointerdown', function (e) {
+    if (e.pointerType !== 'mouse' || e.button !== 0 || chipsEl.scrollWidth <= chipsEl.clientWidth) return;
+    sdrag = { id: e.pointerId, x: e.clientX, left: chipsEl.scrollLeft, moved: false };
+  });
+  chipsEl.addEventListener('pointermove', function (e) {
+    if (!sdrag || e.pointerId !== sdrag.id) return;
+    if (!sdrag.moved) {
+      if (Math.abs(e.clientX - sdrag.x) < 6) return;
+      sdrag.moved = true; chipsEl.classList.add('drag');
+      try { chipsEl.setPointerCapture(e.pointerId); } catch (err) {}
+    }
+    chipsEl.scrollLeft = sdrag.left - (e.clientX - sdrag.x);
+  });
+  function stripDragEnd(e) {
+    if (!sdrag || e.pointerId !== sdrag.id) return;
+    /* the click that ends a drag must not pick the chip under it */
+    if (sdrag.moved) { sdragged = true; setTimeout(function () { sdragged = false; }, 0); }
+    sdrag = null; chipsEl.classList.remove('drag');
+  }
+  chipsEl.addEventListener('pointerup', stripDragEnd);
+  chipsEl.addEventListener('pointercancel', stripDragEnd);
+  chipsEl.addEventListener('click', function (e) { if (sdragged) { e.stopPropagation(); e.preventDefault(); } }, true);
+  /* tabs: left and right arrows, Home and End move the choice (and the focus with it) */
+  chipsEl.addEventListener('keydown', function (e) {
+    var n = CHIPS.length, i = CHIPS.indexOf(curChip()), to = -1;
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key === 'ArrowRight') to = (i + 1) % n; else if (e.key === 'ArrowLeft') to = (i + n - 1) % n; else if (e.key === 'Home') to = 0; else if (e.key === 'End') to = n - 1;
+    if (to < 0) return;
+    e.preventDefault();
+    pickChip(CHIPS[to]);
+    try { CHIPS[to].el.focus({ preventScroll: true }); } catch (err) { CHIPS[to].el.focus(); }
+  });
+  if (window.ResizeObserver) new ResizeObserver(function () { revealChip(curChip(), 'jump'); }).observe(chipsEl);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { revealChip(curChip(), 'jump'); });
+
+  var HAS_BACKLOG = DAYS.some(function (d) { return d.backlog; });
+  function syncControls(how) {
+    var all = S.mode === 'all', d = DAYS[S.day], cur = curChip();
+    CHIPS.forEach(function (c) { var on = c === cur; c.el.setAttribute('aria-selected', String(on)); c.el.tabIndex = on ? 0 : -1; });
+    /* the bar under the chips: the day and its title, or the whole-island view, on the ink of the chosen chip */
+    var t = all ? (HAS_BACKLOG ? 'every day and the backlog' : 'every day') : (d ? d.title : '');
+    titleEl.textContent = '';
+    titleEl.appendChild(el('b', null, all ? 'All of Oahu' : (d ? d.label : '')));
+    if (t) titleEl.appendChild(el('span', null, t));
+    titleEl.style.setProperty('--dc', all || !d ? OCEAN : d.color);
+    document.documentElement.dataset.day = d ? d.key : '';
     document.documentElement.dataset.mode = S.mode;
+    revealChip(cur, how);
+    syncLayerUI();
   }
   function setDay(i, mode, opts) {
     if (i < 0 || i >= DAYS.length) return;
@@ -1199,21 +1336,83 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     if (!opts || !opts.nofit) refit(opts && opts.instant);
   }
   function setMode(m) { S.mode = m; closeCard(); syncControls(); syncVisibility(); syncLegend(true); refit(); }
-  $('prevDay').addEventListener('click', function () { setDay(S.day - 1, 'day'); });
-  $('nextDay').addEventListener('click', function () { setDay(S.day + 1, 'day'); });
-  $('modeDay').addEventListener('click', function () { setMode('day'); });
-  $('modeAll').addEventListener('click', function () { setMode('all'); });
+
+  /* ---------- layers panel ---------- */
+  var layBtn = $('lay'), layPanel = $('layPanel'), layN = $('layN'), LROWS = {};
+  function buildLayers() {
+    var host = $('layRows');
+    LAYERS.forEach(function (L) {
+      var b = el('button', 'lrow'), sw = el('span', 'sw'), cnt = el('span', 'lc'), hint = el('span', 'lh', L.hint);
+      b.type = 'button'; b.dataset.layer = L.id; b.setAttribute('role', 'switch');
+      sw.setAttribute('aria-hidden', 'true'); hint.id = 'lh-' + L.id; b.setAttribute('aria-describedby', hint.id);
+      b.appendChild(sw); b.appendChild(el('span', 'ln', L.name)); b.appendChild(cnt); b.appendChild(hint);
+      b.addEventListener('click', function () { toggleLayer(L.id); });
+      host.appendChild(b); LROWS[L.id] = { el: b, cnt: cnt };
+    });
+  }
+  /* switches, their counts (places of each layer in the view being shown) and the button's "3/4" when a layer is off */
+  function syncLayerUI() {
+    var n = {}, on = 0;
+    LAYERS.forEach(function (L) { n[L.id] = 0; if (LON[L.id]) on++; });
+    DAYS.forEach(function (d) {
+      if (S.mode !== 'all' && d.i !== S.day) return;
+      d.items.forEach(function (it) { var l = ITEMS[it.id].layer; if (l) n[l]++; });
+    });
+    LAYERS.forEach(function (L) {
+      var r = LROWS[L.id];
+      if (!r) return;
+      r.el.setAttribute('aria-checked', String(!!LON[L.id]));
+      r.cnt.textContent = n[L.id];
+      r.el.setAttribute('aria-label', L.name + ', ' + n[L.id] + (n[L.id] === 1 ? ' place' : ' places') + ' in this view');
+    });
+    var filt = on < LAYERS.length, label = filt ? 'Layers, ' + on + ' of ' + LAYERS.length + ' shown' : 'Layers';
+    layBtn.classList.toggle('filt', filt);
+    layN.textContent = on + '/' + LAYERS.length; layN.hidden = !filt;
+    layBtn.setAttribute('aria-label', label); layBtn.title = label;
+  }
+  /* m: margin in px, so that the whole badge counts and not just its centre */
+  function onScreen(p, m) { var q = pinScreen(p); m = m || 0; return q[0] >= m && q[0] <= S.w - m && q[1] >= m && q[1] <= S.h - m; }
+  function toggleLayer(id) {
+    LON[id] = !LON[id];
+    syncLayerUI(); syncVisibility(); syncRows();
+    /* keep the view where it is; it only moves when none of the pins still showing is inside it */
+    var shown = PINS.filter(function (p) { return p.vis; });
+    if (shown.length && !shown.some(function (p) { return onScreen(p); })) refit();
+  }
+  function showLayers(on) { layPanel.hidden = !on; layBtn.setAttribute('aria-expanded', String(on)); }
+  function focusQuiet(e) { try { e.focus({ preventScroll: true }); } catch (err) { e.focus(); } }
+  layBtn.addEventListener('click', function (e) {
+    var on = layPanel.hidden;
+    showLayers(on);
+    /* opened from the keyboard: go straight to the first switch */
+    if (on && e.detail === 0) focusQuiet(LROWS[LAYERS[0].id].el);
+  });
+  $('layClose').addEventListener('click', function () { showLayers(false); focusQuiet(layBtn); });
+  /* a tap anywhere outside the panel closes it (and still does whatever it would have done) */
+  document.addEventListener('pointerdown', function (e) {
+    if (!layPanel.hidden && !layPanel.contains(e.target) && !layBtn.contains(e.target)) showLayers(false);
+  }, true);
+
+  /* ---------- map buttons ---------- */
   $('zin').addEventListener('click', function () { stepZoom(1); });
   $('zout').addEventListener('click', function () { stepZoom(-1); });
   function setFull(on) {
+    /* Full screen keeps the view. The one exception: on a short landscape screen the strip leaves less map than the page had, and no pin that was in view may drop out. */
+    var seen = on ? PINS.filter(function (p) { return p.vis && onScreen(p, 14); }) : [];
     mapEl.classList.toggle('full', on);
     document.documentElement.classList.toggle('mapfull', on);
     $('exp').setAttribute('aria-label', on ? 'Close full screen map' : 'Expand map to full screen');
     $('exp').title = on ? 'Close' : 'Full screen';
     measure();
+    if (seen.some(function (p) { return !onScreen(p, 14); })) refit();
   }
   $('exp').addEventListener('click', function () { setFull(!mapEl.classList.contains('full')); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { if (S.sel) closeCard(); else if (mapEl.classList.contains('full')) setFull(false); } });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (!layPanel.hidden) { showLayers(false); focusQuiet(layBtn); }
+    else if (S.sel) closeCard();
+    else if (mapEl.classList.contains('full')) setFull(false);
+  });
 
   /* ---------- legend ---------- */
   var LG = [];
@@ -1224,20 +1423,22 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
   function buildLegend() {
     var host = $('lgdays');
     DAYS.forEach(function (d) {
-      var sec = el('section', 'lgday'); sec.dataset.date = d.date; sec.style.setProperty('--dc', d.color);
+      var sec = el('section', 'lgday'); sec.dataset.date = d.date; sec.dataset.day = d.key; sec.style.setProperty('--dc', d.color);
       var band = el('div', 'dayband'), t = el('button', 'band-t'), bt = el('span', 'bt'); t.type = 'button';
       bt.appendChild(el('span', 'bl', d.label));
       if (d.title) bt.appendChild(el('span', 'ttl', d.title));
-      bt.appendChild(el('span', 'cnt', d.items.length + (d.items.length === 1 ? ' place' : ' places')));
+      var cnt = el('span', 'cnt'); bt.appendChild(cnt);
       t.appendChild(bt);
       t.appendChild((function () { var c = ICON.chev(); c.setAttribute('class', 'chev'); return c; })());
-      var open = el('button', 'btn open-day'); open.type = 'button'; open.appendChild(el('span', null, 'Open day')); open.appendChild(ICON.chev());
+      var open = el('button', 'btn open-day'); open.type = 'button'; open.appendChild(el('span', null, d.backlog ? 'Open' : 'Open day')); open.appendChild(ICON.chev());
       open.setAttribute('aria-label', 'Open ' + d.label + ' on the map');
       band.appendChild(t); band.appendChild(open); sec.appendChild(band);
+      if (d.backlog) sec.appendChild(el('p', 'lgnote', 'Ideas not in any day yet.'));
       var ol = el('ol'); ol.id = 'lg-' + d.i; t.setAttribute('aria-controls', ol.id);
-      d.items.forEach(function (it) { ol.appendChild(buildRow(d, it)); });
-      sec.appendChild(ol); host.appendChild(sec);
-      var rec = { day: d, el: sec, t: t, user: null };
+      var rows = d.items.map(function (it) { var li = buildRow(d, it); ol.appendChild(li); return { el: li, layer: ITEMS[it.id].layer }; });
+      var empty = el('p', 'lgempty', 'Nothing in the selected layers'); empty.hidden = true;
+      sec.appendChild(ol); sec.appendChild(empty); host.appendChild(sec);
+      var rec = { day: d, el: sec, t: t, user: null, rows: rows, cnt: cnt, empty: empty };
       t.addEventListener('click', function () { rec.user = !sec.classList.contains('open'); applyOpen(rec); });
       open.addEventListener('click', function () { setDay(d.i, 'day'); scrollToMap(); });
       LG.push(rec);
@@ -1273,6 +1474,20 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
       scrollToMap();
     });
     return li;
+  }
+  /* Rows follow the layers: a row whose layer is off is hidden, the band's count says how many are left, and a day left with none says so. */
+  function syncRows() {
+    LG.forEach(function (rec) {
+      var all = rec.rows.length, n = 0, last = null;
+      rec.rows.forEach(function (r) {
+        var on = layerOn(r.layer);
+        r.el.hidden = !on; r.el.classList.remove('last');
+        if (on) { n++; last = r.el; }
+      });
+      if (last) last.classList.add('last');
+      rec.cnt.textContent = (n < all ? n + ' of ' + all : all) + (all === 1 ? ' place' : ' places');
+      rec.empty.hidden = !(all > 0 && n === 0);
+    });
   }
   function applyOpen(rec) {
     var open = rec.user != null ? rec.user : (S.mode === 'all' || rec.day.i === S.day);
@@ -1315,13 +1530,17 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
   }
   /* Opens on today's day; before the trip on its first day, between listed days on the next one, after the trip on its last. */
   (function start() {
-    var today = todayHawaii(), di = DAYS.length - 1;
-    for (var i = 0; i < DAYS.length; i++) if (DAYS[i].date >= today) { di = i; break; }
-    S.day = Math.max(0, di); S.mode = 'day';
+    var today = todayHawaii(), di = -1, last = -1;
+    DAYS.forEach(function (d) {
+      if (d.backlog || !d.date) return; /* the backlog has no date and is never where the page opens */
+      last = d.i;
+      if (di < 0 && d.date >= today) di = d.i;
+    });
+    S.day = Math.max(0, di < 0 ? last : di); S.mode = 'day';
     var checked = (DATA.source && DATA.source.checkedNote) || '';
     $('footChecked').textContent = checked; $('footChecked').hidden = !checked;
-    buildPinEls(); buildLegend();
-    syncControls(); syncVisibility(); syncLegend(true);
+    buildPinEls(); buildStrip(); buildLayers(); buildLegend();
+    syncControls('centre'); syncVisibility(); syncRows(); syncLegend(true);
     measure();
   })();
 
@@ -1329,10 +1548,10 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
   window.__map = {
     state: function () {
       return { cx: S.cx, cy: S.cy, lat: Geo.latOf(S.cy), lng: Geo.lngOf(S.cx), zoom: S.zoom, w: S.w, h: S.h, source: SRC.id, mode: S.mode,
-        day: DAYS[S.day] ? DAYS[S.day].date : null, sel: S.sel, gps: G.state, tiles: tileCount(), levels: Object.keys(levels), busy: !!(anim || inertia || raf), dead: stat.dead, tileOk: stat.ok, tileFail: stat.fail };
+        day: DAYS[S.day] ? DAYS[S.day].key : null, layers: JSON.parse(JSON.stringify(LON)), sel: S.sel, gps: G.state, tiles: tileCount(), levels: Object.keys(levels), busy: !!(anim || inertia || raf), dead: stat.dead, tileOk: stat.ok, tileFail: stat.fail };
     },
     setView: function (lat, lng, zoom) { stopAnim(); S.cx = Geo.mx(lng); S.cy = Geo.my(lat); if (zoom != null) S.zoom = zoom; invalidate(true); },
-    pins: function () { return PINS.map(function (p) { return { id: p.id, name: p.name, lat: p.lat, lng: p.lng, vis: p.vis, day: p.day, color: p.color, offsheet: p.offsheet, ox: p.ox, oy: p.oy }; }); }
+    pins: function () { return PINS.map(function (p) { return { id: p.id, name: p.name, lat: p.lat, lng: p.lng, vis: p.vis, day: p.day, layer: p.layer, color: p.color, offsheet: p.offsheet, ox: p.ox, oy: p.oy }; }); }
   };
 })();
 

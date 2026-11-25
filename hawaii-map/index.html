@@ -276,8 +276,8 @@ a.film-hd:focus-visible .t { color: var(--accent); }
 .map.full .thumb.noimg .lb { padding: 0; }
 .map.full .card.has-film .sc-scroll { max-height: calc(var(--th) + 16px + min(14vh, 122px)); }
 @media (min-width: 700px) {
-  /* a wide screen: the card keeps to the bottom left so the map shows beside it */
-  .card { right: auto; width: min(560px, calc(100% - 16px)); }
+  /* laptop: as wide as the map, capped at a readable line length, centred (left/right 8px + auto margins) */
+  .card { max-width: 760px; margin: 0 auto; }
   .map:not(.full) .card.has-film .sc-scroll { max-height: calc(var(--th) + 14px + min(18vh, 100px)); }
   .map.full .card { --th: min(220px, 28vh); }
   .map.full .card.has-film .sc-scroll { max-height: calc(var(--th) + 16px + min(22vh, 176px)); }

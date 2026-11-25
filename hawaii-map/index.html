@@ -640,10 +640,10 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
   }
 
   /* ---------- pins: layout, declutter, leaders ---------- */
-  /* A pin shows when its layer is on and it belongs to the view: every pin in All, otherwise the chosen day's own and that day's hotel. */
+  /* A pin shows when its layer is on and it belongs to the view: in All every pin except the Backlog's, otherwise the chosen day's own and that day's hotel. */
   function pinVisible(p) {
     if (!layerOn(p.layer)) return false;
-    if (S.mode === 'all') return true;
+    if (S.mode === 'all') return p.hotel || !DAYS[p.day] || !DAYS[p.day].backlog;
     var d = DAYS[S.day];
     if (!d) return false;
     return p.hotel ? d.hotelPin === p : p.day === S.day;
@@ -1350,12 +1350,11 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
   if (window.ResizeObserver) new ResizeObserver(function () { revealChip(curChip(), 'jump'); }).observe(chipsEl);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { revealChip(curChip(), 'jump'); });
 
-  var HAS_BACKLOG = DAYS.some(function (d) { return d.backlog; });
   function syncControls(how) {
     var all = S.mode === 'all', d = DAYS[S.day], cur = curChip();
     CHIPS.forEach(function (c) { var on = c === cur; c.el.setAttribute('aria-selected', String(on)); c.el.tabIndex = on ? 0 : -1; });
     /* the bar under the chips: the day and its title, or the whole-island view, on the ink of the chosen chip */
-    var t = all ? (HAS_BACKLOG ? 'every day and the backlog' : 'every day') : (d ? d.title : '');
+    var t = all ? 'every day' : (d ? d.title : '');
     titleEl.textContent = '';
     titleEl.appendChild(el('b', null, all ? 'All of Oahu' : (d ? d.label : '')));
     if (t) titleEl.appendChild(el('span', null, t));
@@ -1391,7 +1390,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     var n = {}, on = 0;
     LAYERS.forEach(function (L) { n[L.id] = 0; if (LON[L.id]) on++; });
     DAYS.forEach(function (d) {
-      if (S.mode !== 'all' && d.i !== S.day) return;
+      if (S.mode === 'all' ? d.backlog : d.i !== S.day) return;
       d.items.forEach(function (it) { var l = ITEMS[it.id].layer; if (l) n[l]++; });
     });
     LAYERS.forEach(function (L) {

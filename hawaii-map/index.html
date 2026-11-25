@@ -227,10 +227,11 @@ svg { display: block; }
 .card .notes { flex: 0 1 auto; min-height: 42px; margin: 6px 0 0 36px; max-height: min(30vh, 176px); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; }
 .card .notes.more { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent); }
 /* Filmstrip of source posts, under the meta line. --th is the one thumb height: small inline so the card leaves the map usable,
-   large in full screen. The "Sources" spine sits in the card's badge column; the thumbs line up with the text. */
+   large in full screen. The "Sources" spine is the strip's first item, so it scrolls away with the thumbs; at the start it
+   sits in the card's badge column and the thumbs line up with the text. Its right margin plus the strip's gap make the 10px. */
 .card { --th: 88px; }
-.film { display: flex; align-items: stretch; gap: 0 10px; margin: 8px 0 0; }
-.film-hd { flex: 0 0 26px; display: flex; flex-direction: column; align-items: center; gap: 3px; height: var(--th); box-sizing: border-box; padding: 5px 0 4px; border: 1px solid var(--lava); background: var(--stock); color: var(--ink); text-decoration: none; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+.film { display: flex; align-items: stretch; margin: 8px 0 0; }
+.film-hd { flex: 0 0 auto; width: 26px; margin-right: 4px; scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; gap: 3px; height: var(--th); box-sizing: border-box; padding: 5px 0 4px; border: 1px solid var(--lava); background: var(--stock); color: var(--ink); text-decoration: none; overflow: hidden; -webkit-tap-highlight-color: transparent; }
 .film-hd svg { flex: 0 0 auto; width: 13px; height: 13px; fill: none; stroke: var(--dc, var(--ink)); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .film-hd .t { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 11px; font-weight: 700; letter-spacing: .03em; line-height: 1; text-transform: uppercase; white-space: nowrap; }
 a.film-hd:focus-visible .t { color: var(--accent); }
@@ -271,7 +272,7 @@ a.film-hd:focus-visible .t { color: var(--accent); }
 /* the legend rows get the same big prints as full screen (phone 170px, laptop 220px) */
 .row .film { --th: 170px; }
 .map.full .film, .row .film { margin-top: 10px; }
-.map.full .film-hd, .row .film-hd { flex-basis: 26px; padding-top: 8px; gap: 8px; }
+.map.full .film-hd, .row .film-hd { margin-right: 2px; padding-top: 8px; gap: 8px; }
 .map.full .film-hd svg, .row .film-hd svg { width: 16px; height: 16px; }
 .map.full .film-hd .t, .row .film-hd .t { font-size: 15px; letter-spacing: .2em; }
 .map.full .film-s, .row .film-s { gap: 8px; }
@@ -1189,16 +1190,19 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
       sc.addEventListener('scroll', more, { passive: true }); more();
     }
   }
-  /* Filmstrip: a "Sources" spine (to the research page) then one thumb per post, each opening the post in a new tab. Its label
-     sits on the thumb's bottom edge and stays when the image is missing or fails. The strip scrolls sideways (touch, trackpad, Shift+wheel, mouse drag). */
+  /* Filmstrip: div.film > div.film-w (the edge fades) > div.film-s (the scroller) holding a "Sources" spine (to the research page)
+     then one thumb per post, each opening the post in a new tab. The spine is inside the scroller, so it scrolls away with the
+     thumbs. A thumb's label sits on its bottom edge and stays when the image is missing or fails. The strip scrolls sideways
+     (touch, trackpad, Shift+wheel, mouse drag); a drag may start on the spine, and the click that ends it opens nothing. */
   function filmStrip(refs, srcUrl, color) {
     var wrap = el('div', 'film'), su = safeUrl(srcUrl), hd = el(su ? 'a' : 'div', 'film-hd');
     wrap.style.setProperty('--dc', color);
     if (su) { hd.href = su; hd.target = '_blank'; hd.rel = 'noopener noreferrer'; hd.setAttribute('aria-label', 'Sources: research notes for this place'); }
+    if (su) hd.draggable = false;
     hd.appendChild(ICON.link()); hd.appendChild(el('span', 't', 'Sources'));
-    wrap.appendChild(hd);
     var fw = el('div', 'film-w'), fs = el('div', 'film-s');
     fs.setAttribute('role', 'group'); fs.setAttribute('aria-label', 'Source posts');
+    fs.appendChild(hd);
     function fade() {
       var max = fs.scrollWidth - fs.clientWidth, x = fs.scrollLeft;
       fw.classList.toggle('more-l', x > 3); fw.classList.toggle('more-r', x < max - 3);
@@ -1234,7 +1238,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
       if (fs.scrollBy) fs.scrollBy({ left: d, behavior: 'instant' }); else fs.scrollLeft = x + d;
     }, { passive: false });
     /* A mouse or pen drags the strip sideways (touch scrolls it natively). Past 5px it is a drag: no snap while it lasts, and the
-       click that ends it is dropped here, so neither the post under the pointer opens nor the legend row picks its place. */
+       click that ends it is dropped here, so neither the post (or the spine's research page) under the pointer opens nor the
+       legend row picks its place. */
     var drag = null, dragged = false;
     fs.addEventListener('dragstart', function (e) { e.preventDefault(); });
     fs.addEventListener('pointerdown', function (e) {

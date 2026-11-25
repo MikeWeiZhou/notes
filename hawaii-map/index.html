@@ -106,14 +106,14 @@ svg { display: block; }
 .key.opt { border-width: 1.3px; color: var(--lava); background: repeating-linear-gradient(135deg, var(--dc, var(--accent)) 0 1.3px, var(--plate) 1.3px 3.6px);
   text-shadow: 0 1px 0 var(--plate), 0 -1px 0 var(--plate), 1px 0 0 var(--plate), -1px 0 0 var(--plate), 1px 1px 0 var(--plate), -1px -1px 0 var(--plate), 1px -1px 0 var(--plate), -1px 1px 0 var(--plate); }
 .key.two { font-size: 13.5px; letter-spacing: -.03em; }
-.key.plane svg { width: 16px; height: 16px; fill: currentColor; stroke: none; }
+.key.ico svg { width: 16px; height: 16px; fill: currentColor; stroke: none; }
 
 /* pins */
 .pin { position: absolute; left: 0; top: 0; width: 40px; height: 40px; margin: -20px 0 0 -20px; padding: 0; border: 0; background: none; display: grid; place-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: none; border-radius: 50%; }
 .pin .key { width: var(--ps, 26px); height: var(--ps, 26px); box-shadow: 0 0 0 2px var(--plate), 0 0 0 3px rgba(31,26,23,.28), 0 2px 5px 2px rgba(31,26,23,.3); pointer-events: none; }
 .pins.small .pin .key { width: 21px; height: 21px; font-size: 13px; border-width: 1.6px; box-shadow: 0 0 0 1.5px var(--plate), 0 1px 3px 1.5px rgba(31,26,23,.32); }
 .pins.small .pin .key.two { font-size: 11.5px; }
-.pins.small .pin .key.plane svg { width: 13px; height: 13px; }
+.pins.small .pin .key.ico svg { width: 13px; height: 13px; }
 .pins.small .pin.sel .key { box-shadow: 0 0 0 1.5px var(--plate), 0 0 0 4.5px var(--lava), 0 2px 8px 5px rgba(31,26,23,.35); }
 .pin.today { z-index: 2; }
 .pin.sel { z-index: 5; }
@@ -290,7 +290,7 @@ svg { display: block; }
 .symbols { display: flex; flex-wrap: wrap; gap: 7px 16px; margin: 0 2px; padding: 9px 2px 2px; border-top: 1.5px solid var(--lava); font-size: 16px; color: var(--ink-2); }
 .symbols span { display: inline-flex; align-items: center; gap: 6px; }
 .symbols .key { width: 20px; height: 20px; font-size: 12px; }
-.symbols .key.plane svg { width: 12px; height: 12px; }
+.symbols .key.ico svg { width: 12px; height: 12px; }
 
 .foot { margin: 12px 4px 0; font-size: 15px; color: var(--ink-2); line-height: 1.25; }
 .foot p { margin: 0 0 4px; }
@@ -446,6 +446,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
   }
   var ICON = {
     plane: function () { return svg('0 0 20 20', ['M10 1.2c.9 0 1.5 1 1.5 2.4v4l6.7 4v1.9l-6.7-2v3.6l2 1.5v1.5L10 17.3l-3.5.8v-1.5l2-1.5v-3.6l-6.7 2v-1.9l6.7-4v-4c0-1.4.6-2.4 1.5-2.4z']); },
+    bed: function () { return svg('0 0 20 20', ['M1.5 4h2.2v6.6h14.8V16h-2.2v-2.2H3.7V16H1.5z', 'M6.4 5.7a1.9 1.9 0 1 1 0 3.8 1.9 1.9 0 0 1 0-3.8z', 'M9.3 5.9h6.1a3.1 3.1 0 0 1 3.1 3.1v.9H9.3z']); },
     ne: function () { return svg('0 0 10 10', ['M1 9 9 1M3 1h6v6']); },
     chev: function () { return svg('0 0 12 12', ['M4 1.5 8.5 6 4 10.5']); },
     x: function () { return svg('0 0 16 16', ['M2 2l12 12M14 2 2 14']); },
@@ -537,11 +538,11 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
   }
   function fmtKm(km) { return isNum(km) ? (km >= 10 ? String(Math.round(km)) : km.toFixed(1)) : null; }
   function fmtDist(m) { return m < 950 ? Math.round(m / 10) * 10 + ' m' : (m < 9950 ? (m / 1000).toFixed(1) : Math.round(m / 1000)) + ' km'; }
-  /* Badges are short text: a number, or "H" for the hotel. The airport's plane badge (U+2708, with or without a variation selector) is drawn as an icon, so that no phone swaps in an emoji. */
+  /* Badges are short text: a number, "H" for the hotel (drawn as a bed icon) or the plane U+2708 for the airport (drawn as a plane icon, with or without a variation selector, so that no phone swaps in an emoji). */
   var PLANE_CH = String.fromCharCode(0x2708), PLANE = new RegExp('^' + PLANE_CH + '[' + String.fromCharCode(0xFE0E, 0xFE0F) + ']?$');
   function badgeClass(kind, badge, optional) {
     var c = 'key';
-    if (PLANE.test(badge)) return c + ' plane';
+    if (PLANE.test(badge) || badge === 'H') return c + ' ico';
     if (badge.length >= 2) c += ' two';
     if (optional) c += ' opt'; else if (kind === 'meal') c += ' meal';
     return c;
@@ -550,7 +551,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     var k = el(tag, badgeClass(kind, badge, optional));
     k.style.setProperty('--dc', color);
     k.dataset.badge = badge;
-    if (PLANE.test(badge)) k.appendChild(ICON.plane()); else k.textContent = badge;
+    if (PLANE.test(badge)) k.appendChild(ICON.plane()); else if (badge === 'H') k.appendChild(ICON.bed()); else k.textContent = badge;
     return k;
   }
 

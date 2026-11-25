@@ -278,7 +278,9 @@ a.film-hd:focus-visible .t { color: var(--accent); }
 .map.full .thumb, .row .thumb { border-width: 2px; }
 .map.full .thumb .lb, .row .thumb .lb { padding: 3px 8px 3px 6px; font-size: 17px; }
 .map.full .thumb.noimg .lb, .row .thumb.noimg .lb { padding: 0; }
-.row .film + .notes { margin-top: 8px; }
+.row > .film { grid-column: 1 / -1; min-width: 0; }
+.row > .nm2 { grid-column: 2; min-width: 0; }
+.row > .film + .nm2 > .notes:first-child { margin-top: 8px; }
 .map.full .card.has-film .sc-scroll { max-height: calc(var(--th) + 16px + min(14vh, 122px)); }
 @media (min-width: 700px) {
   /* laptop: as wide as the map, capped at a readable line length, centred (left/right 8px + auto margins) */
@@ -1704,15 +1706,18 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     if (it.reserve) nm.appendChild(rsvTag());
     if (it.sub) nm.appendChild(el('div', 'subl', it.sub));
     /* with any cover photo the row shows the filmstrip (as the place card does) in place of the text Sources line */
+    /* the strip spans the whole row (under the badge and km columns too); what follows it goes in a second wrapper back in the name column */
     var film = it.refs.some(function (r) { return r.img; });
-    if (film) nm.appendChild(filmStrip(it.refs, it.sourcesUrl, d.color));
-    if (it.notes.length || (it.refs.length && !film)) nm.appendChild(noteList(it.notes, d.color, film ? null : it.refs, it.sourcesUrl));
-    if (!pin) nm.appendChild(el('span', 'nomap-t', 'Not on the map: use the Google Maps link'));
-    if (it.approxPos) nm.appendChild(el('div', 'approx-t', '≈ ' + String(it.approxNote || 'Position approximate.')));
     li.appendChild(nm);
     var km = el('div', 'km'), k = fmtKm(it.km);
     if (k) { km.appendChild(el('b', null, k)); km.appendChild(document.createTextNode(' ')); km.appendChild(el('small', null, 'km')); }
     li.appendChild(km);
+    var tail = nm;
+    if (film) { li.appendChild(filmStrip(it.refs, it.sourcesUrl, d.color)); tail = el('div', 'nm2'); }
+    if (it.notes.length || (it.refs.length && !film)) tail.appendChild(noteList(it.notes, d.color, film ? null : it.refs, it.sourcesUrl));
+    if (!pin) tail.appendChild(el('span', 'nomap-t', 'Not on the map: use the Google Maps link'));
+    if (it.approxPos) tail.appendChild(el('div', 'approx-t', '≈ ' + String(it.approxNote || 'Position approximate.')));
+    if (tail !== nm && tail.firstChild) li.appendChild(tail);
     li.addEventListener('click', function (e) {
       if (!pin || e.target.closest('a')) return;
       if (window.getSelection && String(window.getSelection())) return;

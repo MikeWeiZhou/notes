@@ -242,6 +242,8 @@ a.film-hd:focus-visible .t { color: var(--accent); }
 .film-w.more-l::before, .film-w.more-r::after { opacity: 1; }
 .film-s { display: flex; gap: 6px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; touch-action: pan-x pan-y; scroll-snap-type: x proximity; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .film-s::-webkit-scrollbar { display: none; }
+.film-s.drag, .film-s.drag * { cursor: grabbing; scroll-snap-type: none; user-select: none; -webkit-user-select: none; }
+@media (hover: hover) and (pointer: fine) { .film-s { cursor: grab; } }
 /* a thumb: a 3:4 print (16:9 for a landscape cover) in a lava rule, its label an ink tab on the bottom edge */
 .thumb { position: relative; flex: 0 0 auto; display: block; height: var(--th); aspect-ratio: 3 / 4; box-sizing: border-box; border: 1.5px solid var(--lava); background: var(--stock); overflow: hidden; scroll-snap-align: start; color: var(--ink); text-decoration: none; -webkit-tap-highlight-color: transparent; }
 .thumb.land { aspect-ratio: 16 / 9; }
@@ -1186,7 +1188,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     }
   }
   /* Filmstrip: a "Sources" spine (to the research page) then one thumb per post, each opening the post in a new tab. Its label
-     sits on the thumb's bottom edge and stays when the image is missing or fails. The strip scrolls sideways (touch, trackpad, wheel). */
+     sits on the thumb's bottom edge and stays when the image is missing or fails. The strip scrolls sideways (touch, trackpad, Shift+wheel, mouse drag). */
   function filmStrip(refs, srcUrl, color) {
     var wrap = el('div', 'film'), su = safeUrl(srcUrl), hd = el(su ? 'a' : 'div', 'film-hd');
     wrap.style.setProperty('--dc', color);
@@ -1201,11 +1203,11 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     }
     function noImg(a, im) { if (im && im.parentNode) im.parentNode.removeChild(im); a.classList.add('noimg'); fade(); }
     refs.forEach(function (r) {
-      var a = el('a', 'thumb'); a.href = r.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      var a = el('a', 'thumb'); a.href = r.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.draggable = false;
       a.setAttribute('aria-label', 'Open ' + r.label + ' post');
       if (r.img) {
         var im = document.createElement('img');
-        im.alt = r.label + ' post screenshot'; im.loading = 'lazy'; im.decoding = 'async'; im.referrerPolicy = 'no-referrer';
+        im.alt = r.label + ' post screenshot'; im.loading = 'lazy'; im.decoding = 'async'; im.referrerPolicy = 'no-referrer'; im.draggable = false;
         im.addEventListener('error', function () { noImg(a, im); });
         im.addEventListener('load', function () { if (!im.naturalWidth) { noImg(a, im); return; } if (im.naturalWidth > im.naturalHeight * 1.15) a.classList.add('land'); fade(); });
         im.src = r.img; a.appendChild(im);
@@ -1215,17 +1217,47 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
       fs.appendChild(a);
     });
     fs.addEventListener('scroll', fade, { passive: true });
-    /* a mouse wheel scrolls the strip sideways while it can move; at either end the wheel is left alone */
+    /* Sideways wheel deltas (a trackpad swipe, a tilt wheel, Shift+wheel where the browser turns it sideways) are left to the
+       browser, which scrolls the strip natively and snaps at the end. Setting scrollLeft here for them got snapped straight back
+       to the same thumb on every small step. A vertical wheel with Shift, or in the card when the box has nothing to scroll,
+       moves the strip by script: scrollBy, so the snap goes on in the wheel's direction. A plain vertical wheel in a legend row
+       scrolls the page, and in the card it reads on through the notes first. At either end the wheel is left alone. */
     fs.addEventListener('wheel', function (e) {
       var max = fs.scrollWidth - fs.clientWidth;
-      /* only when the card has nothing to scroll down to; otherwise the wheel reads on through the notes */
-      /* in a legend row (no box) a vertical wheel always scrolls the page */
       var box = fs.closest('.sc-scroll'), vert = Math.abs(e.deltaY) > Math.abs(e.deltaX);
-      if (max <= 0 || e.ctrlKey || (vert && (!box || box.scrollHeight > box.clientHeight + 1))) return;
-      var d = (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * (e.deltaMode === 1 ? 18 : 1), x = fs.scrollLeft;
+      if (max <= 0 || e.ctrlKey || !vert || (!e.shiftKey && (!box || box.scrollHeight > box.clientHeight + 1))) return;
+      var d = e.deltaY * (e.deltaMode === 1 ? 18 : e.deltaMode === 2 ? fs.clientWidth : 1), x = fs.scrollLeft;
       if (!d || (d < 0 && x <= 0) || (d > 0 && x >= max - 1)) return;
-      e.preventDefault(); fs.scrollLeft = x + d;
+      e.preventDefault();
+      if (fs.scrollBy) fs.scrollBy({ left: d, behavior: 'instant' }); else fs.scrollLeft = x + d;
     }, { passive: false });
+    /* A mouse or pen drags the strip sideways (touch scrolls it natively). Past 5px it is a drag: no snap while it lasts, and the
+       click that ends it is dropped here, so neither the post under the pointer opens nor the legend row picks its place. */
+    var drag = null, dragged = false;
+    fs.addEventListener('dragstart', function (e) { e.preventDefault(); });
+    fs.addEventListener('pointerdown', function (e) {
+      dragged = false;
+      if ((e.pointerType !== 'mouse' && e.pointerType !== 'pen') || e.button !== 0 || fs.scrollWidth <= fs.clientWidth + 1) return;
+      drag = { id: e.pointerId, x: e.clientX, left: fs.scrollLeft, moved: false };
+    });
+    fs.addEventListener('pointermove', function (e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      if (!drag.moved) {
+        if (Math.abs(e.clientX - drag.x) < 5) return;
+        drag.moved = true; fs.classList.add('drag');
+        try { fs.setPointerCapture(e.pointerId); } catch (err) {}
+        if (window.getSelection) window.getSelection().removeAllRanges();
+      }
+      fs.scrollLeft = drag.left - (e.clientX - drag.x);
+    });
+    function dragEnd(e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      if (drag.moved) { dragged = true; setTimeout(function () { dragged = false; }, 0); }
+      drag = null; fs.classList.remove('drag');
+    }
+    fs.addEventListener('pointerup', dragEnd);
+    fs.addEventListener('pointercancel', dragEnd);
+    fs.addEventListener('click', function (e) { if (dragged) { dragged = false; e.preventDefault(); e.stopPropagation(); } }, true);
     if (window.ResizeObserver) new ResizeObserver(fade).observe(fs);
     fw.appendChild(fs); wrap.appendChild(fw);
     requestAnimationFrame(fade);

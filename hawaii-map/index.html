@@ -114,17 +114,16 @@ svg { display: block; }
 
 /* pins */
 .pin { position: absolute; left: 0; top: 0; width: 40px; height: 40px; margin: -20px 0 0 -20px; padding: 0; border: 0; background: none; display: grid; place-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: none; border-radius: 50%; }
-.pin .key { width: var(--ps, 26px); height: var(--ps, 26px); box-shadow: 0 0 0 2px var(--plate), 0 0 0 3px rgba(31,26,23,.28), 0 2px 5px 2px rgba(31,26,23,.3); pointer-events: none; }
-.pins.small .pin .key { width: 21px; height: 21px; font-size: 13px; border-width: 1.6px; box-shadow: 0 0 0 1.5px var(--plate), 0 1px 3px 1.5px rgba(31,26,23,.32); }
-.pins.small .pin .key.two { font-size: 11.5px; }
-.pins.small .pin .key.ico svg { width: 13px; height: 13px; }
-.pins.small .pin .key .rsv { top: -2px; right: -2px; width: 8.5px; height: 8.5px; box-shadow: 0 0 0 1.2px var(--plate), 0 1px 2px 1px rgba(31,26,23,.35); }
-.pins.small .pin.sel .key { box-shadow: 0 0 0 1.5px var(--plate), 0 0 0 4.5px var(--lava), 0 2px 8px 5px rgba(31,26,23,.35); }
+/* one badge size on the map, in every view: smaller than the legend's and the card's, so that more places fit */
+.pin .key { width: var(--ps, 21px); height: var(--ps, 21px); font-size: 13px; border-width: 1.6px; box-shadow: 0 0 0 1.5px var(--plate), 0 1px 3px 1.5px rgba(31,26,23,.32); pointer-events: none; }
+.pin .key.two { font-size: 11.5px; }
+.pin .key.ico svg { width: 13px; height: 13px; }
+.pin .key .rsv { top: -2px; right: -2px; width: 8.5px; height: 8.5px; box-shadow: 0 0 0 1.2px var(--plate), 0 1px 2px 1px rgba(31,26,23,.35); }
 .pin.today { z-index: 2; }
 .pin.sel { z-index: 5; }
-.pin.sel .key { box-shadow: 0 0 0 2px var(--plate), 0 0 0 5px var(--lava), 0 2px 8px 5px rgba(31,26,23,.35); transform: scale(1.12); }
-.pin .plab { position: absolute; left: 50%; top: calc(50% + var(--ps, 26px) / 2 + 4px); transform: translateX(-50%); padding: 1px 5px 2px; background: var(--plate); color: var(--ink); border: 1.5px solid var(--lava); font-weight: 700; font-size: 14px; line-height: 1.1; white-space: nowrap; pointer-events: none; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
-.pin.approx::before { content: ""; position: absolute; left: 50%; top: 50%; width: calc(var(--ps, 26px) + 18px); height: calc(var(--ps, 26px) + 18px); margin: calc(var(--ps, 26px) / -2 - 9px) 0 0 calc(var(--ps, 26px) / -2 - 9px); border: 2px dashed var(--lava); border-radius: 50%; background: rgba(252,248,241,.55); pointer-events: none; }
+.pin.sel .key { box-shadow: 0 0 0 1.5px var(--plate), 0 0 0 4.5px var(--lava), 0 2px 8px 5px rgba(31,26,23,.35); transform: scale(1.12); }
+.pin .plab { position: absolute; left: 50%; top: calc(50% + var(--ps, 21px) / 2 + 4px); transform: translateX(-50%); padding: 1px 5px 2px; background: var(--plate); color: var(--ink); border: 1.5px solid var(--lava); font-weight: 700; font-size: 14px; line-height: 1.1; white-space: nowrap; pointer-events: none; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+.pin.approx::before { content: ""; position: absolute; left: 50%; top: 50%; width: calc(var(--ps, 21px) + 18px); height: calc(var(--ps, 21px) + 18px); margin: calc(var(--ps, 21px) / -2 - 9px) 0 0 calc(var(--ps, 21px) / -2 - 9px); border: 2px dashed var(--lava); border-radius: 50%; background: rgba(252,248,241,.55); pointer-events: none; }
 .pin.approx .key { position: relative; }
 .ld { position: absolute; left: 0; top: 0; width: 0; height: 0; }
 .ld i { position: absolute; left: 0; top: -1.25px; height: 2.5px; width: 0; transform-origin: 0 50%; background: var(--lava); box-shadow: 0 0 0 1px rgba(252,248,241,.9); }
@@ -330,7 +329,11 @@ a.film-hd:focus-visible .t { color: var(--accent); }
 .band-t .cnt { font-size: 15px; font-weight: 500; opacity: .85; letter-spacing: 0; }
 .band-t .chev { width: 12px; height: 12px; margin-left: auto; margin-right: 10px; fill: none; stroke: currentColor; stroke-width: 2.4; transition: transform .15s; flex: 0 0 auto; }
 .lgday.open .band-t .chev { transform: rotate(90deg); }
-.dayband .btn { min-width: 96px; min-height: 42px; padding: 0 12px; border: 0; border-left: 1px solid rgba(252,248,241,.5); background: transparent; color: inherit; font-size: 17px; }
+/* The button is as wide on every band, so the rule to its left lines up: it never shrinks, and a shorter label (the Backlog's "Open")
+   keeps the room of the longest one, held open by a hidden copy of it. */
+.dayband .btn { flex: 0 0 auto; min-width: 96px; min-height: 42px; padding: 0 12px; border: 0; border-left: 1px solid rgba(252,248,241,.5); background: transparent; color: inherit; font-size: 17px; }
+.dayband .btn .od { display: block; text-align: left; white-space: nowrap; }
+.dayband .btn .od[data-w]::after { content: attr(data-w); display: block; height: 0; overflow: hidden; visibility: hidden; }
 .dayband .btn:active, .band-t:active { background: rgba(252,248,241,.16); }
 .lgday ol { list-style: none; margin: 0; padding: 0 2px; }
 .lgday:not(.open) ol { display: none; }
@@ -355,11 +358,9 @@ a.film-hd:focus-visible .t { color: var(--accent); }
 .notes li.src { font-size: 16px; color: var(--ink-2); }
 .notes li.src .lnk, .row .nm .notes li.src .lnk { font-size: 16px; font-weight: 700; white-space: nowrap; }
 .notes svg { width: 17px; height: 17px; margin: 1px 0 0 -3px; fill: none; stroke: var(--dc, var(--ink)); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.lgnote, .lgempty { margin: 6px 4px 0; font-size: 16px; line-height: 1.2; color: var(--ink-2); }
+.lgempty { margin: 6px 4px 0; padding: 8px 0 4px; font-size: 16px; line-height: 1.2; color: var(--ink-2); }
 .lgday:not(.open) .lgempty { display: none; }
-.lgempty { padding: 8px 0 4px; }
-.hint { margin: 8px 4px 6px; text-align: right; font-size: 15px; color: var(--ink-2); }
-.symbols { display: flex; flex-wrap: wrap; gap: 7px 16px; margin: 0 2px; padding: 9px 2px 2px; border-top: 1.5px solid var(--lava); font-size: 16px; color: var(--ink-2); }
+.symbols { display: flex; flex-wrap: wrap; gap: 7px 16px; margin: 10px 2px 0; padding: 9px 2px 2px; border-top: 1.5px solid var(--lava); font-size: 16px; color: var(--ink-2); }
 .symbols span { display: inline-flex; align-items: center; gap: 6px; }
 .symbols .key { width: 20px; height: 20px; font-size: 12px; }
 .symbols .key.ico svg { width: 12px; height: 12px; }
@@ -441,7 +442,6 @@ a.film-hd:focus-visible .t { color: var(--accent); }
     <div class="legend-in">
       <h2 id="lgTitle">Legend</h2>
       <div class="lgdays" id="lgdays"></div>
-      <p class="hint">km from that day's hotel</p>
       <div class="symbols" id="symbols"></div>
     </div>
   </section>
@@ -742,13 +742,12 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
 
   /* ---------- pins: layout, declutter, leaders ---------- */
   /* A pin shows when its layer is on and it belongs to the view: in All every pin except the Backlog's, otherwise the chosen day's own and that day's hotel. */
-  function pinVisible(p) {
-    if (!layerOn(p.layer)) return false;
-    if (S.mode === 'all') return p.hotel || !DAYS[p.day] || !DAYS[p.day].backlog;
-    var d = DAYS[S.day];
-    if (!d) return false;
-    return p.hotel ? d.hotelPin === p : p.day === S.day;
+  function pinInView(p, mode, day) {
+    if (mode === 'all') return !!p.hotel || !DAYS[p.day] || !DAYS[p.day].backlog;
+    var d = DAYS[day];
+    return !!d && (p.hotel ? d.hotelPin === p : p.day === day);
   }
+  function pinVisible(p) { return layerOn(p.layer) && pinInView(p, S.mode, S.day); }
   function buildPinEls() {
     PINS.forEach(function (p) {
       var b = el('button', 'pin' + (p.approx ? ' approx' : ''));
@@ -780,12 +779,11 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
       /* a hotel pin takes the ink of the day being shown, on every day of the stay; in All it is in the All chip's ink */
       if (p.hotel) inkPin(p, mine ? d.color : OCEAN);
     });
-    pinsEl.classList.toggle('small', S.mode === 'all');
     if (S.sel && !PIN_BY_ID[S.sel].vis) closeCard();
     invalidate(true);
   }
   function declutter(list, rounds) {
-    var R = S.mode === 'all' ? 24 : 29, MAXOFF = S.mode === 'all' ? 70 : 64, n = list.length, i, j, it;
+    var R = 24, MAXOFF = 70, n = list.length, i, j, it;
     for (i = 0; i < n; i++) { list[i].ox = 0; list[i].oy = 0; } /* always from scratch: the same view gives the same layout */
     for (it = 0; it < rounds; it++) {
       var moved = false;
@@ -1148,6 +1146,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     if (p && p.el) p.el.classList.remove('sel');
     S.sel = null; cardEl.hidden = true; cardEl.textContent = '';
     document.querySelectorAll('.row.hit').forEach(function (r) { r.classList.remove('hit'); });
+    syncUrl();
   }
   /* ctx: for a hotel, the day's legend row for it (if that day has one); its sub and notes follow the hotel's own. */
   function fillCard(p, ctx) {
@@ -1294,6 +1293,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
       var z = Math.max(S.zoom, 15), s = scaleAt(z);
       flyTo(p.mx, p.my + (S.h / 2 - Math.max(PAD.t, free / 2)) / s, z);
     } else if (opts.pan) panClear(p);
+    syncUrl();
   }
   /* nudge the map so the pin clears the card (after a tap, or when full screen changes the card's size) */
   function panClear(p) {
@@ -1563,8 +1563,68 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     S.day = i; if (mode) S.mode = mode;
     closeCard(); syncControls(); syncVisibility(); syncLegend(true);
     if (!opts || !opts.nofit) refit(opts && opts.instant);
+    syncUrl();
   }
-  function setMode(m) { S.mode = m; closeCard(); syncControls(); syncVisibility(); syncLegend(true); refit(); }
+  function setMode(m) { S.mode = m; closeCard(); syncControls(); syncVisibility(); syncLegend(true); refit(); syncUrl(); }
+
+  /* ---------- share link ---------- */
+  /* The address carries the view and the open place, so a copied link opens the same thing: #day=<view>&place=<id>.
+     <view> is "all", "backlog" or a day's date. <id> is the item's id, or the hotel's own id for the hotel ("hotel:<id>" if an item
+     has that id too); it is left out when no card is open. Written with replaceState once the page has started, so nothing is added
+     to the history and an address opened without a link stays as it came. Nothing is stored. */
+  var urlLive = false, linkPin = null;
+  function has(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+  function placeKey(p) { if (!p.hotel) return p.item.id; var id = String(p.hotel.id); return has(ITEMS, id) ? 'hotel:' + id : id; }
+  function syncUrl() {
+    if (!urlLive) return;
+    var p = S.sel && PIN_BY_ID[S.sel], d = DAYS[S.day];
+    var h = '#day=' + encodeURIComponent(S.mode === 'all' || !d ? 'all' : d.key) + (p ? '&place=' + encodeURIComponent(placeKey(p)) : '');
+    if (h === location.hash) return;
+    try { history.replaceState(history.state, '', h); } catch (e) {}
+  }
+  /* What the address asks for: { mode, day, pin }, or null when it names no view and no place that exist. Only known ids count.
+     A place that the named view does not show (or that comes with no view) opens in the day it belongs to; a hotel keeps the view
+     in hand, cur, when it is drawn there. */
+  function readLink(cur) {
+    var q = {}, view = null, pin = null;
+    String(location.hash || '').replace(/^#/, '').split('&').forEach(function (kv) {
+      var i = kv.indexOf('=');
+      if (i < 1) return;
+      try { var k = decodeURIComponent(kv.slice(0, i)), v = decodeURIComponent(kv.slice(i + 1)); if (!has(q, k)) q[k] = v; } catch (e) {}
+    });
+    if (q.day === 'all') view = { mode: 'all', day: cur.day };
+    else if (q.day) DAYS.forEach(function (d) { if (!view && d.key === q.day) view = { mode: 'day', day: d.i }; });
+    if (q.place) {
+      if (has(ITEM_PIN, q.place)) pin = ITEM_PIN[q.place];
+      else pin = PIN_BY_ID['hotel:' + q.place.replace(/^hotel:/, '')] || null;
+    }
+    if (!view && !pin) return null;
+    if (!view) view = { mode: cur.mode, day: cur.day };
+    if (pin && !pinInView(pin, view.mode, view.day)) { if (DAYS[pin.day]) view = { mode: 'day', day: pin.day }; else pin = null; }
+    return { mode: view.mode, day: view.day, pin: pin };
+  }
+  /* open the linked place's card, once the map has a size and the view has been fitted: the pins are laid out first, so that
+     the map is nudged by where the pin is drawn, as after a tap */
+  function openLinked() {
+    var p = linkPin;
+    if (!p || !S.w || !S.h) return;
+    linkPin = null;
+    if (!p.vis) return;
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    render();
+    selectPin(p, { pan: true });
+  }
+  /* a link pasted into the page while it is open */
+  function followLink() {
+    var t = readLink({ mode: S.mode, day: S.day });
+    if (!t) return;
+    if (t.pin && !layerOn(t.pin.layer)) { LON[t.pin.layer] = true; syncRows(); }
+    linkPin = t.pin;
+    setDay(t.day, t.mode, { instant: true });
+    openLinked();
+    syncUrl();
+  }
+  window.addEventListener('hashchange', followLink);
 
   /* ---------- layers panel ---------- */
   var layBtn = $('lay'), layPanel = $('layPanel'), layN = $('layN'), LROWS = {};
@@ -1682,10 +1742,11 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
       var cnt = el('span', 'cnt'); bt.appendChild(cnt);
       t.appendChild(bt);
       t.appendChild((function () { var c = ICON.chev(); c.setAttribute('class', 'chev'); return c; })());
-      var open = el('button', 'btn open-day'); open.type = 'button'; open.appendChild(el('span', null, d.backlog ? 'Open' : 'Open day')); open.appendChild(ICON.chev());
+      var open = el('button', 'btn open-day'), od = el('span', 'od', d.backlog ? 'Open' : 'Open day'); open.type = 'button';
+      if (d.backlog) od.dataset.w = 'Open day';
+      open.appendChild(od); open.appendChild(ICON.chev());
       open.setAttribute('aria-label', 'Open ' + d.label + ' on the map');
       band.appendChild(t); band.appendChild(open); sec.appendChild(band);
-      if (d.backlog) sec.appendChild(el('p', 'lgnote', 'Ideas not in any day yet.'));
       var ol = el('ol'); ol.id = 'lg-' + d.i; t.setAttribute('aria-controls', ol.id);
       var rows = d.items.map(function (it) { var li = buildRow(d, it); ol.appendChild(li); return { el: li, layer: ITEMS[it.id].layer }; });
       var empty = el('p', 'lgempty', 'Nothing in the selected layers'); empty.hidden = true;
@@ -1770,6 +1831,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     S.w = r.width; S.h = r.height;
     if (first) refit(true);
     invalidate(true);
+    if (first) openLinked();
   }
   if (window.ResizeObserver) new ResizeObserver(measure).observe(surface);
   window.addEventListener('resize', measure);
@@ -1796,11 +1858,16 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
       if (di < 0 && d.date >= today) di = d.i;
     });
     S.day = Math.max(0, di < 0 ? last : di); S.mode = 'day';
+    /* a share link in the address takes the place of that choice */
+    var link = readLink({ mode: S.mode, day: S.day });
+    if (link) { S.mode = link.mode; S.day = link.day; linkPin = link.pin; }
     var checked = (DATA.source && DATA.source.checkedNote) || '';
     $('footChecked').textContent = checked; $('footChecked').hidden = !checked;
     buildPinEls(); buildStrip(); buildLayers(); buildLegend();
     syncControls('centre'); syncVisibility(); syncRows(); syncLegend(true);
     measure();
+    urlLive = true;
+    if (link) syncUrl();
   })();
 
   /* debug and test hook (read-only view state, plus setView for the tests) */

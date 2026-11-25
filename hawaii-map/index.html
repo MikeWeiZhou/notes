@@ -228,7 +228,8 @@ svg { display: block; }
 .card .notes.more { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent); }
 /* Filmstrip of source posts, under the meta line. --th is the one thumb height: small inline so the card leaves the map usable,
    large in full screen. The "Sources" spine sits in the card's badge column; the thumbs line up with the text. */
-.film { --th: 64px; display: flex; align-items: stretch; gap: 0 10px; margin: 8px 0 0; }
+.card { --th: 64px; }
+.film { display: flex; align-items: stretch; gap: 0 10px; margin: 8px 0 0; }
 .film-hd { flex: 0 0 26px; display: flex; flex-direction: column; align-items: center; gap: 3px; height: var(--th); box-sizing: border-box; padding: 5px 0 4px; border: 1px solid var(--lava); background: var(--stock); color: var(--ink); text-decoration: none; overflow: hidden; -webkit-tap-highlight-color: transparent; }
 .film-hd svg { flex: 0 0 auto; width: 13px; height: 13px; fill: none; stroke: var(--dc, var(--ink)); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .film-hd .t { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 11px; font-weight: 700; letter-spacing: .03em; line-height: 1; text-transform: uppercase; white-space: nowrap; }
@@ -239,7 +240,7 @@ a.film-hd:focus-visible .t { color: var(--accent); }
 .film-w::before { left: 0; background: linear-gradient(to right, var(--plate) 10%, rgba(252,248,241,0)); }
 .film-w::after { right: 0; background: linear-gradient(to left, var(--plate) 10%, rgba(252,248,241,0)); }
 .film-w.more-l::before, .film-w.more-r::after { opacity: 1; }
-.film-s { display: flex; gap: 6px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; touch-action: pan-x; scroll-snap-type: x proximity; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.film-s { display: flex; gap: 6px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; touch-action: pan-x pan-y; scroll-snap-type: x proximity; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .film-s::-webkit-scrollbar { display: none; }
 /* a thumb: a 3:4 print (16:9 for a landscape cover) in a lava rule, its label an ink tab on the bottom edge */
 .thumb { position: relative; flex: 0 0 auto; display: block; height: var(--th); aspect-ratio: 3 / 4; box-sizing: border-box; border: 1.5px solid var(--lava); background: var(--stock); overflow: hidden; scroll-snap-align: start; color: var(--ink); text-decoration: none; -webkit-tap-highlight-color: transparent; }
@@ -256,9 +257,16 @@ a.film-hd:focus-visible .t { color: var(--accent); }
 .thumb.noimg .ar { display: block; width: 9px; height: 9px; }
 .thumb.noimg .ar svg { display: block; width: 100%; height: 100%; fill: none; stroke: var(--accent); stroke-width: 2; overflow: visible; }
 /* inline: the thumbs and the notes stay short so at least half the map shows above the card */
-.map:not(.full) .card.has-film .notes { max-height: 46px; }
+/* with photos, the strip and the notes scroll together in one box: reading the notes scrolls the strip away */
+.card .sc-scroll { flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-x pan-y; }
+.card .sc-scroll.more { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent); }
+.card .sc-scroll.up { -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18px); mask-image: linear-gradient(to bottom, transparent, #000 18px); }
+.card .sc-scroll.up.more { -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18px, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to bottom, transparent, #000 18px, #000 calc(100% - 26px), transparent); }
+.card.has-film .notes { min-height: 0; max-height: none; overflow: visible; }
+.map:not(.full) .card.has-film .sc-scroll { max-height: calc(var(--th) + 14px + 46px); }
 /* full screen: big prints */
-.map.full .film { --th: min(170px, 22vh); margin-top: 10px; }
+.map.full .card { --th: min(170px, 22vh); }
+.map.full .film { margin-top: 10px; }
 .map.full .film-hd { flex-basis: 26px; padding-top: 8px; gap: 8px; }
 .map.full .film-hd svg { width: 16px; height: 16px; }
 .map.full .film-hd .t { font-size: 15px; letter-spacing: .2em; }
@@ -266,13 +274,13 @@ a.film-hd:focus-visible .t { color: var(--accent); }
 .map.full .thumb { border-width: 2px; }
 .map.full .thumb .lb { padding: 3px 8px 3px 6px; font-size: 17px; }
 .map.full .thumb.noimg .lb { padding: 0; }
-.map.full .card.has-film .notes { max-height: min(14vh, 122px); }
+.map.full .card.has-film .sc-scroll { max-height: calc(var(--th) + 16px + min(14vh, 122px)); }
 @media (min-width: 700px) {
   /* a wide screen: the card keeps to the bottom left so the map shows beside it */
   .card { right: auto; width: min(560px, calc(100% - 16px)); }
-  .map:not(.full) .card.has-film .notes { max-height: min(18vh, 100px); }
-  .map.full .film { --th: min(220px, 28vh); }
-  .map.full .card.has-film .notes { max-height: min(22vh, 176px); }
+  .map:not(.full) .card.has-film .sc-scroll { max-height: calc(var(--th) + 14px + min(18vh, 100px)); }
+  .map.full .card { --th: min(220px, 28vh); }
+  .map.full .card.has-film .sc-scroll { max-height: calc(var(--th) + 16px + min(22vh, 176px)); }
 }
 .sc-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 0 22px; min-height: 42px; margin: 8px 0 0; padding-left: 36px; border-top: 1px dotted var(--ink-screen); }
 .lnk { color: var(--ink); font-weight: 700; text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 2px; text-underline-offset: 3px; overflow-wrap: anywhere; }
@@ -1146,9 +1154,11 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     /* posts with a cover show as a filmstrip under the meta line; a place whose posts have no covers keeps the text Sources line */
     var refs = p.refs || [], film = refs.some(function (r) { return r.img; });
     cardEl.classList.toggle('has-film', film);
-    if (film) inn.appendChild(filmStrip(refs, p.srcUrl, p.color));
     var nl = notes.length || (!film && refs.length) ? noteList(notes, p.color, film ? null : refs, p.srcUrl) : null;
-    if (nl) inn.appendChild(nl);
+    /* with photos, strip and notes share one scroll box so reading the notes scrolls the strip away */
+    var sc = nl;
+    if (film) { sc = el('div', 'sc-scroll'); sc.appendChild(filmStrip(refs, p.srcUrl, p.color)); if (nl) sc.appendChild(nl); inn.appendChild(sc); }
+    else if (nl) inn.appendChild(nl);
     if (p.approx) inn.appendChild(el('div', 'sc-approx', '≈ ' + p.approxNote));
     var you = el('div', 'sc-you'); you.id = 'scYou'; you.hidden = true; inn.appendChild(you);
     var foot = el('div', 'sc-foot');
@@ -1161,9 +1171,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     cardEl.hidden = false;
     updateYou();
     /* a long list of notes scrolls inside the card: fade its last line while there is more below */
-    if (nl) {
-      var more = function () { nl.classList.toggle('more', nl.scrollHeight - nl.scrollTop - nl.clientHeight > 3); };
-      nl.addEventListener('scroll', more, { passive: true }); more();
+    if (sc) {
+      var more = function () { sc.classList.toggle('more', sc.scrollHeight - sc.scrollTop - sc.clientHeight > 3); if (film) sc.classList.toggle('up', sc.scrollTop > 3); };
+      sc.addEventListener('scroll', more, { passive: true }); more();
     }
   }
   /* Filmstrip: a "Sources" spine (to the research page) then one thumb per post, each opening the post in a new tab. Its label
@@ -1199,7 +1209,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     /* a mouse wheel scrolls the strip sideways while it can move; at either end the wheel is left alone */
     fs.addEventListener('wheel', function (e) {
       var max = fs.scrollWidth - fs.clientWidth;
-      if (max <= 0 || e.ctrlKey) return;
+      /* only when the card has nothing to scroll down to; otherwise the wheel reads on through the notes */
+      var box = fs.closest('.sc-scroll');
+      if (max <= 0 || e.ctrlKey || (box && box.scrollHeight > box.clientHeight + 1 && Math.abs(e.deltaY) > Math.abs(e.deltaX))) return;
       var d = (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * (e.deltaMode === 1 ? 18 : 1), x = fs.scrollLeft;
       if (!d || (d < 0 && x <= 0) || (d > 0 && x >= max - 1)) return;
       e.preventDefault(); fs.scrollLeft = x + d;

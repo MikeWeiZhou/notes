@@ -1309,6 +1309,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
   /* opts.pan: nudge the map so the pin clears the card. opts.center: fly to the pin. opts.item: the legend row that was tapped. */
   function selectPin(p, opts) {
     opts = opts || {};
+    linkPin = null;
     if (!p.vis) { S.day = p.day >= 0 ? p.day : S.day; S.mode = 'day'; syncControls(); syncVisibility(); syncLegend(); }
     if (S.sel && S.sel !== p.id) closeCard();
     S.sel = p.id;
@@ -1587,24 +1588,27 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
   }
   function setDay(i, mode, opts) {
     if (i < 0 || i >= DAYS.length) return;
+    linkPin = null;
     S.day = i; if (mode) S.mode = mode;
     closeCard(); syncControls(); syncVisibility(); syncLegend(true);
     if (!opts || !opts.nofit) refit(opts && opts.instant);
     syncUrl();
   }
-  function setMode(m) { S.mode = m; closeCard(); syncControls(); syncVisibility(); syncLegend(true); refit(); syncUrl(); }
+  function setMode(m) { linkPin = null; S.mode = m; closeCard(); syncControls(); syncVisibility(); syncLegend(true); refit(); syncUrl(); }
 
   /* ---------- share link ---------- */
   /* The address carries the view and the open place, so a copied link opens the same thing: #day=<view>&place=<id>.
      <view> is "all", "backlog" or a day's date. <id> is the item's id, or the hotel's own id for the hotel ("hotel:<id>" if an item
      has that id too); it is left out when no card is open. Written with replaceState once the page has started, so nothing is added
-     to the history and an address opened without a link stays as it came. Nothing is stored. */
+     to the history and an address opened without a link stays as it came. Nothing is stored.
+     linkPin: a linked place whose card cannot open yet, because the map has no size (a hidden pane, a tab laid out later). It waits
+     for the first real size (see measure) and counts as the open place in the address until then; picking a view or a place drops it. */
   var urlLive = false, linkPin = null;
   function has(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
   function placeKey(p) { if (!p.hotel) return p.item.id; var id = String(p.hotel.id); return has(ITEMS, id) ? 'hotel:' + id : id; }
   function syncUrl() {
     if (!urlLive) return;
-    var p = S.sel && PIN_BY_ID[S.sel], d = DAYS[S.day];
+    var p = S.sel ? PIN_BY_ID[S.sel] : (linkPin && linkPin.vis ? linkPin : null), d = DAYS[S.day];
     var h = '#day=' + encodeURIComponent(S.mode === 'all' || !d ? 'all' : d.key) + (p ? '&place=' + encodeURIComponent(placeKey(p)) : '');
     if (h === location.hash) return;
     try { history.replaceState(history.state, '', h); } catch (e) {}
@@ -1646,8 +1650,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     var t = readLink({ mode: S.mode, day: S.day });
     if (!t) return;
     if (t.pin && !layerOn(t.pin.layer)) { LON[t.pin.layer] = true; syncRows(); }
-    linkPin = t.pin;
     setDay(t.day, t.mode, { instant: true });
+    linkPin = t.pin;
     openLinked();
     syncUrl();
   }
@@ -1869,10 +1873,11 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
   function measure() {
     var r = surface.getBoundingClientRect();
     if (r.width === S.w && r.height === S.h) return;
-    var first = !S.w;
+    var first = !S.w || !S.h;
     S.w = r.width; S.h = r.height;
     if (first) refit(true);
     invalidate(true);
+    /* the first real size: a linked place that was waiting for it opens now, after the fit */
     if (first) openLinked();
   }
   if (window.ResizeObserver) new ResizeObserver(measure).observe(surface);

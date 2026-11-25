@@ -365,19 +365,20 @@ a.film-hd:focus-visible .t { color: var(--accent); }
 .notes li.src .lnk, .row .nm .notes li.src .lnk { font-size: 16px; font-weight: 700; white-space: nowrap; }
 .notes svg { width: 17px; height: 17px; margin: 1px 0 0 -3px; fill: none; stroke: var(--dc, var(--ink)); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 /* Show: one switch for the card and every legend row, kept on <html> as data-show. "all" changes nothing; "src" leaves the sources
-   (filmstrip, or the text Sources line) and hides the notes; "notes" does the reverse. A list left with nothing to show goes
-   whole (.has-src and .has-n say what a list holds), so no empty box or margin is left behind. */
+   (filmstrip, or the text Sources line) and hides the notes; "notes" does the reverse; "none" hides both. A list left with nothing
+   to show goes whole (.has-src and .has-n say what a list holds), so no empty box or margin is left behind. */
 html[data-show="src"] .notes li:not(.src), html[data-show="src"] .notes:not(.has-src) { display: none; }
 html[data-show="src"] .card .notes { min-height: 0; }
 html[data-show="notes"] .film, html[data-show="notes"] .notes li.src, html[data-show="notes"] .notes:not(.has-n) { display: none; }
 html[data-show="notes"] .notes li.src + li { margin-top: 0; }
+html[data-show="none"] .film, html[data-show="none"] .notes { display: none; }
 /* the switch itself: fixed to the bottom right of the screen, over the full-screen map too */
 .showbtn { appearance: none; -webkit-appearance: none; position: fixed; right: max(8px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom)); z-index: 70; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; width: 66px; height: 44px; margin: 0; padding: 0;
   background: var(--plate); color: var(--ink); border: 1.5px solid var(--lava); border-radius: 0; box-shadow: 0 1px 5px rgba(31,26,23,.3); font: 700 15px/1 var(--font); font-stretch: condensed; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 .showbtn .sh-c { font-size: 11px; letter-spacing: .14em; color: var(--ink-2); }
 .showbtn:active { background: var(--stock); }
-html[data-show="src"] .showbtn, html[data-show="notes"] .showbtn { background: var(--ink); color: var(--plate); box-shadow: 0 0 0 1.5px var(--plate), 0 1px 5px 1.5px rgba(31,26,23,.3); }
-html[data-show="src"] .showbtn .sh-c, html[data-show="notes"] .showbtn .sh-c { color: inherit; opacity: .8; }
+html[data-show="src"] .showbtn, html[data-show="notes"] .showbtn, html[data-show="none"] .showbtn { background: var(--ink); color: var(--plate); box-shadow: 0 0 0 1.5px var(--plate), 0 1px 5px 1.5px rgba(31,26,23,.3); }
+html[data-show="src"] .showbtn .sh-c, html[data-show="notes"] .showbtn .sh-c, html[data-show="none"] .showbtn .sh-c { color: inherit; opacity: .8; }
 .lgempty { margin: 6px 4px 0; padding: 8px 0 4px; font-size: 16px; line-height: 1.2; color: var(--ink-2); }
 .lgday:not(.open) .lgempty { display: none; }
 .symbols { display: flex; flex-wrap: wrap; gap: 7px 16px; margin: 10px 2px 0; padding: 9px 2px 2px; border-top: 1.5px solid var(--lava); font-size: 16px; color: var(--ink-2); }
@@ -1734,10 +1735,10 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
   srcBtn.addEventListener('click', function () { setSource(SRC.id === 'sat' ? 'osm' : 'sat'); });
   makeSets(); syncSource();
 
-  /* ---------- show: all, sources or notes ---------- */
-  /* One button, fixed to the bottom right of the screen, steps through the three. The choice is a data attribute on <html> and the
+  /* ---------- show: all, sources, notes or none ---------- */
+  /* One button, fixed to the bottom right of the screen, steps through the four. The choice is a data attribute on <html> and the
      stylesheet does the hiding, so the card and every legend row follow at once. Each page load starts on All; nothing is stored. */
-  var SHOW = [['all', 'All', 'sources and notes'], ['src', 'Sources', 'sources only'], ['notes', 'Notes', 'notes only']], showI = 0;
+  var SHOW = [['all', 'All', 'sources and notes'], ['src', 'Sources', 'sources only'], ['notes', 'Notes', 'notes only'], ['none', 'None', 'neither sources nor notes']], showI = 0;
   function setShow(i) {
     showI = i % SHOW.length;
     var m = SHOW[showI];

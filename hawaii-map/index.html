@@ -209,9 +209,11 @@ svg { display: block; }
 .tilewarn { bottom: 40px; background: var(--plate); color: var(--ink); border: 1.5px solid var(--accent); box-shadow: none; pointer-events: none; }
 
 /* pin card */
-/* the card never grows taller than the map: on a short screen its notes give way first and scroll */
-.card { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 9; display: flex; flex-direction: column; max-height: calc(100% - 16px); background: var(--plate); border: 2px solid var(--lava); padding: 3px; box-shadow: 0 2px 10px rgba(31,26,23,.35); user-select: text; -webkit-user-select: text; }
+/* the card covers at most 45% of the map (never less than --cmin, so the name, a row of thumbs and the links still fit; never more than the map):
+   past that its notes give way first and scroll */
+.card { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 9; display: flex; flex-direction: column; --cmin: 240px; max-height: min(calc(100% - 16px), max(45%, var(--cmin))); background: var(--plate); border: 2px solid var(--lava); padding: 3px; box-shadow: 0 2px 10px rgba(31,26,23,.35); user-select: text; -webkit-user-select: text; }
 .map.full .card { bottom: max(8px, env(safe-area-inset-bottom)); }
+@media (max-width: 379px) { .card { --cmin: 330px; } }
 .card-in { display: flex; flex-direction: column; flex: 0 1 auto; min-height: 0; border: 1px solid var(--lava); padding: 9px 10px 0; }
 .card-in > * { flex: 0 0 auto; }
 .sc-head { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto 36px; gap: 0 10px; align-items: start; }

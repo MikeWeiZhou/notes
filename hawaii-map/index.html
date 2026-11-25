@@ -1015,7 +1015,12 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
   }
 
   /* ---------- gestures ---------- */
-  var ptrs = {}, nptr = 0, gest = null, lastTap = null;
+  /* ghost: a map tap just opened the card. Phones send that tap's click afterwards to whatever is under the finger by then,
+     which can be the new card (a photo or Sources link), so the card drops the first pointer click until the next pointerdown.
+     No timer: a real tap on the card always starts with its own pointerdown, and a click that never comes leaves nothing stale. */
+  var ptrs = {}, nptr = 0, gest = null, lastTap = null, ghost = false;
+  document.addEventListener('pointerdown', function () { ghost = false; }, true);
+  cardEl.addEventListener('click', function (e) { if (ghost && e.detail) { ghost = false; e.preventDefault(); e.stopPropagation(); } }, true);
   function local(e) { var r = surface.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
   function userMoved() { if (G.state === 'following') setGpsState('on'); }
   function two() { var k = Object.keys(ptrs); return [ptrs[k[0]], ptrs[k[1]]]; }
@@ -1080,7 +1085,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Geo;
     gest = null; surface.classList.remove('drag');
     if (cancelled) return;
     if (g.type === 'pan') {
-      if (!g.moved) { lastTap = { t: e.timeStamp, x: p.x, y: p.y }; tapAt(p.x, p.y); return; }
+      if (!g.moved) { lastTap = { t: e.timeStamp, x: p.x, y: p.y }; tapAt(p.x, p.y); ghost = !!S.sel; return; }
       var tr = g.trail, last = tr[tr.length - 1], i = tr.length - 1;
       while (i > 0 && last.t - tr[i - 1].t < 90) i--;
       var dt = last.t - tr[i].t;

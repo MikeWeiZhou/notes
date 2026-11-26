@@ -448,7 +448,7 @@
   document.addEventListener('keydown', (e) => {
     if (document.querySelector('.tcl-scrim') || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     if (e.key === 'n' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); TCL.openAdd(); return; }
-    if (['1', '2', '3', '4'].includes(e.key)) { show(['runway', 'week', 'deck', 'month'][+e.key - 1]); return; }
+    if (['1', '2', '3', '4'].includes(e.key)) { show(['runway', 'week', 'month', 'deck'][+e.key - 1]); return; }
     const v = views[current]; if (TCL.tasks().length && v.key) v.key(e);
   });
   addEventListener('hashchange', () => show(location.hash.slice(1)));

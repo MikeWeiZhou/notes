@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Task Mosaic · Todo Calendar prototype 9</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../shared.css">
+<style>
+main{max-width:1180px;margin:0 auto;padding:12px}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px}
+.controls h2{margin:0 auto 0 0;font:600 1.25rem Georgia,serif}
+.controls h2 small{display:block;font:400 .82rem system-ui;color:var(--muted)}
+.mosaic{position:relative;width:100%;height:min(72vh,620px);min-height:420px;border-radius:16px;overflow:hidden;background:var(--surface)}
+.grp{position:absolute;outline:3px solid var(--paper);outline-offset:-1.5px}
+.grp .gl{position:absolute;left:6px;top:5px;z-index:2;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:var(--paper);color:var(--ink);padding:2px 7px;border-radius:6px;pointer-events:none;white-space:nowrap}
+.grp .gl.late{background:var(--danger);color:#fff}
+.tile{position:absolute;box-sizing:border-box;border:1.5px solid var(--paper);padding:24px 8px 6px;color:#fff;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end;transition:filter .15s}
+.tile:hover{filter:brightness(1.08)}
+.tile b{font-size:.86rem;line-height:1.2;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.tile span{font-size:.72rem;opacity:.9}
+.tile.tiny{padding:2px}
+.tile.tiny b,.tile.tiny span{display:none}
+.key{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:10px;font-size:.78rem;color:var(--muted)}
+.fade{display:inline-flex;gap:2px}
+.fade i{width:18px;height:12px;border-radius:3px;background:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+  <div class="controls">
+    <h2>All open work<small id="sub"></small></h2>
+    <div class="tcl-seg" id="mode"><button data-m="time">By when</button><button data-m="project">By project</button></div>
+  </div>
+  <div class="mosaic" id="mosaic"></div>
+  <div class="key"><span>Tile size = time needed</span><span class="fade"><i style="opacity:1"></i><i style="opacity:.75"></i><i style="opacity:.55"></i><i style="opacity:.4"></i></span><span>due soon → far off</span></div>
+</main>
+<script src="../shared.js"></script>
+<script>
+(function(){
+  const {h} = TCL;
+  TCL.mount('mosaic');
+  let mode = 'time';
+  document.querySelectorAll('#mode button').forEach((b) => (b.onclick = () => { mode = b.dataset.m; render(); }));
+
+  // squarified treemap: items [{v}], rect {x,y,w,h} -> sets item.r
+  function squarify(items, rect) {
+    items = items.filter((i) => i.v > 0).sort((a, b) => b.v - a.v);
+    const total = items.reduce((s, i) => s + i.v, 0);
+    const scale = (rect.w * rect.h) / total;
+    let {x, y, w, h: hh} = rect, row = [];
+    const worst = (row, side) => { const s = row.reduce((a, i) => a + i.v * scale, 0); const mx = Math.max(...row.map((i) => i.v * scale)), mn = Math.min(...row.map((i) => i.v * scale)); return Math.max(side * side * mx / (s * s), (s * s) / (side * side * mn)); };
+    const lay = (row) => {
+      const s = row.reduce((a, i) => a + i.v * scale, 0);
+      if (w >= hh) { const cw = s / hh; let cy = y; row.forEach((i) => { const ih = i.v * scale / cw; i.r = {x, y: cy, w: cw, h: ih}; cy += ih; }); x += cw; w -= cw; }
+      else { const ch = s / w; let cx = x; row.forEach((i) => { const iw = i.v * scale / ch; i.r = {x: cx, y, w: iw, h: ch}; cx += iw; }); y += ch; hh -= ch; }
+    };
+    for (const it of items) {
+      const side = Math.min(w, hh);
+      if (!row.length || worst(row.concat(it), side) <= worst(row, side)) row.push(it);
+      else { lay(row); row = [it]; }
+    }
+    if (row.length) lay(row);
+    return items;
+  }
+
+  function groups(list, now) {
+    if (mode === 'project') return Object.entries(TCL.PROJECTS).map(([k, p]) => ({name: p.name, items: list.filter((o) => o.project === k)}));
+    const T = TCL.sod(now), dow = (T.getDay() + 6) % 7, endWeek = TCL.addDays(T, 7 - dow), endNext = TCL.addDays(endWeek, 7);
+    return [
+      {name: 'Overdue', late: true, items: list.filter((o) => o.due < now)},
+      {name: 'Today', items: list.filter((o) => o.due >= now && o.due < TCL.addDays(T, 1))},
+      {name: 'This week', items: list.filter((o) => o.due >= TCL.addDays(T, 1) && o.due < endWeek)},
+      {name: 'Next week', items: list.filter((o) => o.due >= endWeek && o.due < endNext)},
+      {name: 'Later', items: list.filter((o) => o.due >= endNext)},
+    ];
+  }
+
+  function render() {
+    document.querySelectorAll('#mode button').forEach((b) => b.classList.toggle('on', b.dataset.m === mode));
+    const now = new Date();
+    const list = TCL.openOneOffs();
+    const total = list.reduce((s, o) => s + o.dur, 0);
+    document.getElementById('sub').textContent = `${list.length} tasks · ${TCL.fmtHours(total)} of work`;
+    const box = document.getElementById('mosaic'); box.textContent = '';
+    const W = box.clientWidth, H = box.clientHeight;
+    const gs = groups(list, now).map((g) => Object.assign(g, {v: g.items.reduce((s, o) => s + o.dur, 0)}));
+    // groups keep their order: slices along the long side, each at least 9% so labels fit
+    const live = gs.filter((g) => g.v > 0);
+    const raw = live.map((g) => Math.max(g.v / total, .09)), sum = raw.reduce((a, b) => a + b, 0);
+    let off = 0;
+    live.forEach((g, i) => {
+      const f = raw[i] / sum;
+      g.r = W >= H ? {x: off * W, y: 0, w: f * W, h: H} : {x: 0, y: off * H, w: W, h: f * H};
+      off += f;
+    });
+    for (const g of gs) {
+      if (!g.r) continue;
+      const el = h('div', {class: 'grp', style: {left: g.r.x + 'px', top: g.r.y + 'px', width: g.r.w + 'px', height: g.r.h + 'px'}},
+        h('div', {class: 'gl' + (g.late ? ' late' : '')}, `${g.name} · ${TCL.fmtHours(g.v)}`));
+      const tiles = squarify(g.items.map((o) => ({o, v: o.dur})), {x: 0, y: 0, w: g.r.w, h: g.r.h});
+      for (const t of tiles) {
+        const o = t.o, days = (o.due - now) / 864e5;
+        const op = days < 0 ? 1 : days < 2 ? 1 : days < 7 ? .78 : days < 14 ? .58 : .42;
+        const tiny = t.r.w < 58 || t.r.h < 52;
+        el.append(h('div', {
+          class: 'tile' + (tiny ? ' tiny' : ''), title: `${o.title} · ${TCL.fmtDur(o.dur)} · due ${TCL.relDue(o, now)}`,
+          style: {left: t.r.x + 'px', top: t.r.y + 'px', width: t.r.w + 'px', height: t.r.h + 'px', background: days < 0 ? 'var(--danger)' : `color-mix(in oklab, ${o.color} ${op * 100}%, var(--surface))`, color: op < .6 ? 'var(--ink)' : '#fff'},
+          onclick: () => TCL.openTask(o),
+        }, h('b', null, o.title), h('span', null, `${TCL.fmtDur(o.dur)} · ${TCL.relDue(o, now)}`)));
+      }
+      box.append(el);
+    }
+    if (!list.length) box.append(h('p', {class: 'tcl-muted', style: {padding: '20px'}}, 'Nothing open. Enjoy it.'));
+  }
+  TCL.onChange(render);
+  addEventListener('resize', render);
+  TCL.every(render);
+  render();
+})();
+</script>
+</body>
+</html>

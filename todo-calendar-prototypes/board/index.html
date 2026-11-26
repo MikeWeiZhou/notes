@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Horizon Board · Todo Calendar prototype 6</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../shared.css">
+<style>
+main{padding:12px}
+.routines{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none;align-items:center}
+.routines .lab{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);white-space:nowrap}
+.rt{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-left:4px solid;border-radius:10px;padding:5px 10px;background:var(--surface);white-space:nowrap;font-size:.85rem;cursor:pointer}
+.rt input{accent-color:var(--accent);margin:0}
+.rt.done span{text-decoration:line-through;color:var(--muted)}
+.rt small{color:var(--muted)}
+.board{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:12px;align-items:flex-start}
+.col{flex:1 0 230px;scroll-snap-align:start;background:var(--surface2);border-radius:16px;padding:10px;min-height:200px;transition:background .15s}
+@media (max-width:700px){.col{flex:0 0 84vw}}
+.col.over{background:color-mix(in oklab,var(--accent) 18%,var(--surface2))}
+.col.late{background:color-mix(in oklab,var(--danger) 12%,var(--surface2))}
+.ch{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ch h3{margin:0;font:600 1.05rem Georgia,serif}
+.ch h3 small{font:400 .75rem system-ui;color:var(--muted);margin-left:6px}
+.ch span{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.fill{height:6px;border-radius:3px;background:var(--surface);margin:7px 0 10px;overflow:hidden}
+.fill i{display:block;height:100%;background:var(--accent)}
+.fill i.hot{background:var(--danger)}
+.cards{display:flex;flex-direction:column;gap:8px;min-height:40px}
+.card{background:var(--surface);border-radius:12px;padding:9px 11px 9px 13px;position:relative;cursor:grab;box-shadow:0 1px 2px rgba(0,0,0,.08);border:1px solid var(--line);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c)}
+.card::after{content:"";position:absolute;left:5px;right:0;bottom:0;height:calc(100% - 36px);background:linear-gradient(color-mix(in oklab,var(--c) 10%,transparent),color-mix(in oklab,var(--c) 18%,transparent));pointer-events:none}
+.card.dragging{opacity:.4}
+.card .t{font-weight:600;font-size:.92rem;line-height:1.25;position:relative;z-index:1}
+.card .b{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:.74rem;position:relative;z-index:1}
+.dur{color:var(--muted);font-variant-numeric:tabular-nums}
+.tag{padding:1px 7px;border-radius:999px;background:var(--surface2);white-space:nowrap}
+.tag.soon{background:color-mix(in oklab,var(--danger) 18%,var(--surface));color:var(--danger);font-weight:600}
+.tag.sched{background:transparent;color:var(--muted)}
+.empty{font-size:.82rem;color:var(--muted);text-align:center;padding:16px 4px;border:1.5px dashed var(--line);border-radius:12px}
+.jump{display:none;gap:6px;overflow-x:auto;margin-bottom:8px;scrollbar-width:none}
+@media (max-width:700px){.jump{display:flex}}
+.hint{font-size:.8rem;color:var(--muted);margin:0 0 8px}
+</style>
+</head>
+<body>
+<main>
+  <p class="hint">Card height shows how long a task takes. Drag a card to another column (or tap it on a phone) to change when you'll do it.</p>
+  <div class="routines" id="routines"></div>
+  <div class="jump" id="jump"></div>
+  <div class="board" id="board"></div>
+</main>
+<script src="../shared.js"></script>
+<script>
+(function(){
+  const {h} = TCL;
+  TCL.mount('board');
+  const CAP = 6 * 60;
+  let dragKey = null;
+
+  function buckets(now) {
+    const T = TCL.sod(now), dow = (T.getDay() + 6) % 7; // 0 = Mon
+    const endWeek = TCL.addDays(T, 7 - dow), endNext = TCL.addDays(endWeek, 7);
+    const B = [
+      {id: 'today', name: 'Today', from: T, to: TCL.addDays(T, 1)},
+      {id: 'tomorrow', name: 'Tomorrow', from: TCL.addDays(T, 1), to: TCL.addDays(T, 2)},
+      {id: 'week', name: 'This week', from: TCL.addDays(T, 2), to: endWeek},
+      {id: 'next', name: 'Next week', from: endWeek, to: endNext},
+      {id: 'later', name: 'Later', from: endNext, to: null},
+    ].filter((b) => !b.to || b.to > b.from);
+    B.forEach((b) => { b.sub = b.to && (b.to - b.from) / 864e5 > 1 ? `${TCL.fmtDay(b.from).slice(0, 3)}–${TCL.fmtDay(TCL.addDays(b.to, -1)).slice(0, 3)}` : b.id === 'later' ? '' : TCL.fmtDay(b.from).slice(4); b.days = b.to ? Math.round((b.to - b.from) / 864e5) : 7; });
+    return B;
+  }
+  const bucketOf = (B, k) => B.find((b) => TCL.parse(k) >= b.from && (!b.to || TCL.parse(k) < b.to));
+
+  function render() {
+    const now = new Date(), T = TCL.sod(now), B = buckets(now);
+    // routines strip
+    const rs = document.getElementById('routines'); rs.textContent = '';
+    rs.append(h('span', {class: 'lab'}, 'Today\'s routines'));
+    TCL.expand(T, TCL.addDays(T, 1)).filter((o) => o.recurring).forEach((o) => {
+      rs.append(h('label', {class: 'rt' + (o.done ? ' done' : ''), style: {borderLeftColor: o.color}},
+        h('input', {type: 'checkbox', checked: o.done, onchange: () => TCL.toggle(o)}), h('span', null, o.title), o.start ? h('small', null, TCL.fmtTime(o.start)) : null));
+    });
+    // cards
+    const open = TCL.openOneOffs();
+    const overdue = open.filter((o) => o.due < now && o.planDay < TCL.key(T));
+    const cols = [];
+    if (overdue.length) cols.push({id: 'late', name: 'Overdue', sub: '', list: overdue, days: 0});
+    B.forEach((b) => cols.push(Object.assign(b, {list: open.filter((o) => !overdue.includes(o) && bucketOf(B, o.planDay < TCL.key(T) ? TCL.key(T) : o.planDay) === b)})));
+    // done today, to keep a sense of progress
+    const doneToday = TCL.expand(T, TCL.addDays(T, 1)).filter((o) => !o.recurring && o.done);
+    const board = document.getElementById('board'); board.textContent = '';
+    const jump = document.getElementById('jump'); jump.textContent = '';
+    for (const c of cols) {
+      const mins = c.list.reduce((s, o) => s + o.dur, 0);
+      const cap = c.days * CAP;
+      const cards = h('div', {class: 'cards'});
+      c.list.sort((a, b) => a.due - b.due).forEach((o) => {
+        const hrsLeft = (o.due - now) / 36e5;
+        const card = h('div', {
+          class: 'card', draggable: 'true', style: {'--c': o.color, height: (54 + Math.min(240, o.dur) / 15 * 7) + 'px'},
+          ondragstart: (e) => { dragKey = o.key; card.classList.add('dragging'); e.dataTransfer.setData('text/plain', o.key); },
+          ondragend: () => card.classList.remove('dragging'),
+          onclick: () => TCL.openTask(o, B.filter((b) => b !== c).map((b) => ({label: '→ ' + b.name, fn: () => moveTo(o, b, now)}))),
+        },
+          h('div', {class: 't'}, o.title),
+          h('div', {class: 'b'}, h('span', {class: 'dur'}, TCL.fmtDur(o.dur)),
+            o.start ? h('span', {class: 'tag sched'}, TCL.fmtTime(o.start)) : null,
+            h('span', {class: 'tag' + (hrsLeft < 48 ? ' soon' : '')}, 'due ' + TCL.relDue(o, now))));
+        cards.append(card);
+      });
+      if (c.id === 'today') doneToday.forEach((o) => cards.append(h('div', {class: 'card', style: {'--c': o.color, opacity: .45, height: '46px'}, onclick: () => TCL.openTask(o)}, h('div', {class: 't', style: {textDecoration: 'line-through'}}, o.title))));
+      if (!c.list.length && !(c.id === 'today' && doneToday.length)) cards.append(h('div', {class: 'empty'}, c.id === 'today' ? 'Nothing left for today' : 'Drop tasks here'));
+      const col = h('section', {class: 'col' + (c.id === 'late' ? ' late' : '')},
+        h('div', {class: 'ch'}, h('h3', {style: c.id === 'late' ? {color: 'var(--danger)'} : null}, c.name, c.sub ? h('small', null, c.sub) : null), h('span', null, TCL.fmtHours(mins) + (cap ? ` / ${TCL.fmtHours(cap)}` : ''))),
+        cap ? h('div', {class: 'fill', title: 'Planned hours vs capacity'}, h('i', {class: mins > cap ? 'hot' : '', style: {width: Math.min(100, mins / cap * 100) + '%'}})) : h('div', {class: 'fill'}),
+        cards);
+      if (c.id !== 'late') {
+        col.addEventListener('dragover', (e) => { e.preventDefault(); col.classList.add('over'); });
+        col.addEventListener('dragleave', () => col.classList.remove('over'));
+        col.addEventListener('drop', (e) => { e.preventDefault(); col.classList.remove('over'); const o = open.find((x) => x.key === dragKey); if (o) moveTo(o, c, now); });
+      }
+      board.append(col);
+      jump.append(h('button', {class: 'tcl-chip', onclick: () => col.scrollIntoView({behavior: 'smooth', inline: 'start', block: 'nearest'})}, `${c.name} · ${c.list.length}`));
+    }
+  }
+  function moveTo(o, b, now) {
+    const T = TCL.sod(now);
+    let k = TCL.key(b.from < T ? T : b.from);
+    if (b.id === 'week' || b.id === 'next') { // land on the least busy day of that range that is not after the deadline
+      const mins = TCL.minutesByDay(TCL.expand(b.from, b.to).filter((x) => !x.done && x.key !== o.key));
+      let best = null;
+      for (let d = b.from; d < b.to; d = TCL.addDays(d, 1)) { const dk = TCL.key(d); if (best === null || (mins[dk] || 0) < (mins[best] || 0)) best = dk; }
+      k = best;
+    }
+    TCL.setPlan(o, k);
+  }
+  TCL.onChange(render);
+  TCL.every(render);
+  render();
+})();
+</script>
+</body>
+</html>

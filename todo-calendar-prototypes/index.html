@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>Todo Calendar · 5 prototypes</title>
+<title>Todo Calendar · 10 prototypes</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="shared.css">
 <style>
@@ -36,8 +36,8 @@ pre{white-space:pre-wrap;background:var(--paper);border:1px solid var(--line);bo
 </head>
 <body>
 <main>
-  <h1>Todo Calendar: 5 prototypes</h1>
-  <p class="intro">Five different ways to see a calendar and a todo list as one picture. Every prototype shares <b>the same sample tasks</b>, with deadlines, durations and repeating tasks, so you can compare like for like. Changes you make in one (add, tick off, schedule) show up in all of them. Everything stays in this browser.</p>
+  <h1>Todo Calendar: 10 prototypes</h1>
+  <p class="intro">Ten different ways to see a calendar and a todo list as one picture. Every prototype shares <b>the same sample tasks</b>, with deadlines, durations and repeating tasks, so you can compare like for like. Changes you make in one (add, tick off, schedule) show up in all of them. Everything stays in this browser.</p>
   <ol class="steps">
     <li>Open each prototype and play with it</li>
     <li>Tap <b>★ Pick</b> to tick the features you like</li>
@@ -80,7 +80,7 @@ pre{white-space:pre-wrap;background:var(--paper);border:1px solid var(--line);bo
         h('iframe', {src: pr.id + '/', loading: 'lazy', tabindex: '-1', title: pr.name + ' preview', 'aria-hidden': 'true'}),
         h('span', {class: 'open'}, 'Open ›')),
       h('div', {class: 'body'},
-        h('h2', null, h('small', null, String(i + 1)), pr.name),
+        h('h2', null, h('small', null, String(i + 1)), pr.name, i >= 5 ? h('small', {style: {color: 'var(--accent)'}}, 'new') : null),
         h('p', null, pr.idea),
         TCL.featureList(pr, upd)))));
     upd();

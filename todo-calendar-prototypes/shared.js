@@ -134,7 +134,7 @@
     return {
       key: t.id + (k ? '@' + k : ''), task: t, title: t.title, project: t.project, color: TCL.color(t.project),
       due, start, dur: t.dur, done, recurring: !!k, dateKey: k, hasTime,
-      planDay: key(start || due),
+      planDay: start ? key(start) : (!k && t.plan) || key(due),
     };
   }
   TCL.expand = (from, to, list = TCL.tasks()) => {
@@ -179,7 +179,7 @@
   TCL.toggle = (o) => {
     const t = o.task;
     if (o.recurring) { t.doneDates = t.doneDates || {}; if (t.doneDates[o.dateKey]) delete t.doneDates[o.dateKey]; else t.doneDates[o.dateKey] = true; }
-    else t.done = !t.done;
+    else { t.done = !t.done; if (t.done) t.doneOn = key(new Date()); else delete t.doneOn; }
     TCL.changed();
   };
   TCL.setStart = (o, d) => {
@@ -188,6 +188,7 @@
     else if (d) t.start = stamp(d); else delete t.start;
     TCL.changed();
   };
+  TCL.setPlan = (o, k) => { if (k) o.task.plan = k; else delete o.task.plan; delete o.task.start; TCL.changed(); };
   TCL.remove = (o) => {
     const list = TCL.tasks();
     const i = list.indexOf(o.task);
@@ -337,6 +338,46 @@
       ['habits', 'Habit streak dots for recurring tasks'],
       ['overdue', 'Overdue section pinned to the top'],
     ] },
+    { id: 'board', name: 'Horizon Board', idea: 'A board with columns for Today, Tomorrow, This week, Next week and Later. Card height shows how long a task takes.', features: [
+      ['columns', 'Columns by time horizon instead of dates'],
+      ['height', 'Card height = how long the task takes'],
+      ['colcap', 'Hours total and a fill bar on each column'],
+      ['move', 'Move a card to another column to change when you do it'],
+      ['deadlinetag', 'Deadline tag on each card, red when close'],
+      ['routinesrow', 'Today\'s routines as a compact strip on top'],
+    ] },
+    { id: 'clock', name: 'Day Clock', idea: 'Your day as a 24-hour clock face. Scheduled work is arcs, deadlines are ticks, the hand is now.', features: [
+      ['dial', '24-hour dial with tasks as coloured arcs'],
+      ['hand', 'Clock hand showing now, with time left today'],
+      ['ticks', 'Deadline ticks around the rim'],
+      ['floating', 'Unscheduled tasks due today listed beside the clock'],
+      ['week7', 'Mini clocks for the next 7 days'],
+      ['freegaps', 'Free gaps highlighted so you see where work fits'],
+    ] },
+    { id: 'terrain', name: 'Workload Terrain', idea: 'The next month as a mountain range. Peaks are busy days, coloured by project, with deadline pins on top.', features: [
+      ['area', 'Stacked hills of hours per day by project'],
+      ['pins', 'Deadline pins standing on the hills'],
+      ['capline', 'Capacity line; anything above it is a crunch'],
+      ['scrub', 'Drag across the chart to read any day'],
+      ['legendtoggle', 'Tap a project in the legend to hide it'],
+      ['daylist', 'Selected day\'s tasks listed below'],
+    ] },
+    { id: 'mosaic', name: 'Task Mosaic', idea: 'All open work as one mosaic. Tile area = time needed, colour = project, brightness = urgency.', features: [
+      ['area', 'Tile size = how long the task takes'],
+      ['urgencyfade', 'Urgent tiles are bold, far-off tiles are faded'],
+      ['buckets', 'Mosaic grouped into Overdue, This week, Later'],
+      ['bucketsize', 'See at a glance which period holds the most work'],
+      ['groupswitch', 'Switch grouping between time and project'],
+      ['tapdone', 'Tap a tile for details, mark done from there'],
+    ] },
+    { id: 'deck', name: 'Focus Deck', idea: 'Today as a deck of big cards, one at a time. Swipe right to do it now, left to push to tomorrow.', features: [
+      ['onecard', 'One big task card at a time'],
+      ['swipe', 'Swipe right = done, left = tomorrow'],
+      ['dayring', 'Progress ring for how much of today is done'],
+      ['queue', 'Peek at the cards still in the deck'],
+      ['countdown', 'Big countdown to the deadline on each card'],
+      ['endofday', 'End of day summary when the deck is empty'],
+    ] },
   ];
   const PKEY = 'tcl.picks.v1';
   TCL.picks = () => { try { return JSON.parse(localStorage.getItem(PKEY)) || {}; } catch (e) { return {}; } };
@@ -380,14 +421,14 @@
   /* ---------- prototype chrome: top bar with back, add, features, reset ---------- */
   TCL.mount = (id) => {
     const pr = TCL.PROTOS.find((x) => x.id === id);
-    const n = TCL.PROTOS.indexOf(pr) + 1;
-    const prev = TCL.PROTOS[(n + 3) % 5], next = TCL.PROTOS[n % 5];
+    const n = TCL.PROTOS.indexOf(pr) + 1, N = TCL.PROTOS.length;
+    const prev = TCL.PROTOS[(n - 2 + N) % N], next = TCL.PROTOS[n % N];
     const count = () => Object.values(TCL.picks()[id] || {}).filter(Boolean).length;
     const badge = h('span', { class: 'tcl-badge' });
     const upd = () => { const c = count(); badge.textContent = c ? c : ''; badge.hidden = !c; };
     const bar = h('header', { class: 'tcl-bar' },
       h('a', { class: 'tcl-back', href: '../', 'aria-label': 'All prototypes' }, '‹'),
-      h('div', { class: 'tcl-name' }, h('small', null, `Prototype ${n} of 5`), h('strong', null, pr.name)),
+      h('div', { class: 'tcl-name' }, h('small', null, `Prototype ${n} of ${N}`), h('strong', null, pr.name)),
       h('div', { class: 'tcl-tools' },
         h('a', { class: 'tcl-icon', href: `../${prev.id}/`, title: 'Previous prototype', 'aria-label': 'Previous prototype' }, '←'),
         h('a', { class: 'tcl-icon', href: `../${next.id}/`, title: 'Next prototype', 'aria-label': 'Next prototype' }, '→'),
@@ -404,7 +445,7 @@
   // Reset is undoable only by re-adding, so ask with an inline sheet instead of a browser dialog.
   function confirmReset() {
     const close = TCL.sheet('Reset to sample data?', h('div', null,
-      h('p', null, 'Your own tasks and changes in all five prototypes go away and the sample tasks come back.'),
+      h('p', null, 'Your own tasks and changes in all the prototypes go away and the sample tasks come back.'),
       h('div', { class: 'tcl-actions' },
         h('button', { class: 'tcl-btn danger', onclick: () => { close(); TCL.reset(); } }, 'Reset'),
         h('button', { class: 'tcl-btn', onclick: () => close() }, 'Cancel'))));

@@ -116,7 +116,7 @@ main{max-width:1180px;margin:0 auto;padding:12px}
     const flexible = [];
     for (const o of occs) {
       if (o.due < now && !o.done && !o.recurring) continue; // shown in overdue
-      const fixed = o.done || o.start || o.recurring || !spreadEl.checked;
+      const fixed = o.done || o.start || o.recurring || o.task.plan || !spreadEl.checked;
       if (fixed) { plan.set(o.key, o.planDay); if (!o.done) load[o.planDay] = (load[o.planDay] || 0) + o.dur; }
       else flexible.push(o);
     }

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>Todo Calendar · monthly view prototypes</title>
+<title>Todo Calendar · Duration Grid variations</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="../shared.css">
 <link rel="stylesheet" href="month.css">
@@ -37,8 +37,8 @@ pre{white-space:pre-wrap;background:var(--paper);border:1px solid var(--line);bo
 </head>
 <body>
 <main>
-  <h1>Monthly view: 5 prototypes</h1>
-  <p class="intro">Five ideas for a fourth view in your app: the month at a glance. They show <b>a copy of your app's tasks and projects</b> (or sample tasks if the app has none in this browser), so ticking things off here won't change the app.</p>
+  <h1>Duration Grid: 10 variations</h1>
+  <p class="intro">Ten takes on the Duration Grid month view, each handling <b>busy days</b> and <b>phone screens</b> differently. They show a copy of your app's tasks and projects (or sample tasks if the app has none in this browser), so ticking things off here won't change the app. Try each one on your phone too.</p>
   <ol class="steps">
     <li>Open each one and play with it</li>
     <li>Tap <b>★ Pick</b> to tick what you like</li>
@@ -95,7 +95,7 @@ pre{white-space:pre-wrap;background:var(--paper);border:1px solid var(--line);bo
     setTimeout(() => (e.target.textContent = 'Copy my picks'), 2000);
   };
   document.getElementById('clear').onclick = () => { TCL.savePicks({}); general.value = ''; build(); };
-  addEventListener('storage', (e) => { if (e.key === 'tcl.monthpicks.v1') build(); });
+  addEventListener('storage', (e) => { if (e.key === 'tcl.monthpicks.v2') build(); });
   addEventListener('pageshow', build); // coming back from a prototype
   build();
 })();

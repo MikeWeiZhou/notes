@@ -18,48 +18,28 @@
   };
 
   TCL.MPROTOS = [
-    { id: 'grid', name: 'Duration Grid', idea: 'A classic month grid. Each task is a bar whose length shows how long it takes, so busy days look full.', features: [
-      ['bars', 'Task bars sized by duration inside each day'],
-      ['deadlineflag', 'Deadline marker ▶ on bars due that day'],
-      ['loadline', 'Thin load line at the bottom of each day'],
-      ['more', '"+3 more" when a day overflows, tap to see all'],
-      ['dayinfo', 'Tap a day for its full list'],
-      ['weekends', 'Weekends tinted'],
-    ] },
-    { id: 'heat', name: 'Heat Month', idea: 'Days shaded by how busy they are, with project-coloured deadline dots. The whole month in one glance.', features: [
-      ['heat', 'Shade = hours of work planned'],
-      ['dots', 'Project-coloured deadline dots'],
-      ['over', 'Red ring when a day is over capacity'],
-      ['weektotal', 'Hours per week column'],
-      ['panel', 'Side panel (laptop) / drawer (phone) for the picked day'],
-      ['filter', 'Filter by project'],
-    ] },
-    { id: 'span', name: 'Runway Month', idea: 'Your Runway on a month calendar. Each task stretches from when you plan to start until its deadline.', features: [
-      ['spans', 'Bars that span days, ending at the deadline'],
-      ['lanes', 'Bars stack in lanes so none overlap'],
-      ['flag', 'Flag on the deadline end of each bar'],
-      ['work', 'Solid part = planned work day, faded part = runway'],
-      ['overdue', 'Overdue tasks pinned in red at today'],
-      ['routines', 'Routines hidden to keep the month clean'],
-    ] },
-    { id: 'strip', name: 'Blocks Month', idea: 'Your Blocks view shrunk to a month. Each day is a mini timeline from 6am to midnight with time blocks.', features: [
-      ['minitime', 'Mini 6am–midnight timeline in every day'],
-      ['blocks', 'Scheduled tasks as coloured blocks at their time'],
-      ['unsched', 'Unscheduled tasks as a dotted pile at the bottom'],
-      ['nowline', 'Now line on today'],
-      ['hover', 'Hover or tap a block to see the task'],
-      ['jumpweek', 'Tap a day to open it in Blocks (in the real app)'],
-    ] },
-    { id: 'rings', name: 'Ring Month', idea: 'Every day is a ring that fills up by project as work is planned. Done work turns solid.', features: [
-      ['ring', 'Ring per day, segments coloured by project'],
-      ['fill', 'Ring fills toward your daily capacity'],
-      ['donefill', 'Done work solid, open work outlined'],
-      ['center', 'Deadline count in the ring centre'],
-      ['agenda', 'Agenda for the picked day underneath'],
-      ['streak', 'Month summary: hours planned, done and overdue'],
-    ] },
+    { id: 'tiny', name: 'Tiny Titles', idea: 'Same grid; on a phone the bars keep short titles in small text. A "+N more" pill shows the colours of what is hidden.', features: [
+      ['tinytext', 'Small titles stay visible on a phone'], ['morepill', '"+N more" with dots for the hidden tasks\' projects'], ['sheet', 'Tap a day to see its full list in a sheet']] },
+    { id: 'accordion', name: 'Expanding Week', idea: 'Tap a day and its full task list opens right under that week, inside the calendar.', features: [
+      ['inline', 'Full list opens inline under the week'], ['stayscontext', 'Rest of the month stays visible'], ['tapclose', 'Tap the day again to close']] },
+    { id: 'panel', name: 'Day Panel', idea: 'The grid stays compact; the picked day is always listed beside it on a laptop or below it on a phone.', features: [
+      ['alwayslist', 'Picked day always listed, no pop-ups'], ['phonelines', 'Phone grid uses thin bars, the list has the text'], ['sidepanel', 'Laptop: list sits beside the month']] },
+    { id: 'grow', name: 'Growing Days', idea: 'Every task is always shown. Busy days simply grow taller; on a phone titles wrap onto two lines.', features: [
+      ['noneHidden', 'Nothing hidden behind "+more"'], ['wrap', 'Titles wrap to two lines on a phone'], ['busytall', 'Busy weeks look taller at a glance']] },
+    { id: 'fisheye', name: 'Focus Week', idea: 'One week is shown big with full titles and durations; the other weeks shrink to thin bars. Tap a week to focus it.', features: [
+      ['bigweek', 'Current week big with full details'], ['smallweeks', 'Other weeks as thin bars'], ['tapfocus', 'Tap any week to make it the big one']] },
+    { id: 'agenda', name: 'Phone Agenda', idea: 'Laptop keeps the grid. On a phone the month becomes a list of days, each with full-width duration bars.', features: [
+      ['phonelist', 'Phone: month as a list of days'], ['fullbars', 'Full-width bars with title and duration'], ['weekhdr', 'Week headers with total hours']] },
+    { id: 'scroll', name: 'Scrolling Days', idea: 'Days keep a fixed size; when there are more tasks you scroll inside the day.', features: [
+      ['fixedsize', 'Every day the same size'], ['innerScroll', 'Scroll inside a busy day'], ['fadehint', 'Fade at the bottom hints there is more']] },
+    { id: 'summary', name: 'Day Summary', idea: 'Each day shows one stacked bar of its work plus a count; the top two titles on a laptop. Tap for the list.', features: [
+      ['stackbar', 'One stacked bar per day, segment per task'], ['count', 'Task count and deadline count'], ['toptwo', 'Top two titles on a laptop']] },
+    { id: 'peek', name: 'Peek Bubble', idea: 'Hover a day on a laptop, or tap it on a phone, and a bubble shows every task right over the calendar.', features: [
+      ['hoverpeek', 'Hover to peek on a laptop'], ['tappeek', 'Tap to peek on a phone'], ['bubble', 'Bubble stays near the day instead of a full sheet']] },
+    { id: 'zoom', name: 'Zoom Levels', idea: 'Switch between Month, 2 weeks and Week. Zoomed in, every title and duration is shown, even on a phone.', features: [
+      ['zoomtoggle', 'Month / 2 weeks / Week switch'], ['fulltext', 'Full titles when zoomed in'], ['weekrows', 'Week on a phone shows as rows']] },
   ];
-  const PKEY = 'tcl.monthpicks.v1';
+  const PKEY = 'tcl.monthpicks.v2';
   TCL.picks = () => { try { return JSON.parse(localStorage.getItem(PKEY)) || {}; } catch (e) { return {}; } };
   TCL.savePicks = (p) => localStorage.setItem(PKEY, JSON.stringify(p));
   TCL.picksText = () => {
@@ -75,7 +55,7 @@
       if (note) lines.push(`- Note: ${note}`);
     }
     if (p.general) lines.push(`\nOther: ${p.general}`);
-    return lines.length ? 'My picks for the monthly view\n' + lines.join('\n') : '';
+    return lines.length ? 'My picks for the Duration Grid month view\n' + lines.join('\n') : '';
   };
   TCL.featureList = (pr, onChange) => {
     const p = TCL.picks();
@@ -101,8 +81,8 @@
     const badge = h('span', { class: 'tcl-badge' });
     const upd = () => { const c = Object.values(TCL.picks()[id] || {}).filter(Boolean).length; badge.textContent = c || ''; badge.hidden = !c; };
     const bar = h('header', { class: 'tcl-bar' },
-      h('a', { class: 'tcl-back', href: '../', 'aria-label': 'All month prototypes' }, '‹'),
-      h('div', { class: 'tcl-name' }, h('small', null, `Month view ${n} of ${N}`), h('strong', null, pr.name)),
+      h('a', { class: 'tcl-back', href: '../', 'aria-label': 'All variations' }, '‹'),
+      h('div', { class: 'tcl-name' }, h('small', null, `Variation ${n} of ${N}`), h('strong', null, pr.name)),
       h('div', { class: 'tcl-tools' },
         h('a', { class: 'tcl-icon', href: `../${prev.id}/`, title: 'Previous', 'aria-label': 'Previous prototype' }, '←'),
         h('a', { class: 'tcl-icon', href: `../${next.id}/`, title: 'Next', 'aria-label': 'Next prototype' }, '→'),

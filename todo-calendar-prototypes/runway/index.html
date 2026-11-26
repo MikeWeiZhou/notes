@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Deadline Runway · Todo Calendar prototype 2</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../shared.css">
+<style>
+main{max-width:1400px;margin:0 auto;padding:12px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.controls .sum{margin-right:auto;font:600 1.2rem Georgia,serif}
+.controls .sum small{display:block;font:400 .82rem system-ui,sans-serif;color:var(--muted)}
+.chart{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface);-webkit-overflow-scrolling:touch}
+.inner{position:relative}
+.cols{position:absolute;top:0;bottom:0;pointer-events:none}
+.col{position:absolute;top:0;bottom:0;border-left:1px solid var(--line)}
+.col.we{background:color-mix(in oklab,var(--surface2) 60%,transparent)}
+.col.today{background:color-mix(in oklab,var(--accent) 8%,transparent)}
+.row{display:flex;height:42px;position:relative}
+.row.head{height:44px;position:sticky;top:0;z-index:3}
+.lab{position:sticky;left:0;z-index:2;flex:none;background:var(--surface);border-right:1px solid var(--line);padding:4px 10px;display:flex;flex-direction:column;justify-content:center;overflow:hidden;cursor:pointer}
+.lab .t{font-size:.86rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lab .c{font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lab .c.late{color:var(--danger);font-weight:600}
+.lane .lab{flex-direction:row;align-items:center;gap:8px;font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em}
+.row.lane{height:30px;border-top:1px solid var(--line)}
+.track{position:relative;flex:none}
+.dayhead{position:absolute;top:0;height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.72rem;color:var(--muted);background:var(--surface);border-left:1px solid var(--line);border-bottom:1px solid var(--line)}
+.dayhead b{font-size:.92rem;color:var(--ink)}
+.dayhead.today b{background:var(--ink);color:var(--paper);border-radius:999px;padding:0 7px}
+.run{position:absolute;top:20px;height:0;border-top:2px dashed currentColor;opacity:.55}
+.work{position:absolute;top:13px;height:16px;border-radius:5px;min-width:8px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.work.latest{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.45) 0 4px,transparent 4px 8px)}
+.flag{position:absolute;top:6px;width:2px;height:30px;cursor:pointer}
+.flag::after{content:"";position:absolute;left:2px;top:0;border-left:11px solid currentColor;border-top:6px solid transparent;border-bottom:6px solid transparent}
+.cd{position:absolute;top:11px;font-size:.72rem;white-space:nowrap;font-variant-numeric:tabular-nums;padding:1px 6px;border-radius:6px;background:var(--surface);border:1px solid var(--line);cursor:pointer}
+.cd.late{color:var(--danger);border-color:var(--danger)}
+.tick{position:absolute;top:12px;height:18px;min-width:5px;border-radius:3px;border:1.5px solid currentColor;cursor:pointer}
+.tick.done{background:currentColor;opacity:.5}
+.now{position:absolute;top:0;bottom:0;width:2px;background:var(--danger);z-index:1;pointer-events:none}
+.now::before{content:"now";position:absolute;top:30px;left:4px;font-size:.66rem;color:var(--danger);font-weight:700;text-transform:uppercase}
+.key{display:flex;flex-wrap:wrap;gap:14px;font-size:.78rem;color:var(--muted);margin-top:10px;align-items:center}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.key .k1{width:26px;border-top:2px dashed var(--muted)}
+.key .k2{width:18px;height:10px;border-radius:3px;background:var(--accent)}
+.key .k3{width:18px;height:10px;border-radius:3px;background:var(--accent);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.5) 0 3px,transparent 3px 6px)}
+</style>
+</head>
+<body>
+<main>
+  <div class="controls">
+    <div class="sum" id="sum"></div>
+    <div class="tcl-seg" id="zoom"></div>
+    <button class="tcl-btn" id="routines">Routines</button>
+  </div>
+  <div class="chart" id="chart"></div>
+  <div class="key">
+    <span><i class="k1"></i>runway: time until you must start</span>
+    <span><i class="k2"></i>scheduled work block</span>
+    <span><i class="k3"></i>not scheduled yet, shown at the latest start</span>
+    <span>▶ deadline</span>
+  </div>
+</main>
+<script src="../shared.js"></script>
+<script>
+(function(){
+  const {h} = TCL;
+  TCL.mount('runway');
+  let days = 14, showRoutines = true;
+  const zoom = document.getElementById('zoom');
+  [[7, '1 wk'], [14, '2 wks'], [31, 'Month']].forEach(([n, l]) => zoom.append(h('button', {'data-n': n, onclick: () => { days = n; render(); }}, l)));
+  document.getElementById('routines').onclick = () => { showRoutines = !showRoutines; render(); };
+
+  function render() {
+    zoom.querySelectorAll('button').forEach((b) => b.classList.toggle('on', +b.dataset.n === days));
+    document.getElementById('routines').classList.toggle('on', showRoutines);
+    const now = new Date();
+    const from = TCL.addDays(TCL.sod(now), -1), to = TCL.addDays(from, days + 1);
+    const chart = document.getElementById('chart');
+    const LABEL = innerWidth < 560 ? 118 : 200;
+    const avail = chart.clientWidth - LABEL - 2;
+    const dayW = Math.max(innerWidth < 560 ? 44 : 56, avail / (days + 1));
+    const W = dayW * (days + 1);
+    const x = (t) => Math.max(0, Math.min(W, (t - from) / 864e5 * dayW));
+
+    const oneOffs = TCL.openOneOffs().filter((o) => o.due < to);
+    const late = oneOffs.filter((o) => o.due < now).length;
+    const soon = oneOffs.filter((o) => o.due >= now && o.due < TCL.addDays(TCL.sod(now), 3)).length;
+    document.getElementById('sum').innerHTML = `${oneOffs.length} open tasks<small>${late ? `<b style="color:var(--danger)">${late} overdue</b> · ` : ''}${soon} due in the next 3 days</small>`;
+
+    const inner = h('div', {class: 'inner', style: {width: (LABEL + W) + 'px'}});
+    const cols = h('div', {class: 'cols', style: {left: LABEL + 'px', width: W + 'px'}});
+    const head = h('div', {class: 'row head'}, h('div', {class: 'lab', style: {width: LABEL + 'px'}}, h('span', {class: 'c'}, 'Deadlines ▸')));
+    const headTrack = h('div', {class: 'track', style: {width: W + 'px'}});
+    const todayK = TCL.key(now);
+    for (let i = 0; i <= days; i++) {
+      const d = TCL.addDays(from, i), we = d.getDay() === 0 || d.getDay() === 6, isT = TCL.key(d) === todayK;
+      cols.append(h('div', {class: 'col' + (we ? ' we' : '') + (isT ? ' today' : ''), style: {left: i * dayW + 'px', width: dayW + 'px'}}));
+      headTrack.append(h('div', {class: 'dayhead' + (isT ? ' today' : ''), style: {left: i * dayW + 'px', width: dayW + 'px'}}, TCL.DOW[d.getDay()], h('b', null, d.getDate())));
+    }
+    head.append(headTrack);
+    inner.append(cols, head);
+    const lane = (name, color) => inner.append(h('div', {class: 'row lane'}, h('div', {class: 'lab', style: {width: LABEL + 'px', color}}, h('span', {class: 'tcl-dot', style: {background: color}}), name), h('div', {class: 'track', style: {width: W + 'px'}})));
+
+    if (showRoutines) {
+      const rec = TCL.expand(from, to).filter((o) => o.recurring);
+      const byTask = new Map();
+      rec.forEach((o) => { if (!byTask.has(o.task)) byTask.set(o.task, []); byTask.get(o.task).push(o); });
+      if (byTask.size) lane('Routines', 'var(--muted)');
+      for (const [t, list] of byTask) {
+        const track = h('div', {class: 'track', style: {width: W + 'px', color: TCL.color(t.project)}});
+        list.forEach((o) => {
+          const s = o.start || TCL.parse(o.dateKey + 'T12:00');
+          track.append(h('div', {class: 'tick' + (o.done ? ' done' : ''), title: `${o.title} · ${TCL.fmtDay(o.due)}${o.start ? ' ' + TCL.fmtTime(o.start) : ''}`, style: {left: x(s) + 'px', width: Math.max(5, o.dur / 1440 * dayW) + 'px'}, onclick: () => TCL.openTask(o)}));
+        });
+        inner.append(h('div', {class: 'row'}, h('div', {class: 'lab', style: {width: LABEL + 'px'}, onclick: () => TCL.openTask(list[0])}, h('span', {class: 't'}, t.title), h('span', {class: 'c'}, TCL.recurText(t.recur))), track));
+      }
+    }
+
+    for (const [pk, p] of Object.entries(TCL.PROJECTS)) {
+      const list = oneOffs.filter((o) => o.project === pk);
+      if (!list.length) continue;
+      lane(p.name, p.color);
+      for (const o of list) {
+        const isLate = o.due < now;
+        const track = h('div', {class: 'track', style: {width: W + 'px', color: p.color}});
+        const open = () => TCL.openTask(o);
+        const latest = new Date(o.due - o.dur * 6e4);
+        const ws = o.start || latest;
+        const xs = x(ws), xe = x(new Date(ws.getTime() + o.dur * 6e4));
+        if (!isLate) track.append(h('div', {class: 'run', style: {left: x(now) + 'px', width: Math.max(0, x(o.start || latest) - x(now)) + 'px'}}));
+        track.append(h('div', {class: 'work' + (o.start ? '' : ' latest'), title: `${o.title}: ${TCL.fmtDur(o.dur)}${o.start ? ' at ' + TCL.fmtTime(o.start) + ' ' + TCL.fmtDay(o.start) : ', not scheduled'}`, style: {left: (isLate ? x(now) - Math.max(8, xe - xs) : xs) + 'px', width: Math.max(8, xe - xs) + 'px', background: isLate ? 'var(--danger)' : p.color}, onclick: open}));
+        const xd = x(o.due);
+        track.append(h('div', {class: 'flag', style: {left: xd + 'px', background: isLate ? 'var(--danger)' : p.color, color: isLate ? 'var(--danger)' : p.color}, title: 'Deadline ' + TCL.fmtDay(o.due), onclick: open}));
+        const cdText = TCL.countdown(o, now);
+        const cd = h('div', {class: 'cd' + (isLate ? ' late' : ''), onclick: open}, cdText);
+        if (xd + 120 < W) cd.style.left = (xd + 16) + 'px'; else cd.style.right = (W - xd + 6) + 'px';
+        track.append(cd);
+        inner.append(h('div', {class: 'row'}, h('div', {class: 'lab', style: {width: LABEL + 'px'}, onclick: open}, h('span', {class: 't'}, o.title), h('span', {class: 'c' + (isLate ? ' late' : '')}, `${TCL.fmtDur(o.dur)} · due ${TCL.relDue(o, now)}`)), track));
+      }
+    }
+    inner.append(h('div', {class: 'now', style: {left: (LABEL + x(now)) + 'px'}}));
+    const sl = chart.scrollLeft;
+    chart.textContent = '';
+    chart.append(inner);
+    chart.scrollLeft = sl;
+  }
+  TCL.onChange(render);
+  addEventListener('resize', render);
+  TCL.every(render);
+  render();
+})();
+</script>
+</body>
+</html>

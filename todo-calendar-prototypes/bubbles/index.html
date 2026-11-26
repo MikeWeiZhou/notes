@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Urgency Orbit · Todo Calendar prototype 4</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../shared.css">
+<style>
+main{max-width:1180px;margin:0 auto;padding:12px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+@media (min-width:900px){main{grid-template-columns:minmax(0,1fr) 330px;align-items:start}}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.controls .lead{margin-right:auto;font-size:.85rem;color:var(--muted)}
+.stage{position:relative;width:100%;max-width:720px;margin:0 auto;aspect-ratio:1;touch-action:manipulation}
+.stage svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.ring{fill:none;stroke:var(--line);stroke-width:1.5}
+.ring.today{stroke:var(--danger);stroke-dasharray:4 4;opacity:.7}
+.ringlab{font-size:11px;fill:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.core{fill:color-mix(in oklab,var(--danger) 14%,transparent)}
+.sector{stroke:var(--line);stroke-width:1;stroke-dasharray:2 5}
+.seclab{font-size:12px;font-weight:600}
+.b{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;cursor:pointer;transform:translate(-50%,-50%);transition:left .5s cubic-bezier(.3,.7,.3,1),top .5s cubic-bezier(.3,.7,.3,1),box-shadow .15s;box-shadow:0 2px 8px rgba(0,0,0,.2);padding:4px;overflow:hidden;line-height:1.1}
+.b span{font-size:11px;font-weight:600;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.b small{display:block;font-size:9px;opacity:.85;font-weight:500}
+.b.rec{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.25) 0 4px,transparent 4px 8px)}
+.b.late{animation:pulse 1.6s infinite}
+.b.sel{box-shadow:0 0 0 3px var(--paper),0 0 0 6px var(--ink)}
+@keyframes pulse{50%{box-shadow:0 0 0 7px color-mix(in oklab,var(--danger) 35%,transparent)}}
+.center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:10px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:.08em;pointer-events:none}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:10px}
+.card h3{margin:0 0 4px;font:600 1.15rem Georgia,serif;display:flex;gap:8px;align-items:center}
+.card .meta{color:var(--muted);font-size:.85rem}
+aside{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+aside h3{margin:0 0 8px;font:600 1.1rem Georgia,serif}
+.nx{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);cursor:pointer}
+.nx .t{font-weight:500;font-size:.9rem}
+.nx .m{font-size:.75rem;color:var(--muted)}
+.nx .cd{font-size:.75rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.nx .cd.late{color:var(--danger);font-weight:600}
+.nx .sz{border-radius:50%;flex:none}
+/* focus mode */
+.focus{position:fixed;inset:0;z-index:90;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:20px;text-align:center;animation:tclfade .2s}
+.focus .proj{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.focus h2{font:600 clamp(1.5rem,5vw,2.4rem)/1.15 Georgia,serif;margin:0;max-width:700px}
+.focus .due{color:var(--muted)}
+.dial{position:relative;width:min(70vw,320px);aspect-ratio:1}
+.dial svg{width:100%;height:100%;transform:rotate(-90deg)}
+.dial .bg{fill:none;stroke:var(--surface2);stroke-width:14}
+.dial .fg{fill:none;stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+.dial .time{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 clamp(2.2rem,10vw,3.6rem) system-ui;font-variant-numeric:tabular-nums}
+.dial .time small{font:400 .85rem system-ui;color:var(--muted)}
+.focus .tcl-actions{justify-content:center}
+.focus .tcl-btn{padding:10px 18px;font-size:1rem}
+</style>
+</head>
+<body>
+<main>
+  <section>
+    <div class="controls">
+      <span class="lead">Bigger = takes longer. Closer to the centre = due sooner.</span>
+      <button class="tcl-btn" id="group">Group by project</button>
+    </div>
+    <div class="stage" id="stage"></div>
+    <div id="card"></div>
+  </section>
+  <aside><h3>Next up</h3><div id="next"></div></aside>
+</main>
+<script src="../shared.js"></script>
+<script>
+(function(){
+  const {h} = TCL;
+  TCL.mount('bubbles');
+  let group = false, selKey = null;
+  const pos = new Map(); // key -> {x,y} last positions, so bubbles glide
+  const keys = Object.keys(TCL.PROJECTS);
+  document.getElementById('group').onclick = () => { group = !group; render(); };
+
+  function items(now) {
+    const oneOffs = TCL.openOneOffs();
+    const today = TCL.expand(TCL.sod(now), TCL.addDays(TCL.sod(now), 1)).filter((o) => o.recurring && !o.done && o.due > now);
+    return oneOffs.concat(today).sort((a, b) => a.due - b.due);
+  }
+
+  function render() {
+    document.getElementById('group').classList.toggle('on', group);
+    const now = new Date();
+    const stage = document.getElementById('stage');
+    const S = stage.clientWidth, R = S / 2 - 6, C = S / 2;
+    const eod = TCL.addDays(TCL.sod(now), 1), wk = new Date(+now + 7 * 864e5), late3 = new Date(+now + 21 * 864e5);
+    const rad = (o) => { // piecewise distance from centre
+      const t = +o.due;
+      if (t < now) return R * 0.07;
+      const seg = (a, b, r0, r1) => r0 + (r1 - r0) * Math.min(1, (t - a) / (b - a));
+      if (t < eod) return seg(+now, +eod, R * .14, R * .32);
+      if (t < wk) return seg(+eod, +wk, R * .34, R * .64);
+      if (t < late3) return seg(+wk, +late3, R * .66, R * .93);
+      return R * .97;
+    };
+    const k = Math.min(1, S / 540);
+    const list = items(now).map((o, i) => {
+      const r = (12 + Math.sqrt(o.dur / 240) * 40) * k;
+      let a;
+      if (group) { const si = keys.indexOf(o.project); a = (si / keys.length) * 2 * Math.PI - Math.PI / 2 + (2 * Math.PI / keys.length) * (.15 + .7 * ((i * 0.618) % 1)); }
+      else a = i * 2.39996 - Math.PI / 2;
+      const d = rad(o);
+      return {o, r, d, a, x: C + Math.cos(a) * d, y: C + Math.sin(a) * d};
+    });
+    // relax overlaps while keeping each bubble near its ring distance
+    for (let it = 0; it < 120; it++) {
+      for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+        const p = list[i], q = list[j];
+        let dx = q.x - p.x, dy = q.y - p.y, dist = Math.hypot(dx, dy) || .01;
+        const min = p.r + q.r + 3;
+        if (dist < min) { const push = (min - dist) / 2; dx /= dist; dy /= dist; p.x -= dx * push; p.y -= dy * push; q.x += dx * push; q.y += dy * push; }
+      }
+      for (const p of list) {
+        let dx = p.x - C, dy = p.y - C, dist = Math.hypot(dx, dy) || .01;
+        const nd = dist + (p.d - dist) * .25;
+        p.x = C + dx / dist * nd; p.y = C + dy / dist * nd;
+        if (group) { // nudge back into its sector
+          const si = keys.indexOf(p.o.project), mid = ((si + .5) / keys.length) * 2 * Math.PI - Math.PI / 2;
+          let ang = Math.atan2(p.y - C, p.x - C), diff = Math.atan2(Math.sin(mid - ang), Math.cos(mid - ang));
+          const lim = Math.PI / keys.length * .85;
+          if (Math.abs(diff) > lim) { ang = mid - Math.sign(diff) * lim; const dd = Math.hypot(p.x - C, p.y - C); p.x = C + Math.cos(ang) * dd; p.y = C + Math.sin(ang) * dd; }
+        }
+      }
+    }
+    // draw
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${S} ${S}`);
+    const add = (tag, at, text) => { const e = document.createElementNS(ns, tag); for (const a in at) e.setAttribute(a, at[a]); if (text) e.textContent = text; svg.append(e); return e; };
+    add('circle', {cx: C, cy: C, r: R * .12, class: 'core'});
+    [[.33, 'Today', 'today'], [.65, 'This week', ''], [.94, 'Next 3 weeks', '']].forEach(([f, l, c]) => {
+      add('circle', {cx: C, cy: C, r: R * f, class: 'ring ' + c});
+      add('text', {x: C + 6, y: C - R * f + 14, class: 'ringlab'}, l);
+    });
+    if (group) keys.forEach((pk, i) => {
+      const a = (i / keys.length) * 2 * Math.PI - Math.PI / 2;
+      add('line', {x1: C, y1: C, x2: C + Math.cos(a) * R, y2: C + Math.sin(a) * R, class: 'sector'});
+      const m = a + Math.PI / keys.length;
+      const t = add('text', {x: C + Math.cos(m) * (R + 2), y: C + Math.sin(m) * (R + 2), class: 'seclab', fill: TCL.PROJECTS[pk].color, 'text-anchor': Math.cos(m) > .2 ? 'start' : Math.cos(m) < -.2 ? 'end' : 'middle'}, TCL.PROJECTS[pk].name);
+    });
+    stage.textContent = '';
+    stage.append(svg, h('div', {class: 'center'}, 'now'));
+    for (const p of list) {
+      const o = p.o, prev = pos.get(o.key);
+      const el = h('div', {
+        class: 'b' + (o.recurring ? ' rec' : '') + (o.due < now ? ' late' : '') + (selKey === o.key ? ' sel' : ''),
+        style: {width: p.r * 2 + 'px', height: p.r * 2 + 'px', background: o.due < now ? 'var(--danger)' : o.color, left: (prev ? prev.x : C) + 'px', top: (prev ? prev.y : C) + 'px'},
+        title: `${o.title} · ${TCL.fmtDur(o.dur)} · ${TCL.countdown(o, now)}`,
+        onclick: () => { selKey = o.key; render(); if (innerWidth < 900) document.getElementById('card').scrollIntoView({behavior: 'smooth', block: 'nearest'}); },
+      }, p.r >= 17 ? h('span', {style: {fontSize: Math.max(8, Math.min(11, p.r / 3.2)) + 'px'}}, o.title, p.r > 26 ? h('small', null, TCL.fmtDur(o.dur)) : null) : null);
+      stage.append(el);
+      requestAnimationFrame(() => requestAnimationFrame(() => { el.style.left = p.x + 'px'; el.style.top = p.y + 'px'; }));
+      pos.set(o.key, {x: p.x, y: p.y});
+    }
+    // selected card
+    const card = document.getElementById('card'); card.textContent = '';
+    const sel = list.find((p) => p.o.key === selKey);
+    if (sel) {
+      const o = sel.o;
+      card.append(h('div', {class: 'card'},
+        h('h3', null, h('span', {class: 'tcl-dot', style: {background: o.color}}), o.title),
+        h('div', {class: 'meta'}, `${TCL.PROJECTS[o.project].name} · takes ${TCL.fmtDur(o.dur)} · due ${TCL.relDue(o, now)} · ${TCL.countdown(o, now)}`),
+        h('div', {class: 'tcl-actions'},
+          h('button', {class: 'tcl-btn primary', onclick: () => focus(o)}, '◎ Focus on this'),
+          h('button', {class: 'tcl-btn', onclick: () => { selKey = null; TCL.toggle(o); }}, 'Done'),
+          h('button', {class: 'tcl-btn', onclick: () => TCL.openTask(o)}, 'Details'))));
+    } else card.append(h('p', {class: 'tcl-muted', style: {textAlign: 'center'}}, 'Tap a bubble to zone in on it.'));
+    // next up
+    const nx = document.getElementById('next'); nx.textContent = '';
+    list.slice(0, 10).forEach(({o, r}) => nx.append(h('div', {class: 'nx', onclick: () => { selKey = o.key; render(); }},
+      h('span', {class: 'sz', style: {width: Math.max(10, r * .6) + 'px', height: Math.max(10, r * .6) + 'px', background: o.color}}),
+      h('div', null, h('div', {class: 't'}, o.title), h('div', {class: 'm'}, `${TCL.fmtDur(o.dur)} · ${TCL.relDue(o, now)}`)),
+      h('span', {class: 'cd' + (o.due < now ? ' late' : '')}, TCL.countdown(o, now)))));
+  }
+
+  /* focus mode */
+  let timer = null;
+  function focus(o) {
+    let total = o.dur * 60, left = total, running = false;
+    const C = 2 * Math.PI * 140;
+    const fg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    const dial = h('div', {class: 'dial'});
+    dial.innerHTML = `<svg viewBox="0 0 320 320"><circle class="bg" cx="160" cy="160" r="140"/></svg>`;
+    Object.entries({class: 'fg', cx: 160, cy: 160, r: 140, stroke: o.color, 'stroke-dasharray': C, 'stroke-dashoffset': 0}).forEach(([a, v]) => fg.setAttribute(a, v));
+    dial.firstChild.append(fg);
+    const time = h('div', {class: 'time'});
+    dial.append(time);
+    const play = h('button', {class: 'tcl-btn primary'});
+    const draw = () => {
+      const m = Math.floor(left / 60), s = left % 60;
+      time.innerHTML = `${m}:${TCL.pad(s)}<small>${running ? 'focusing' : left === total ? 'ready' : 'paused'}</small>`;
+      fg.setAttribute('stroke-dashoffset', C * (1 - left / total));
+      play.textContent = running ? 'Pause' : left === total ? 'Start' : 'Resume';
+    };
+    play.onclick = () => {
+      running = !running;
+      clearInterval(timer);
+      if (running) timer = setInterval(() => { left = Math.max(0, left - 1); if (!left) { running = false; clearInterval(timer); } draw(); }, 1000);
+      draw();
+    };
+    const exit = () => { clearInterval(timer); wrap.remove(); render(); };
+    const wrap = h('div', {class: 'focus'},
+      h('div', {class: 'proj', style: {color: o.color}}, TCL.PROJECTS[o.project].name),
+      h('h2', null, o.title),
+      h('div', {class: 'due'}, `Due ${TCL.relDue(o)} · ${TCL.countdown(o)}`),
+      dial,
+      h('div', {class: 'tcl-actions'}, play,
+        h('button', {class: 'tcl-btn', onclick: () => { total += 300; left += 300; draw(); }}, '+5 min'),
+        h('button', {class: 'tcl-btn', onclick: () => { selKey = null; TCL.toggle(o); exit(); }}, '✓ Done'),
+        h('button', {class: 'tcl-btn ghost', onclick: exit}, 'Exit')),
+      o.task.note ? h('p', {class: 'tcl-muted', style: {maxWidth: '520px'}}, o.task.note) : null);
+    document.body.append(wrap);
+    draw();
+  }
+
+  TCL.onChange(render);
+  addEventListener('resize', render);
+  TCL.every(render);
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Todo Calendar · 5 prototypes</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="shared.css">
+<style>
+main{max-width:1180px;margin:0 auto;padding:24px 14px 60px}
+h1{font:400 clamp(1.8rem,5vw,2.4rem)/1.1 Georgia,"Songti SC",serif;margin:0 0 8px}
+.intro{max-width:720px;color:var(--muted);margin:0 0 22px}
+.intro b{color:var(--ink)}
+.steps{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 24px;padding:0;list-style:none;counter-reset:s}
+.steps li{counter-increment:s;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:.88rem}
+.steps li::before{content:counter(s);display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--paper);font-size:.72rem;margin-right:8px}
+.cards{display:grid;gap:16px}
+@media (min-width:760px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1100px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+.card.base{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.prev{position:relative;display:block;height:210px;overflow:hidden;background:var(--paper);border-bottom:1px solid var(--line)}
+.prev iframe{position:absolute;left:0;top:0;width:250%;height:250%;transform:scale(.4);transform-origin:0 0;border:0;pointer-events:none}
+.prev .open{position:absolute;right:10px;bottom:10px;background:var(--ink);color:var(--paper);border-radius:10px;padding:6px 12px;font-size:.85rem;text-decoration:none}
+.body{padding:14px;display:flex;flex-direction:column;gap:10px;flex:1}
+.body h2{margin:0;font:600 1.2rem Georgia,serif;display:flex;gap:8px;align-items:baseline}
+.body h2 small{font:600 .72rem system-ui;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.body p{margin:0;color:var(--muted);font-size:.9rem}
+.out{margin-top:28px;background:var(--surface);border:1.5px solid var(--line);border-radius:18px;padding:16px}
+.out h2{margin:0 0 8px;font:600 1.25rem Georgia,serif}
+.out textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--paper)}
+pre{white-space:pre-wrap;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:.85rem;min-height:60px;margin:10px 0}
+.foot{margin-top:24px;font-size:.82rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Todo Calendar: 5 prototypes</h1>
+  <p class="intro">Five different ways to see a calendar and a todo list as one picture. Every prototype shares <b>the same sample tasks</b>, with deadlines, durations and repeating tasks, so you can compare like for like. Changes you make in one (add, tick off, schedule) show up in all of them. Everything stays in this browser.</p>
+  <ol class="steps">
+    <li>Open each prototype and play with it</li>
+    <li>Tap <b>★ Pick</b> to tick the features you like</li>
+    <li>Choose one as the base layout</li>
+    <li>Copy your picks at the bottom and send them</li>
+  </ol>
+  <div class="cards" id="cards"></div>
+  <section class="out">
+    <h2>Your picks</h2>
+    <textarea id="general" rows="2" placeholder="Anything else you want in the final app?"></textarea>
+    <pre id="summary"></pre>
+    <div class="tcl-actions">
+      <button class="tcl-btn primary" id="copy">Copy my picks</button>
+      <button class="tcl-btn" id="clear">Clear picks</button>
+    </div>
+  </section>
+  <p class="foot">Prototypes with sample data. Nothing syncs yet; the final app will be built so sync and calendar import can be added later.</p>
+</main>
+<script src="shared.js"></script>
+<script>
+(function(){
+  const {h} = TCL;
+  TCL.tasks(); // seed sample data once
+  const cards = document.getElementById('cards');
+  const summary = document.getElementById('summary');
+  const general = document.getElementById('general');
+  general.value = TCL.picks().general || '';
+  general.oninput = () => { const p = TCL.picks(); p.general = general.value; TCL.savePicks(p); upd(); };
+
+  function upd() {
+    const t = TCL.picksText();
+    summary.textContent = t || 'Nothing picked yet. Tick features in the cards above or inside each prototype.';
+    const base = TCL.picks().base;
+    cards.querySelectorAll('.card').forEach((c) => c.classList.toggle('base', c.dataset.id === base));
+  }
+  function build() {
+    cards.textContent = '';
+    TCL.PROTOS.forEach((pr, i) => cards.append(h('article', {class: 'card', 'data-id': pr.id},
+      h('a', {class: 'prev', href: pr.id + '/', 'aria-label': 'Open ' + pr.name},
+        h('iframe', {src: pr.id + '/', loading: 'lazy', tabindex: '-1', title: pr.name + ' preview', 'aria-hidden': 'true'}),
+        h('span', {class: 'open'}, 'Open ›')),
+      h('div', {class: 'body'},
+        h('h2', null, h('small', null, String(i + 1)), pr.name),
+        h('p', null, pr.idea),
+        TCL.featureList(pr, upd)))));
+    upd();
+  }
+  document.getElementById('copy').onclick = async (e) => {
+    const t = TCL.picksText();
+    if (!t) return;
+    try { await navigator.clipboard.writeText(t); e.target.textContent = 'Copied ✓'; }
+    catch (err) { const r = document.createRange(); r.selectNodeContents(summary); getSelection().removeAllRanges(); getSelection().addRange(r); e.target.textContent = 'Selected, copy it'; }
+    setTimeout(() => (e.target.textContent = 'Copy my picks'), 2000);
+  };
+  document.getElementById('clear').onclick = () => { TCL.savePicks({}); general.value = ''; build(); };
+  addEventListener('storage', (e) => { if (e.key === 'tcl.picks.v1') build(); });
+  addEventListener('pageshow', build); // coming back from a prototype
+  build();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+/* Shared look for the five todo calendar prototypes */
+:root{--paper:#eef1f0;--surface:#fbfcfc;--surface2:#e5eae8;--ink:#172625;--muted:#5d6e6b;--line:#cdd6d3;--accent:#1f6f66;--danger:#c8372d;--heat:#1f6f66;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--paper:#0f1615;--surface:#172120;--surface2:#1f2b29;--ink:#e4ece8;--muted:#97a9a4;--line:#2c3b38;--accent:#5ec2b5;--danger:#ff6b5e;--heat:#5ec2b5;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC",sans-serif;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+.tcl-muted{color:var(--muted);font-size:.9rem}
+
+/* top bar */
+.tcl-bar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:10px;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));background:color-mix(in oklab,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.tcl-back{font-size:28px;line-height:1;text-decoration:none;color:var(--ink);padding:0 6px 4px}
+.tcl-name{display:flex;flex-direction:column;min-width:0;flex:1}
+.tcl-name small{color:var(--muted);font-size:.72rem;letter-spacing:.04em;text-transform:uppercase}
+.tcl-name strong{font:600 1.05rem/1.2 Georgia,"Songti SC",serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tcl-tools{display:flex;gap:6px;align-items:center}
+.tcl-icon{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);text-decoration:none;color:var(--ink);background:var(--surface)}
+@media (max-width:560px){.tcl-icon,.tcl-wide{display:none}}
+
+.tcl-btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;cursor:pointer;white-space:nowrap;position:relative}
+.tcl-btn:hover{border-color:var(--ink)}
+.tcl-btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tcl-btn.danger{color:var(--danger)}
+.tcl-btn.ghost{background:transparent}
+.tcl-btn.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tcl-badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;border-radius:9px;background:var(--accent);color:var(--paper);font-size:11px;display:grid;place-items:center;padding:0 4px}
+.tcl-badge[hidden]{display:none}
+.tcl-dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex:none}
+.tcl-seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.tcl-seg button{border:0;background:transparent;padding:6px 11px;cursor:pointer}
+.tcl-seg button.on{background:var(--ink);color:var(--paper)}
+.tcl-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:var(--surface);cursor:pointer;font-size:.85rem;white-space:nowrap}
+.tcl-chip.off{opacity:.45}
+
+/* sheet */
+.tcl-scrim{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.35);display:flex;align-items:flex-end;justify-content:center;animation:tclfade .15s}
+.tcl-sheet{background:var(--surface);width:100%;max-width:520px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:14px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -8px 30px rgba(0,0,0,.2);animation:tclup .2s}
+@media (min-width:700px){.tcl-scrim{align-items:center}.tcl-sheet{border-radius:18px}}
+@keyframes tclfade{from{opacity:0}}
+@keyframes tclup{from{transform:translateY(30px);opacity:.5}}
+.tcl-sheet-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.tcl-sheet-head strong{font:600 1.1rem Georgia,serif}
+.tcl-x{border:0;background:transparent;font-size:26px;line-height:1;cursor:pointer;color:var(--muted)}
+.tcl-detail-title{display:flex;align-items:center;gap:10px;font-size:1.2rem;font-weight:600;margin:4px 0 10px}
+.tcl-detail dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0 0 14px}
+.tcl-detail dt{color:var(--muted)}
+.tcl-detail dd{margin:0}
+.tcl-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.tcl-form{display:flex;flex-direction:column;gap:10px}
+.tcl-form label{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.tcl-form label span{font-size:.8rem;color:var(--muted)}
+.tcl-form input,.tcl-form select,.tcl-sheet textarea{border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:var(--paper);width:100%}
+.tcl-row{display:flex;gap:10px}
+.tcl-feats{display:flex;flex-direction:column;gap:6px}
+.tcl-feat{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:var(--paper)}
+.tcl-feat input{margin-top:3px;accent-color:var(--accent);width:17px;height:17px;flex:none}
+.tcl-feat.base{border-style:dashed}
+.tcl-feats textarea{margin-top:4px;resize:vertical}

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Time Blocks · Todo Calendar prototype 3</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../shared.css">
+<style>
+body{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+main{flex:1;display:flex;flex-direction:column;min-height:0;max-width:1400px;width:100%;margin:0 auto;padding:10px 12px 0}
+.controls{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.controls h2{font:600 1.2rem Georgia,serif;margin:0 auto 0 0}
+.cal{flex:1;min-height:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.heads{display:flex;border-bottom:1px solid var(--line)}
+.gut{width:46px;flex:none}
+.dh{flex:1;min-width:0;padding:6px 6px 6px;border-left:1px solid var(--line)}
+.dh .d{display:flex;align-items:baseline;gap:6px;font-size:.78rem;color:var(--muted)}
+.dh .d b{font-size:1.05rem;color:var(--ink)}
+.dh.today .d b{background:var(--ink);color:var(--paper);border-radius:999px;padding:0 7px}
+.dh .load{height:4px;border-radius:2px;background:var(--surface2);margin:4px 0;overflow:hidden}
+.dh .load i{display:block;height:100%;background:var(--accent)}
+.dh .load i.over{background:var(--danger)}
+.flags{display:flex;flex-direction:column;gap:2px;min-height:18px}
+.fl{font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;padding:1px 5px;border-radius:5px;border-left:3px solid;background:var(--paper)}
+.fl.done{opacity:.4;text-decoration:line-through}
+.scroll{flex:1;overflow-y:auto;position:relative;-webkit-overflow-scrolling:touch}
+.body{display:flex;position:relative}
+.hours{width:46px;flex:none}
+.hours div{font-size:.68rem;color:var(--muted);text-align:right;padding-right:6px;transform:translateY(-7px)}
+.day{flex:1;min-width:0;position:relative;border-left:1px solid var(--line);background-image:linear-gradient(var(--line) 1px,transparent 1px);cursor:copy}
+.day.we{background-color:color-mix(in oklab,var(--surface2) 45%,transparent)}
+.blk{position:absolute;border-radius:7px;padding:3px 6px;font-size:.74rem;line-height:1.25;overflow:hidden;cursor:pointer;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.18);border:1px solid rgba(0,0,0,.08)}
+.blk b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blk.rec{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.22) 0 5px,transparent 5px 10px)}
+.blk.done{opacity:.4}
+.blk.done b{text-decoration:line-through}
+.blk.late{outline:2.5px solid var(--danger);outline-offset:1px}
+.blk.late::after{content:"after deadline";position:absolute;right:4px;bottom:2px;font-size:.6rem;background:var(--danger);color:#fff;border-radius:4px;padding:0 4px}
+.blk.sel{outline:3px solid var(--ink);outline-offset:1px}
+.dl{position:absolute;left:0;right:0;border-top:2px dashed;pointer-events:none;z-index:2}
+.dl span{position:absolute;right:2px;top:-9px;font-size:.6rem;font-weight:700;background:var(--surface);padding:0 3px;border-radius:3px;white-space:nowrap;max-width:95%;overflow:hidden;text-overflow:ellipsis}
+.now{position:absolute;left:0;right:0;height:2px;background:var(--danger);z-index:3;pointer-events:none}
+.now::before{content:"";position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--danger)}
+.ghost{position:absolute;left:3px;right:3px;border-radius:7px;border:2px dashed var(--ink);pointer-events:none;display:none;z-index:4;font-size:.7rem;padding:2px 6px}
+.placing .day:hover .ghost{display:block}
+.tray{flex:none;padding:8px 12px calc(10px + env(safe-area-inset-bottom));max-width:1400px;width:100%;margin:0 auto}
+.tray-h{display:flex;justify-content:space-between;align-items:center;font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.tk{flex:none;display:flex;flex-direction:column;gap:2px;border:1px solid var(--line);border-left:5px solid;border-radius:10px;padding:6px 10px;background:var(--surface);cursor:pointer;text-align:left;max-width:220px}
+.tk b{font-weight:600;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tk span{font-size:.72rem;color:var(--muted)}
+.tk .late{color:var(--danger);font-weight:600}
+.tk.sel{outline:3px solid var(--ink)}
+.hint{display:none;position:fixed;left:50%;top:64px;transform:translateX(-50%);z-index:50;background:var(--ink);color:var(--paper);padding:8px 14px;border-radius:12px;font-size:.85rem;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:92vw;align-items:center;gap:10px}
+.placing .hint{display:flex}
+.hint button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:8px;padding:2px 8px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="hint" id="hint"><span id="hintText"></span><button id="cancel">Cancel</button></div>
+<main>
+  <div class="controls">
+    <h2 id="range"></h2>
+    <div class="tcl-seg"><button id="prev" aria-label="Earlier">‹</button><button id="today">Today</button><button id="next" aria-label="Later">›</button></div>
+  </div>
+  <div class="cal">
+    <div class="heads" id="heads"></div>
+    <div class="scroll" id="scroll"><div class="body" id="body"></div></div>
+  </div>
+</main>
+<div class="tray">
+  <div class="tray-h"><span id="trayTitle">Not scheduled yet</span><span>tap one, then tap a time</span></div>
+  <div class="chips" id="tray"></div>
+</div>
+<script src="../shared.js"></script>
+<script>
+(function(){
+  const {h} = TCL;
+  TCL.mount('week');
+  const H0 = 6, H1 = 24, HH = 46, CAP = 6 * 60;
+  let offset = 0, placing = null, scrolled = false;
+
+  const nDays = () => innerWidth < 700 ? 3 : 7;
+  const firstDay = () => nDays() === 7 ? TCL.addDays(TCL.sow(new Date()), offset * 7) : TCL.addDays(TCL.sod(new Date()), offset * 3);
+
+  function place(o) {
+    placing = o;
+    document.body.classList.add('placing');
+    document.getElementById('hintText').textContent = `Tap a time to place “${o.title}” (${TCL.fmtDur(o.dur)})`;
+    render();
+  }
+  function stopPlacing() { placing = null; document.body.classList.remove('placing'); render(); }
+  document.getElementById('cancel').onclick = stopPlacing;
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && placing) stopPlacing(); });
+
+  function lanes(list) {
+    // greedy overlap columns
+    const ends = [];
+    list.sort((a, b) => a.start - b.start);
+    for (const o of list) {
+      const s = +o.start; let i = ends.findIndex((e) => e <= s);
+      if (i < 0) { i = ends.length; ends.push(0); }
+      ends[i] = s + Math.max(o.dur, 30) * 6e4; o._lane = i;
+    }
+    for (const o of list) { const s = +o.start, e = s + Math.max(o.dur, 30) * 6e4; o._n = 1 + Math.max(...list.filter((p) => +p.start < e && +p.start + Math.max(p.dur, 30) * 6e4 > s).map((p) => p._lane)); }
+  }
+
+  function render() {
+    const n = nDays(), d0 = firstDay(), d1 = TCL.addDays(d0, n);
+    const now = new Date(), todayK = TCL.key(now);
+    document.getElementById('range').textContent = `${TCL.MON[d0.getMonth()]} ${d0.getDate()} – ${TCL.MON[TCL.addDays(d1, -1).getMonth()]} ${TCL.addDays(d1, -1).getDate()}`;
+    const occs = TCL.expand(d0, d1);
+    const heads = document.getElementById('heads'), body = document.getElementById('body');
+    heads.textContent = ''; body.textContent = '';
+    heads.append(h('div', {class: 'gut'}));
+    const hours = h('div', {class: 'hours'});
+    for (let i = H0; i < H1; i++) hours.append(h('div', {style: {height: HH + 'px'}}, i === H0 ? '' : TCL.fmtTime(new Date(2000, 0, 1, i))));
+    body.append(hours);
+    for (let i = 0; i < n; i++) {
+      const d = TCL.addDays(d0, i), k = TCL.key(d);
+      const mine = occs.filter((o) => o.start && TCL.key(o.start) === k);
+      const dues = occs.filter((o) => !o.recurring && TCL.key(o.due) === k);
+      const load = occs.filter((o) => o.planDay === k && !o.done).reduce((s, o) => s + o.dur, 0);
+      heads.append(h('div', {class: 'dh' + (k === todayK ? ' today' : '')},
+        h('div', {class: 'd'}, TCL.DOW[d.getDay()], h('b', null, d.getDate()), h('span', {style: {marginLeft: 'auto'}}, load ? TCL.fmtHours(load) : '')),
+        h('div', {class: 'load', title: `${TCL.fmtHours(load)} planned of ${TCL.fmtHours(CAP)}`}, h('i', {class: load > CAP ? 'over' : '', style: {width: Math.min(100, load / CAP * 100) + '%'}})),
+        h('div', {class: 'flags'}, dues.map((o) => h('div', {class: 'fl' + (o.done ? ' done' : ''), style: {borderColor: o.color}, title: 'Deadline: ' + o.title, onclick: () => TCL.openTask(o, [{label: 'Place on calendar', fn: () => place(o)}])}, `▶ ${o.hasTime ? TCL.fmtTime(o.due) + ' ' : ''}${o.title}`)))));
+      const ghost = h('div', {class: 'ghost'});
+      const col = h('div', {class: 'day' + (d.getDay() % 6 === 0 ? ' we' : ''), style: {height: (H1 - H0) * HH + 'px', backgroundSize: `100% ${HH}px`}}, ghost);
+      col.addEventListener('pointermove', (e) => {
+        if (!placing) return;
+        const m = Math.round((e.offsetY / HH * 60) / 15) * 15;
+        if (e.target !== col) return;
+        ghost.style.top = (m / 60 * HH) + 'px'; ghost.style.height = (placing.dur / 60 * HH) + 'px';
+        ghost.textContent = TCL.fmtTime(new Date(2000, 0, 1, H0, m));
+      });
+      col.addEventListener('click', (e) => {
+        if (e.target !== col && e.target !== ghost) return;
+        const y = e.clientY - col.getBoundingClientRect().top;
+        const m = Math.max(0, Math.round((y / HH * 60) / 15) * 15);
+        if (placing) {
+          const st = new Date(d); st.setHours(H0, m);
+          const o = placing; placing = null; document.body.classList.remove('placing');
+          TCL.setStart(o, st);
+        } else {
+          const st = new Date(d); st.setHours(H0, m);
+          TCL.openAdd({due: k, start: st});
+        }
+      });
+      lanes(mine);
+      for (const o of mine) {
+        const top = ((o.start.getHours() - H0) * 60 + o.start.getMinutes()) / 60 * HH;
+        const end = new Date(o.start.getTime() + o.dur * 6e4);
+        const late = !o.recurring && !o.done && end > o.due;
+        const w = 100 / o._n;
+        col.append(h('div', {
+          class: 'blk' + (o.recurring ? ' rec' : '') + (o.done ? ' done' : '') + (late ? ' late' : '') + (placing && placing.key === o.key ? ' sel' : ''),
+          style: {top: Math.max(0, top) + 'px', height: Math.max(20, o.dur / 60 * HH - 2) + 'px', left: `calc(${o._lane * w}% + 2px)`, width: `calc(${w}% - 4px)`, background: o.color},
+          title: `${o.title} · ${TCL.fmtTime(o.start)}–${TCL.fmtTime(end)}`,
+          onclick: (e) => { e.stopPropagation(); TCL.openTask(o, [{label: 'Move', fn: () => place(o)}]); },
+        }, h('b', null, o.title), o.dur >= 30 ? `${TCL.fmtTime(o.start)} · ${TCL.fmtDur(o.dur)}` : ''));
+      }
+      for (const o of dues) if (o.hasTime && !o.done) {
+        const top = ((o.due.getHours() - H0) * 60 + o.due.getMinutes()) / 60 * HH;
+        col.append(h('div', {class: 'dl', style: {top: top + 'px', borderColor: o.color, color: o.color}}, h('span', null, '▶ due ' + o.title)));
+      }
+      if (k === todayK) col.append(h('div', {class: 'now', style: {top: ((now.getHours() - H0) * 60 + now.getMinutes()) / 60 * HH + 'px'}}));
+      body.append(col);
+    }
+    // tray
+    const tray = document.getElementById('tray'); tray.textContent = '';
+    const un = TCL.openOneOffs().filter((o) => !o.start);
+    document.getElementById('trayTitle').textContent = `Not scheduled yet · ${un.length}`;
+    un.forEach((o) => tray.append(h('button', {class: 'tk' + (placing && placing.key === o.key ? ' sel' : ''), style: {borderLeftColor: o.color}, onclick: () => placing && placing.key === o.key ? stopPlacing() : place(o)},
+      h('b', null, o.title), h('span', null, TCL.fmtDur(o.dur) + ' · ', h('span', {class: o.due < now ? 'late' : ''}, 'due ' + TCL.relDue(o, now))))));
+    if (!un.length) tray.append(h('span', {class: 'tcl-muted'}, 'Everything has a time. Nice.'));
+    if (!scrolled) { document.getElementById('scroll').scrollTop = (Math.max(H0, Math.min(now.getHours() - 1, 17)) - H0) * HH; scrolled = true; }
+  }
+  document.getElementById('prev').onclick = () => { offset--; render(); };
+  document.getElementById('next').onclick = () => { offset++; render(); };
+  document.getElementById('today').onclick = () => { offset = 0; render(); };
+  TCL.onChange(() => { placing = null; document.body.classList.remove('placing'); render(); });
+  let lastN = nDays();
+  addEventListener('resize', () => { if (nDays() !== lastN) { lastN = nDays(); offset = 0; } render(); });
+  TCL.every(render);
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Capacity Stack · Todo Calendar prototype 5</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../shared.css">
+<style>
+main{max-width:1180px;margin:0 auto;padding:12px}
+.top{display:grid;gap:12px;margin-bottom:14px}
+@media (min-width:900px){.top{grid-template-columns:1fr 1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.panel h3{margin:0 0 8px;font:600 1rem Georgia,serif}
+.ctl{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.ctl label{display:flex;align-items:center;gap:8px;font-size:.9rem}
+.ctl input[type=range]{accent-color:var(--accent);width:150px}
+.ctl output{font-variant-numeric:tabular-nums;font-weight:600;min-width:2.5em}
+.hab{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:5px 0;border-top:1px solid var(--line);font-size:.88rem}
+.hab:first-of-type{border-top:0}
+.hab .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hab .nm small{color:var(--muted);margin-left:6px}
+.pips{display:flex;gap:4px}
+.pip{width:14px;height:14px;border-radius:50%;border:2px solid;cursor:pointer;padding:0;background:transparent}
+.pip.on{background:currentColor}
+.pip.today{outline:2px solid var(--ink);outline-offset:1px}
+.pip.na{opacity:.2;cursor:default;border-style:dotted}
+.streak{font-size:.75rem;color:var(--muted);min-width:64px;text-align:right;font-variant-numeric:tabular-nums}
+.days{display:grid;gap:12px}
+@media (min-width:900px){.days{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}}
+.dc{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.dc.today{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.dc.overdue{border-color:var(--danger)}
+.dhd{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.dhd h4{margin:0;font:600 1.05rem Georgia,serif}
+.dhd h4 small{font:400 .8rem system-ui;color:var(--muted);margin-left:6px}
+.dhd .lv{font-size:.8rem;font-variant-numeric:tabular-nums;color:var(--muted)}
+.dhd .lv b{color:var(--ink)}
+.dhd .lv.over b{color:var(--danger)}
+.gauge{position:relative;height:18px;border-radius:9px;background:var(--surface2);margin:8px 0 6px;overflow:hidden}
+.gauge .fill{position:absolute;left:0;top:0;bottom:0;display:flex}
+.gauge .fill i{height:100%;border-right:1.5px solid var(--surface)}
+.gauge .fill i.done{opacity:.3}
+.gauge .cap{position:absolute;top:-2px;bottom:-2px;width:2.5px;background:var(--ink)}
+.gauge .ovr{position:absolute;top:0;bottom:0;right:0;background:repeating-linear-gradient(135deg,color-mix(in oklab,var(--danger) 70%,transparent) 0 4px,transparent 4px 8px);border-left:2px solid var(--danger)}
+.it{display:grid;grid-template-columns:22px 4px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--line);cursor:pointer}
+.it:first-of-type{border-top:0}
+.it input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
+.it .st{width:4px;height:28px;border-radius:2px}
+.it .t{font-weight:500;font-size:.92rem}
+.it.done .t{text-decoration:line-through;color:var(--muted)}
+.it .m{font-size:.75rem;color:var(--muted)}
+.it .m .pl{color:var(--accent);font-weight:600}
+.it .m .late{color:var(--danger);font-weight:600}
+.it .d{font-size:.75rem;padding:2px 8px;border-radius:999px;background:var(--surface2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.free{font-size:.82rem;color:var(--muted);padding:6px 0}
+.addd{border:1px dashed var(--line);background:transparent;border-radius:10px;padding:5px 10px;margin-top:6px;cursor:pointer;color:var(--muted);font-size:.82rem;width:100%}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div class="panel">
+      <h3>How much can you do in a day?</h3>
+      <div class="ctl">
+        <label>Capacity <input type="range" id="cap" min="2" max="10" step=".5"><output id="capv"></output></label>
+        <label><input type="checkbox" id="spread"> Spread unscheduled work before deadlines</label>
+      </div>
+      <p class="tcl-muted" style="margin:8px 0 0">With spread on, tasks without a time slot are placed on the earliest day that still has room before they are due.</p>
+    </div>
+    <div class="panel"><h3>Habits · last 7</h3><div id="habits"></div></div>
+  </div>
+  <div class="days" id="days"></div>
+</main>
+<script src="../shared.js"></script>
+<script>
+(function(){
+  const {h} = TCL;
+  TCL.mount('stack');
+  const capEl = document.getElementById('cap'), spreadEl = document.getElementById('spread');
+  capEl.value = +localStorage.getItem('tcl.p5.cap') || 6;
+  spreadEl.checked = localStorage.getItem('tcl.p5.spread') !== '0';
+  capEl.oninput = () => { localStorage.setItem('tcl.p5.cap', capEl.value); render(); };
+  spreadEl.onchange = () => { localStorage.setItem('tcl.p5.spread', spreadEl.checked ? '1' : '0'); render(); };
+  const N = 14;
+
+  function habits(now) {
+    const box = document.getElementById('habits'); box.textContent = '';
+    const T = TCL.sod(now);
+    const past = TCL.expand(TCL.addDays(T, -90), TCL.addDays(T, 1)).filter((o) => o.recurring);
+    const by = new Map();
+    past.forEach((o) => { if (!by.has(o.task)) by.set(o.task, []); by.get(o.task).push(o); });
+    for (const [t, list] of by) {
+      const last = list.slice(-7);
+      let streak = 0;
+      for (let i = list.length - 1; i >= 0; i--) { const o = list[i]; if (o.dateKey === TCL.key(T) && !o.done) continue; if (o.done) streak++; else break; }
+      const color = TCL.color(t.project);
+      box.append(h('div', {class: 'hab'},
+        h('span', {class: 'nm'}, t.title, h('small', null, TCL.recurText(t.recur))),
+        h('span', {class: 'pips'}, Array.from({length: 7 - last.length}, () => h('span', {class: 'pip na', style: {color}})),
+          last.map((o) => h('button', {class: 'pip' + (o.done ? ' on' : '') + (o.dateKey === TCL.key(T) ? ' today' : ''), style: {color}, title: `${TCL.fmtDay(TCL.parse(o.dateKey))}: ${o.done ? 'done' : 'not done'}`, onclick: () => TCL.toggle(o)}))),
+        h('span', {class: 'streak'}, streak ? `${streak} in a row` : '')));
+    }
+  }
+
+  function render() {
+    const now = new Date(), T = TCL.sod(now), cap = +capEl.value * 60;
+    document.getElementById('capv').textContent = capEl.value + 'h';
+    habits(now);
+    const occs = TCL.expand(T, TCL.addDays(T, N));
+    const overdue = TCL.openOneOffs().filter((o) => o.due < now);
+    const load = {}, plan = new Map();
+    const dayKeys = Array.from({length: N}, (_, i) => TCL.key(TCL.addDays(T, i)));
+    // fixed first: done, scheduled, recurring, and everything if spread is off
+    const flexible = [];
+    for (const o of occs) {
+      if (o.due < now && !o.done && !o.recurring) continue; // shown in overdue
+      const fixed = o.done || o.start || o.recurring || !spreadEl.checked;
+      if (fixed) { plan.set(o.key, o.planDay); if (!o.done) load[o.planDay] = (load[o.planDay] || 0) + o.dur; }
+      else flexible.push(o);
+    }
+    flexible.sort((a, b) => a.due - b.due);
+    for (const o of flexible) {
+      const last = TCL.key(o.due);
+      const range = dayKeys.filter((k) => k <= last);
+      let k = range.find((d) => (load[d] || 0) + o.dur <= cap);
+      if (!k) k = range.reduce((m, d) => ((load[d] || 0) < (load[m] || 0) ? d : m), range[0] || last);
+      plan.set(o.key, k); o._planned = k !== last; load[k] = (load[k] || 0) + o.dur;
+    }
+    const days = document.getElementById('days'); days.textContent = '';
+    const item = (o, now) => {
+      const sub = [];
+      if (o.start) sub.push(TCL.fmtTime(o.start));
+      if (o.recurring) sub.push(TCL.recurText(o.task.recur).toLowerCase());
+      else if (o._planned) sub.push(h('span', {class: 'pl'}, 'planned'), ` · due ${TCL.relDue(o, now)}`);
+      else sub.push(h('span', {class: o.due < now && !o.done ? 'late' : ''}, `due ${TCL.relDue(o, now)}`));
+      const parts = []; sub.forEach((s, i) => { if (i && !(typeof s === 'string' && s.startsWith(' ·'))) parts.push(' · '); parts.push(s); });
+      return h('div', {class: 'it' + (o.done ? ' done' : ''), onclick: () => TCL.openTask(o)},
+        h('input', {type: 'checkbox', checked: o.done, onclick: (e) => { e.stopPropagation(); TCL.toggle(o); }}),
+        h('span', {class: 'st', style: {background: o.color}}),
+        h('div', null, h('div', {class: 't'}, o.title), h('div', {class: 'm'}, parts)),
+        h('span', {class: 'd'}, TCL.fmtDur(o.dur)));
+    };
+    if (overdue.length) {
+      days.append(h('div', {class: 'dc overdue'},
+        h('div', {class: 'dhd'}, h('h4', {style: {color: 'var(--danger)'}}, 'Overdue'), h('span', {class: 'lv'}, TCL.fmtHours(overdue.reduce((s, o) => s + o.dur, 0)))),
+        overdue.map((o) => item(o, now))));
+    }
+    dayKeys.forEach((k, i) => {
+      const d = TCL.parse(k);
+      const list = occs.filter((o) => plan.get(o.key) === k).sort((a, b) => (a.done - b.done) || ((a.start || a.due) - (b.start || b.due)));
+      const L = load[k] || 0, scale = Math.max(cap, L);
+      const name = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
+      const gauge = h('div', {class: 'gauge', title: `${TCL.fmtHours(L)} of ${TCL.fmtHours(cap)}`},
+        h('div', {class: 'fill', style: {width: '100%'}}, list.filter((o) => !o.done).map((o) => h('i', {style: {width: (o.dur / scale * 100) + '%', background: o.color}, title: o.title}))),
+        L > cap ? h('div', {class: 'ovr', style: {width: ((L - cap) / scale * 100) + '%'}}) : null,
+        h('div', {class: 'cap', style: {left: `calc(${cap / scale * 100}% - 1px)`}}));
+      days.append(h('div', {class: 'dc' + (i === 0 ? ' today' : '')},
+        h('div', {class: 'dhd'},
+          h('h4', null, name, h('small', null, `${TCL.DOW[d.getDay()]} ${d.getDate()} ${TCL.MON[d.getMonth()]}`)),
+          h('span', {class: 'lv' + (L > cap ? ' over' : '')}, h('b', null, TCL.fmtHours(L)), ` / ${TCL.fmtHours(cap)} · `, L > cap ? `${TCL.fmtHours(L - cap)} over` : `${TCL.fmtHours(cap - L)} free`)),
+        gauge,
+        list.length ? list.map((o) => item(o, now)) : h('div', {class: 'free'}, 'Nothing here yet. Room for deep work.'),
+        h('button', {class: 'addd', onclick: () => TCL.openAdd({due: k})}, '+ add to this day')));
+    });
+  }
+  TCL.onChange(render);
+  TCL.every(render);
+  render();
+})();
+</script>
+</body>
+</html>

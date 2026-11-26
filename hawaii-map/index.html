@@ -151,10 +151,10 @@ svg { display: block; }
 .pin .key.sil > svg .hl { display: inline; }
 .pin.today { z-index: 2; }
 .pin.sel { z-index: 5; }
-.pin.sel .key { box-shadow: 0 0 0 1.5px var(--plate), 0 0 0 4.5px var(--lava), 0 2px 8px 5px rgba(31,26,23,.35); transform: scale(1.12); }
+.pin.sel .key { box-shadow: 0 0 0 1.5px var(--plate), 0 0 0 4.5px var(--lava), 0 2px 8px 5px rgba(31,26,23,.35); }
 .pin.sel .key.sil { box-shadow: none; }
-.pin.sel .key.sil::before { content: ""; position: absolute; inset: -6px; z-index: -1; border-radius: 50%; background: var(--plate); box-shadow: 0 0 0 3px var(--lava), 0 2px 8px 5px rgba(31,26,23,.35); }
-.pin.sel .key.sil > svg { filter: none; }
+/* a selected silhouette keeps its size: a dark outline hugs the shape (four offset drop-shadows of the haloed svg), no disc behind it */
+.pin.sel .key.sil > svg { filter: drop-shadow(1.6px 0 0 var(--lava)) drop-shadow(-1.6px 0 0 var(--lava)) drop-shadow(0 1.6px 0 var(--lava)) drop-shadow(0 -1.6px 0 var(--lava)) drop-shadow(0 2px 3px rgba(31,26,23,.35)); }
 .pin .plab { position: absolute; left: 50%; top: calc(50% + var(--ps, 21px) / 2 + 4px); transform: translateX(-50%); padding: 1px 5px 2px; background: var(--plate); color: var(--ink); border: 1.5px solid var(--lava); font-weight: 700; font-size: 14px; line-height: 1.1; white-space: nowrap; pointer-events: none; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
 .pin.approx::before { content: ""; position: absolute; left: 50%; top: 50%; width: calc(var(--ps, 21px) + 18px); height: calc(var(--ps, 21px) + 18px); margin: calc(var(--ps, 21px) / -2 - 9px) 0 0 calc(var(--ps, 21px) / -2 - 9px); border: 2px dashed var(--lava); border-radius: 50%; background: rgba(252,248,241,.55); pointer-events: none; }
 .pin.approx .key { position: relative; }

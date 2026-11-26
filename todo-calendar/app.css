@@ -218,3 +218,9 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidd
 .pp-swatches{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .pp-sw{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;box-shadow:inset 0 0 0 2px var(--surface)}
 .pp-sw.on{border-color:var(--ink)}
+.pj-list{display:flex;flex-direction:column}
+.pj-row{display:flex;align-items:center;gap:12px;padding:12px 4px;border:0;border-top:1px solid var(--line);background:transparent;cursor:pointer;text-align:left;width:100%}
+.pj-row:first-child{border-top:0}
+.pj-row:hover{background:var(--surface2)}
+.pj-name{flex:1;font-weight:500}
+.pj-err{color:var(--danger);margin:0;font-size:.85rem}

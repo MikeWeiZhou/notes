@@ -360,6 +360,7 @@
     const n = TCL.tasks().length;
     close = TCL.sheet('Todo Calendar', h('div', { class: 'menu-list' },
       h('p', { class: 'tcl-muted', style: { margin: '0 0 4px' } }, `${n} task${n === 1 ? '' : 's'} saved in this browser. Shortcuts: N new task, 1 2 3 switch views.`),
+      item('Projects', 'Add, rename, recolour or delete projects', () => { close(); openProjects(); }),
       item('Export backup', 'Download all tasks as a JSON file', () => {
         const a = h('a', { href: URL.createObjectURL(new Blob([TCL.exportJSON()], { type: 'application/json' })), download: `todo-calendar-${TCL.key(new Date())}.json` });
         document.body.append(a); a.click(); a.remove(); close();
@@ -369,5 +370,72 @@
         : item('Add sample tasks', 'A few weeks of example tasks to explore with', () => { TCL.loadSample(); close(); }),
       file));
   });
+  /* ---------- projects screen ---------- */
+  function swatchRow(color, onPick) {
+    const row = h('div', { class: 'pp-swatches' });
+    const draw = (c) => { row.textContent = ''; TCL.PALETTE.forEach((x) => row.append(h('button', { type: 'button', class: 'pp-sw' + (x === c ? ' on' : ''), style: { background: x }, 'aria-label': 'Colour ' + x, onclick: () => { onPick(x); draw(x); } }))); };
+    draw(color);
+    return row;
+  }
+  function openProjects() {
+    let close;
+    const list = h('div', { class: 'pj-list' });
+    const ps = TCL.projects();
+    if (!ps.length) list.append(h('p', { class: 'tcl-muted' }, 'No projects yet. Add one here or type a new name when you add a task.'));
+    ps.forEach((p) => {
+      const n = TCL.projectTaskCount(p.id);
+      list.append(h('button', { class: 'pj-row', onclick: () => { close(); openProject(p); } },
+        h('span', { class: 'tcl-dot', style: { background: p.color, width: '14px', height: '14px' } }),
+        h('span', { class: 'pj-name' }, p.name),
+        h('span', { class: 'tcl-muted' }, `${n} task${n === 1 ? '' : 's'} ›`)));
+    });
+    close = TCL.sheet('Projects', h('div', null, list,
+      h('div', { class: 'tcl-actions' }, h('button', { class: 'tcl-btn primary', onclick: () => { close(); openProject(null); } }, '+ New project'))));
+  }
+  function openProject(p) {
+    let close, color = p ? p.color : TCL.nextColor();
+    const name = h('input', { type: 'text', value: p ? p.name : '', placeholder: 'Project name', required: true, autocomplete: 'off' });
+    const err = h('p', { class: 'pj-err', hidden: true });
+    const save = () => {
+      const v = name.value.trim();
+      if (!v) { err.textContent = 'Give the project a name.'; err.hidden = false; return; }
+      const clash = TCL.findProject(v);
+      if (clash && clash !== p) { err.textContent = `There is already a project called “${clash.name}”.`; err.hidden = false; return; }
+      if (p) TCL.updateProject(p, { name: v, color }); else TCL.addProject(v, color);
+      close(); openProjects();
+    };
+    const body = h('form', { class: 'tcl-form', onsubmit: (e) => { e.preventDefault(); save(); } },
+      h('label', null, h('span', null, 'Name'), name),
+      h('label', null, h('span', null, 'Colour'), swatchRow(color, (c) => (color = c))),
+      err,
+      h('div', { class: 'tcl-actions' },
+        h('button', { class: 'tcl-btn primary', type: 'submit' }, p ? 'Save' : 'Add project'),
+        h('button', { class: 'tcl-btn', type: 'button', onclick: () => { close(); openProjects(); } }, 'Back'),
+        p ? h('button', { class: 'tcl-btn danger', type: 'button', style: { marginLeft: 'auto' }, onclick: () => { close(); openDeleteProject(p); } }, 'Delete') : null));
+    close = TCL.sheet(p ? 'Edit project' : 'New project', body);
+    setTimeout(() => name.focus(), 50);
+  }
+  function openDeleteProject(p) {
+    let close;
+    const n = TCL.projectTaskCount(p.id);
+    const others = TCL.projects().filter((x) => x !== p);
+    const back = h('button', { class: 'tcl-btn', type: 'button', onclick: () => { close(); openProject(p); } }, 'Cancel');
+    let body;
+    if (!n) {
+      body = h('div', null, h('p', null, `“${p.name}” has no tasks. Delete it?`),
+        h('div', { class: 'tcl-actions' }, h('button', { class: 'tcl-btn danger', onclick: () => { TCL.deleteProject(p); close(); openProjects(); } }, 'Delete project'), back));
+    } else if (!others.length) {
+      body = h('div', null, h('p', null, `“${p.name}” has ${n} task${n === 1 ? '' : 's'}, and every task needs a project. Create another project first, then delete this one and move its tasks there.`),
+        h('div', { class: 'tcl-actions' }, h('button', { class: 'tcl-btn primary', onclick: () => { close(); openProject(null); } }, '+ New project'), back));
+    } else {
+      const sel = h('select', null, others.map((x) => h('option', { value: x.id }, x.name)));
+      body = h('div', { class: 'tcl-form' },
+        h('p', { style: { margin: 0 } }, `“${p.name}” has ${n} task${n === 1 ? '' : 's'}. Move ${n === 1 ? 'it' : 'them'} to:`),
+        h('label', null, sel),
+        h('div', { class: 'tcl-actions' }, h('button', { class: 'tcl-btn danger', onclick: () => { const to = TCL.PROJECTS[sel.value]; TCL.deleteProject(p, sel.value); TCL.toast(`Deleted “${p.name}”. ${n} task${n === 1 ? '' : 's'} moved to ${to.name}.`); close(); openProjects(); } }, `Move and delete`), back));
+    }
+    close = TCL.sheet('Delete project', body);
+  }
+
   show(location.hash.slice(1) || localStorage.getItem(VIEW_KEY) || 'runway');
 })();

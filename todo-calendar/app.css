@@ -224,3 +224,58 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidd
 .pj-row:hover{background:var(--surface2)}
 .pj-name{flex:1;font-weight:500}
 .pj-err{color:var(--danger);margin:0;font-size:.85rem}
+
+/* =================================================================== MONTH (Tiny Titles) */
+.v-month .mo{max-width:1180px;margin:0 auto;padding:12px 12px 24px}
+.v-month .m-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.v-month .m-controls h2{font:600 1.35rem Georgia,serif;margin:0 auto 0 0}
+.v-month .m-dow{font-size:.72rem;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.05em;padding:2px 0}
+.v-month .grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.v-month .cell{background:var(--surface);border:1px solid var(--line);border-radius:10px;min-height:112px;padding:5px 5px 9px;display:flex;flex-direction:column;gap:3px;cursor:pointer;position:relative;min-width:0}
+.v-month .cell.we{background:color-mix(in oklab,var(--surface2) 55%,var(--surface))}
+.v-month .cell.out{opacity:.42}
+.v-month .cell.today{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.v-month .top{display:flex;align-items:center;gap:4px;min-height:18px}
+.v-month .num{font-weight:600;font-size:.85rem}
+.v-month .cell.today .num{background:var(--ink);color:var(--paper);border-radius:999px;padding:0 6px}
+.v-month .rd{display:flex;gap:2px}
+.v-month .rd i{width:5px;height:5px;border-radius:50%}
+.v-month .hrs{margin-left:auto;font-size:.66rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.v-month .ld{position:absolute;left:5px;right:5px;bottom:3px;height:3px;border-radius:2px;background:var(--surface2);overflow:hidden}
+.v-month .ld i{display:block;height:100%;background:var(--accent)}
+.v-month .ld i.over{background:var(--danger)}
+.v-month .dgb{position:relative;border-radius:5px;background:color-mix(in oklab,var(--c) 15%,var(--surface));overflow:hidden;cursor:pointer;flex:none;display:flex;align-items:center;gap:3px}
+.v-month .dgb::before{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--w);background:var(--c);opacity:.9}
+.v-month .dgb>span{position:relative;z-index:1}
+.v-month .dgb .tx{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 0 3px var(--surface),0 0 2px var(--surface);min-width:0;flex:1}
+.v-month .dgb .fl{color:var(--c);font-weight:800;filter:brightness(.8)}
+.v-month .dgb.done{opacity:.4}
+.v-month .dgb.done .tx{text-decoration:line-through}
+.v-month .dgb.text{height:19px;font-size:.7rem;padding:0 5px}
+.v-month .dgb.tiny{height:14px;font-size:.58rem;padding:0 2px;border-radius:3px;letter-spacing:-.01em}
+.v-month .dgb.tiny .fl{display:none}
+.v-month .more{font-size:.68rem;color:var(--muted);padding:0 3px;background:none;border:0;text-align:left;cursor:pointer;display:flex;align-items:center;gap:4px;color:var(--muted)}
+.v-month .md{display:inline-flex;gap:2px}.v-month .md i{width:5px;height:5px;border-radius:50%}
+.v-month .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.78rem;color:var(--muted);margin-top:10px;align-items:center}
+.v-month .legend .sw{display:inline-block;width:40px;height:10px;border-radius:3px;background:color-mix(in oklab,var(--accent) 15%,var(--surface));position:relative;vertical-align:middle;margin-right:6px;overflow:hidden}
+.v-month .legend .sw::before{content:"";position:absolute;left:0;top:0;bottom:0;width:50%;background:var(--accent)}
+@media (max-width:640px){
+  .v-month .mo{padding:8px 6px 16px}
+  .v-month .grid{gap:2px}
+  .v-month .cell{min-height:84px;padding:3px 2px 8px;border-radius:7px;gap:2px}
+  .v-month .num{font-size:.75rem}
+  .v-month .rd,.v-month .hrs{display:none}
+  .v-month .ld{left:3px;right:3px;bottom:2px}
+  .v-month .more{font-size:.6rem;padding:0 1px}
+  .v-month .legend{font-size:.72rem;gap:8px 12px}
+}
+/* day list sheet (lives outside #view) */
+.v-month-sheet .dl-h{margin-bottom:4px}
+.v-month-sheet .m-item{display:grid;grid-template-columns:22px 4px 1fr auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line);cursor:pointer}
+.v-month-sheet .m-item input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
+.v-month-sheet .m-item .st{height:28px;border-radius:2px}
+.v-month-sheet .m-item .t{font-weight:500;font-size:.92rem}
+.v-month-sheet .m-item .m{font-size:.75rem;color:var(--muted)}
+.v-month-sheet .m-item.done .t{text-decoration:line-through;color:var(--muted)}
+.v-month-sheet .m-item .d{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.v-month-sheet .add{margin-top:10px}

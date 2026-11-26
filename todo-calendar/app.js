@@ -1,5 +1,5 @@
 /* Todo Calendar app: three views over one task store.
-   Runway (deadlines), Blocks (week time blocking), Focus (today's deck). */
+   Runway (deadlines), Blocks (week time blocking), Focus (today's deck), Month (Tiny Titles grid). */
 (function () {
   'use strict';
   const { h } = TCL;
@@ -303,11 +303,116 @@
     return { build, render, key };
   })();
 
+  /* =================================================================== MONTH */
+  views.month = (() => {
+    const DOWS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const MAX = 4; // bars shown per day before "+N more"
+    const phone = () => innerWidth < 640;
+    let m = TCL.sod(new Date()); m.setDate(1);
+    let el, title, stage, sheet = null; // sheet: {k, body} while a day's list is open
+    function dayData(days, now) {
+      const tk = TCL.key(now);
+      const occs = TCL.expand(days[0], TCL.addDays(days[days.length - 1], 1));
+      const late = TCL.openOneOffs().filter((o) => o.planDay < tk);
+      const map = {};
+      for (const d of days) {
+        const k = TCL.key(d);
+        let list = occs.filter((o) => !o.recurring && o.planDay === k);
+        if (k === tk) list = late.concat(list.filter((o) => !late.some((x) => x.key === o.key)));
+        list.sort((a, b) => a.done - b.done || (b.due < now) - (a.due < now) || b.dur - a.dur);
+        const rec = occs.filter((o) => o.recurring && o.planDay === k);
+        const load = list.concat(rec).filter((o) => !o.done).reduce((s, o) => s + o.dur, 0);
+        map[k] = { d, k, list, rec, load };
+      }
+      return map;
+    }
+    const fillW = (o) => Math.min(100, Math.max(8, o.dur / 240 * 100)) + '%';
+    function bar(o, k, now, mode) {
+      const late = o.due < now && !o.done;
+      return h('div', {
+        class: 'dgb ' + mode + (o.done ? ' done' : ''), style: { '--c': late ? 'var(--danger)' : o.color, '--w': fillW(o) },
+        title: `${o.title} · ${TCL.fmtDur(o.dur)} · due ${TCL.relDue(o, now)}`,
+        onclick: (e) => { e.stopPropagation(); TCL.openTask(o); },
+      }, TCL.key(o.due) === k ? h('span', { class: 'fl' }, '▶') : null, h('span', { class: 'tx' }, o.title));
+    }
+    const recDots = (rec) => h('span', { class: 'rd', title: rec.map((o) => o.title).join(', ') }, rec.slice(0, 5).map((o) => h('i', { style: { background: o.color, opacity: o.done ? .35 : 1 } })));
+    const loadLine = (load) => h('div', { class: 'ld' }, h('i', { class: load > CAP ? 'over' : '', style: { width: Math.min(100, load / CAP * 100) + '%' } }));
+    const itemRow = (o, now) => h('div', { class: 'm-item' + (o.done ? ' done' : ''), onclick: () => TCL.openTask(o) },
+      h('input', { type: 'checkbox', checked: o.done, onclick: (e) => { e.stopPropagation(); TCL.toggle(o); } }),
+      h('span', { class: 'st', style: { background: o.color } }),
+      h('div', null, h('div', { class: 't' }, o.title), h('div', { class: 'm' }, [o.start ? TCL.fmtTime(o.start) : null, o.recurring ? TCL.recurText(o.task.recur).toLowerCase() : 'due ' + TCL.relDue(o, now), TCL.project(o.project).name].filter(Boolean).join(' · '))),
+      h('span', { class: 'd' }, TCL.fmtDur(o.dur)));
+    function dayList(x, now) {
+      const all = x.list.concat(x.rec);
+      return h('div', { class: 'dl' },
+        h('div', { class: 'dl-h' }, h('span', { class: 'tcl-muted' }, `${all.length} task${all.length === 1 ? '' : 's'} · ${TCL.fmtHours(x.load)} planned`)),
+        all.length ? all.map((o) => itemRow(o, now)) : h('p', { class: 'tcl-muted' }, 'Nothing planned.'),
+        h('button', { class: 'tcl-btn add', onclick: () => TCL.openAdd({ due: x.k }) }, '+ Task due this day'));
+    }
+    function openDay(x, now) {
+      const body = h('div', { class: 'v-month-sheet' }, dayList(x, now));
+      sheet = { k: x.k, body };
+      TCL.sheet(TCL.fmtDay(x.d), body, { onClose: () => { if (sheet && sheet.body === body) sheet = null; } });
+    }
+    function go(n) {
+      if (n === 0) { m = TCL.sod(new Date()); m.setDate(1); } else m.setMonth(m.getMonth() + n);
+      render();
+    }
+    function build() {
+      title = h('h2');
+      stage = h('div', { class: 'stage' });
+      el = h('div', { class: 'mo' },
+        h('div', { class: 'm-controls' }, title, h('div', { class: 'tcl-seg' },
+          h('button', { 'aria-label': 'Previous month', onclick: () => go(-1) }, '‹'),
+          h('button', { onclick: () => go(0) }, 'Today'),
+          h('button', { 'aria-label': 'Next month', onclick: () => go(1) }, '›'))),
+        stage,
+        h('div', { class: 'legend' }, h('span', null, h('i', { class: 'sw' }), 'bar fill = time needed (full = 4h)'), h('span', null, '▶ due that day'), h('span', null, '• routines'), h('span', null, 'line under each day = load vs 6h')));
+      return el;
+    }
+    function render() {
+      const now = new Date(), tk = TCL.key(now);
+      title.textContent = MONTHS[m.getMonth()] + ' ' + m.getFullYear();
+      const start = TCL.addDays(TCL.sod(m), -((m.getDay() + 6) % 7));
+      let days = Array.from({ length: 42 }, (_, i) => TCL.addDays(start, i));
+      if (days[35].getMonth() !== m.getMonth()) days = days.slice(0, 35); // drop a week that is all next month
+      const byKey = dayData(days, now);
+      const grid = h('div', { class: 'grid' });
+      DOWS.forEach((d) => grid.append(h('div', { class: 'm-dow' }, phone() ? d[0] : d)));
+      for (const d of days) {
+        const x = byKey[TCL.key(d)];
+        const c = h('div', { class: 'cell' + (d.getMonth() !== m.getMonth() ? ' out' : '') + (d.getDay() % 6 === 0 ? ' we' : '') + (x.k === tk ? ' today' : ''), onclick: () => openDay(x, now) },
+          h('div', { class: 'top' }, h('span', { class: 'num' }, d.getDate()), recDots(x.rec), x.load ? h('span', { class: 'hrs' }, TCL.fmtHours(x.load)) : null));
+        x.list.slice(0, MAX).forEach((o) => c.append(bar(o, x.k, now, phone() ? 'tiny' : 'text')));
+        if (x.list.length > MAX) {
+          const hidden = x.list.slice(MAX);
+          c.append(h('button', { class: 'more', onclick: (e) => { e.stopPropagation(); openDay(x, now); } }, `+${hidden.length} more`, h('span', { class: 'md' }, hidden.map((o) => h('i', { style: { background: o.color } })))));
+        }
+        c.append(loadLine(x.load));
+        grid.append(c);
+      }
+      stage.textContent = '';
+      stage.append(grid);
+      // keep an open day list current after a task is ticked, edited or added
+      if (sheet) {
+        const k = sheet.k, d = TCL.parse(k + 'T00:00');
+        const x = byKey[k] || dayData([d], now)[k];
+        sheet.body.textContent = '';
+        sheet.body.append(dayList(x, now));
+      }
+    }
+    function key(e) {
+      if (e.key === 'ArrowLeft') go(-1); else if (e.key === 'ArrowRight') go(1); else if (e.key === 't') go(0);
+    }
+    return { build, render, key };
+  })();
+
   /* =================================================================== SHELL */
   function welcome() {
     return h('div', { class: 'welcome' },
       h('h2', null, 'Plan with your eyes'),
-      h('p', null, 'See every deadline as a runway, block time for work on a week grid, and get through today one card at a time.'),
+      h('p', null, 'See every deadline as a runway, block time for work on a week grid, get through today one card at a time, and see the whole month at a glance.'),
       h('div', { class: 'tcl-actions' },
         h('button', { class: 'tcl-btn primary', onclick: () => TCL.openAdd() }, '+ Add your first task'),
         h('button', { class: 'tcl-btn', onclick: () => TCL.loadSample() }, 'Try with sample tasks')),
@@ -343,7 +448,7 @@
   document.addEventListener('keydown', (e) => {
     if (document.querySelector('.tcl-scrim') || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     if (e.key === 'n' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); TCL.openAdd(); return; }
-    if (['1', '2', '3'].includes(e.key)) { show(['runway', 'week', 'deck'][+e.key - 1]); return; }
+    if (['1', '2', '3', '4'].includes(e.key)) { show(['runway', 'week', 'deck', 'month'][+e.key - 1]); return; }
     const v = views[current]; if (TCL.tasks().length && v.key) v.key(e);
   });
   addEventListener('hashchange', () => show(location.hash.slice(1)));

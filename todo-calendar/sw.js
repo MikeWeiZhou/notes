@@ -1,7 +1,7 @@
 /* Offline support for Todo Calendar. Tasks already live in localStorage; this keeps the
    app's own files on the phone. Network first, so a new version shows up on the next
    open; if the network fails or takes over 3 s, the cached copy is served instead. */
-const CACHE = 'todocal-v1';
+const CACHE = 'todocal-v2';
 const FILES = ['./', 'index.html', 'app.css', 'core.js', 'app.js', 'manifest.webmanifest',
   'icon.svg', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
 

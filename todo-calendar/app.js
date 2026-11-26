@@ -68,8 +68,9 @@
           inner.append(h('div', { class: 'row' }, h('div', { class: 'lab', style: { width: LABEL + 'px' }, onclick: () => TCL.openTask(list[0]) }, h('span', { class: 't' }, t.title), h('span', { class: 'c' }, TCL.recurText(t.recur))), track));
         }
       }
-      for (const [pk, p] of Object.entries(TCL.PROJECTS)) {
-        const list = oneOffs.filter((o) => o.project === pk);
+      for (const p of TCL.projects().concat(TCL.openOneOffs().some((o) => !TCL.PROJECTS[o.project]) ? [{ id: '?', name: 'Unknown project', color: '#8a9a96' }] : [])) {
+        const pk = p.id;
+        const list = oneOffs.filter((o) => pk === '?' ? !TCL.PROJECTS[o.project] : o.project === pk);
         if (!list.length) continue;
         lane(p.name, p.color);
         for (const o of list) {
@@ -264,7 +265,7 @@
         const yes = h('div', { class: 'stamp yes' }, 'Done'), no = h('div', { class: 'stamp no' }, 'Tomorrow');
         const card = h('div', { class: 'card' + (isTop ? ' top' : ''), style: { '--c': o.color, transform: `translateY(${depth * 14}px) scale(${1 - depth * .05})`, opacity: isTop ? 1 : 1 - depth * .25, zIndex: 10 - depth } },
           yes, no,
-          h('div', { class: 'proj' }, TCL.PROJECTS[o.project].name + (o.recurring ? ' · routine' : '')),
+          h('div', { class: 'proj' }, TCL.project(o.project).name + (o.recurring ? ' · routine' : '')),
           h('h3', null, o.title),
           h('div', { class: 'facts' }, h('span', null, '⏱ ' + TCL.fmtDur(o.dur)), o.start ? h('span', null, '🕑 ' + TCL.fmtTime(o.start)) : h('span', null, 'any time today'), h('span', null, 'due ' + TCL.relDue(o, now))),
           o.task.note ? h('div', { class: 'note' }, o.task.note) : null,

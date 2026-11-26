@@ -5,15 +5,15 @@
   'use strict';
   const TCL = (window.TCL = {});
 
-  /* ---------- projects ---------- */
-  TCL.PROJECTS = {
-    work: { name: 'Work', color: '#3b6fd8' },
-    personal: { name: 'Personal', color: '#d6457a' },
-    health: { name: 'Health', color: '#e0762b' },
-    home: { name: 'Home', color: '#8a5bd6' },
-    learn: { name: 'Learning', color: '#14998f' },
-  };
-  TCL.color = (p) => (TCL.PROJECTS[p] || TCL.PROJECTS.personal).color;
+  /* ---------- projects ----------
+     Projects are user data: db.projects = [{id, name, color, updatedAt}].
+     TCL.PROJECTS is a live id -> {name, color} map rebuilt after every change. */
+  TCL.PALETTE = ['#3b6fd8', '#d6457a', '#e0762b', '#8a5bd6', '#14998f', '#c8372d', '#2f9e44', '#b8860b', '#0e8fc0', '#a0522d', '#6b7a8f', '#c2185b'];
+  TCL.PROJECTS = {};
+  const UNKNOWN = { name: 'Unknown project', color: '#8a9a96' };
+  TCL.project = (id) => TCL.PROJECTS[id] || UNKNOWN;
+  TCL.color = (id) => TCL.project(id).color;
+  const SAMPLE_PROJECTS = { work: ['Work', '#3b6fd8'], personal: ['Personal', '#d6457a'], health: ['Health', '#e0762b'], home: ['Home', '#8a5bd6'], learn: ['Learning', '#14998f'] };
 
   /* ---------- dates ---------- */
   const pad = (n) => String(n).padStart(2, '0');
@@ -122,19 +122,53 @@
   const listeners = [];
   function load() {
     if (db) return db;
-    try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.tasks)) return (db = Object.assign({ deleted: {} }, s)); } catch (e) {}
-    return (db = { version: 1, tasks: [], deleted: {}, created: Date.now() });
+    try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.tasks)) db = Object.assign({ deleted: {} }, s); } catch (e) {}
+    if (!db) db = { version: 2, tasks: [], projects: [], deleted: {}, created: Date.now() };
+    if (!db.projects) { // v1 had five fixed projects keyed by name
+      db.projects = [];
+      const used = new Set(db.tasks.map((t) => t.project));
+      for (const [id, [name, color]] of Object.entries(SAMPLE_PROJECTS)) if (used.has(id)) db.projects.push({ id, name, color, updatedAt: Date.now() });
+      db.version = 2;
+    }
+    syncProjects();
+    return db;
   }
+  function syncProjects() {
+    Object.keys(TCL.PROJECTS).forEach((k) => delete TCL.PROJECTS[k]);
+    for (const p of db.projects) TCL.PROJECTS[p.id] = p;
+  }
+  TCL.projects = () => load().projects.slice().sort((a, b) => a.name.localeCompare(b.name));
+  TCL.findProject = (name) => load().projects.find((p) => p.name.trim().toLowerCase() === name.trim().toLowerCase());
+  TCL.addProject = (name, color) => { const p = { id: uid(), name: name.trim(), color, updatedAt: Date.now() }; load().projects.push(p); TCL.changed(); return p; };
+  TCL.updateProject = (p, fields) => { Object.assign(p, fields, { updatedAt: Date.now() }); TCL.changed(); };
+  TCL.projectTaskCount = (id) => TCL.tasks().filter((t) => t.project === id).length;
+  TCL.deleteProject = (p, moveTo) => {
+    const d = load();
+    if (moveTo) d.tasks.forEach((t) => { if (t.project === p.id) { t.project = moveTo; t.updatedAt = Date.now(); } });
+    d.projects.splice(d.projects.indexOf(p), 1);
+    d.deleted[p.id] = Date.now();
+    TCL.changed();
+  };
+  TCL.nextColor = () => { const used = new Set(load().projects.map((p) => p.color)); return TCL.PALETTE.find((c) => !used.has(c)) || TCL.PALETTE[load().projects.length % TCL.PALETTE.length]; };
   TCL.tasks = () => load().tasks;
   function persist() { try { localStorage.setItem(KEY, JSON.stringify(load())); } catch (e) { alertOnce(); } }
   let warned = false;
   function alertOnce() { if (!warned) { warned = true; TCL.toast && TCL.toast('Could not save. Storage may be full or blocked.'); } }
   TCL.onChange = (fn) => listeners.push(fn);
-  TCL.changed = (t) => { if (t) t.updatedAt = Date.now(); persist(); listeners.forEach((f) => f()); };
+  TCL.changed = (t) => { if (t) t.updatedAt = Date.now(); if (db) syncProjects(); persist(); listeners.forEach((f) => f()); };
   TCL.hasSample = () => TCL.tasks().some((t) => t.sample);
-  TCL.loadSample = () => { TCL.tasks().push(...sample()); TCL.changed(); };
+  TCL.loadSample = () => {
+    const d = load(), map = {};
+    for (const [k, [name, color]] of Object.entries(SAMPLE_PROJECTS)) {
+      let p = TCL.findProject(name);
+      if (!p) { p = { id: uid(), name, color, updatedAt: Date.now() }; d.projects.push(p); }
+      map[k] = p.id;
+    }
+    d.tasks.push(...sample().map((t) => Object.assign(t, { project: map[t.project] })));
+    TCL.changed();
+  };
   TCL.clearSample = () => { const d = load(); d.tasks.filter((t) => t.sample).forEach((t) => (d.deleted[t.id] = Date.now())); d.tasks = d.tasks.filter((t) => !t.sample); TCL.changed(); };
-  window.addEventListener('storage', (e) => { if (e.key === KEY) { db = null; listeners.forEach((f) => f()); } });
+  window.addEventListener('storage', (e) => { if (e.key === KEY) { db = null; load(); listeners.forEach((f) => f()); } });
   /* backup and future sync: export everything, import merges by id (newer wins) */
   TCL.exportJSON = () => JSON.stringify(Object.assign({}, load(), { exported: new Date().toISOString() }), null, 2);
   TCL.importJSON = (text) => {
@@ -148,9 +182,19 @@
       if (!cur) { d.tasks.push(t); added++; }
       else if ((t.updatedAt || 0) > (cur.updatedAt || 0)) { Object.keys(cur).forEach((k) => delete cur[k]); Object.assign(cur, t); updated++; }
     }
+    const pById = new Map(d.projects.map((p) => [p.id, p]));
+    for (const p of inc.projects || []) {
+      if (!p.id || (d.deleted[p.id] && d.deleted[p.id] >= (p.updatedAt || 0))) continue;
+      const cur = pById.get(p.id);
+      if (!cur) d.projects.push(p); else if ((p.updatedAt || 0) > (cur.updatedAt || 0)) Object.assign(cur, p);
+    }
+    if (!inc.projects) for (const t of inc.tasks) if (SAMPLE_PROJECTS[t.project] && !d.projects.some((p) => p.id === t.project)) {
+      const [name, color] = SAMPLE_PROJECTS[t.project]; d.projects.push({ id: t.project, name, color, updatedAt: Date.now() });
+    }
     for (const [id, at] of Object.entries(inc.deleted || {})) {
-      const cur = byId.get(id);
+      const cur = byId.get(id), cp = pById.get(id);
       if (cur && at >= (cur.updatedAt || 0)) d.tasks.splice(d.tasks.indexOf(cur), 1);
+      if (cp && at >= (cp.updatedAt || 0)) d.projects.splice(d.projects.indexOf(cp), 1);
       d.deleted[id] = Math.max(d.deleted[id] || 0, at);
     }
     TCL.changed();
@@ -228,6 +272,61 @@
   TCL.add = (t) => { t.id = uid(); t.createdAt = Date.now(); TCL.tasks().push(t); TCL.changed(t); return t; };
 
   const repeatOf = (r) => !r ? '' : r.freq === 'daily' ? 'daily' : r.freq === 'monthly' ? 'monthly' : (r.days || []).length === 5 ? 'weekdays' : 'weekly';
+  /* free-text project field with a dropdown of matches; a new name asks for a colour */
+  TCL.projectPicker = (currentId) => {
+    const h = TCL.h;
+    const cur = currentId && TCL.PROJECTS[currentId];
+    const input = h('input', { type: 'text', placeholder: 'Type or pick a project', autocomplete: 'off', required: true, value: cur ? cur.name : '', role: 'combobox', 'aria-autocomplete': 'list' });
+    const dot = h('span', { class: 'tcl-dot pp-dot' });
+    const list = h('div', { class: 'pp-list', role: 'listbox', hidden: true });
+    let color = TCL.nextColor(), active = -1, items = [];
+    const swatches = h('div', { class: 'pp-swatches' });
+    const newBox = h('div', { class: 'pp-new', hidden: true }, h('span', { class: 'pp-newlab' }), swatches);
+    const el = h('div', { class: 'pp' }, h('div', { class: 'pp-field' }, dot, input, list), newBox);
+    function drawSwatches() {
+      swatches.textContent = '';
+      TCL.PALETTE.forEach((c) => swatches.append(h('button', { type: 'button', class: 'pp-sw' + (c === color ? ' on' : ''), style: { background: c }, 'aria-label': 'Colour ' + c, onclick: () => { color = c; drawSwatches(); update(false); } })));
+    }
+    function update(open = true) {
+      const q = input.value.trim().toLowerCase();
+      const all = TCL.projects();
+      const match = q ? all.filter((p) => p.name.toLowerCase().includes(q)) : all;
+      const exact = q && all.find((p) => p.name.toLowerCase() === q);
+      items = match.map((p) => ({ p }));
+      if (q && !exact) items.push({ create: input.value.trim() });
+      list.textContent = '';
+      items.forEach((it, i) => list.append(h('div', { class: 'pp-opt' + (i === active ? ' on' : ''), role: 'option', onmousedown: (e) => { e.preventDefault(); choose(it); } },
+        h('span', { class: 'tcl-dot', style: { background: it.p ? it.p.color : color } }), it.p ? it.p.name : `Create “${it.create}”`)));
+      list.hidden = !open || !items.length;
+      dot.style.background = exact ? exact.color : q ? color : 'transparent';
+      newBox.hidden = !q || !!exact;
+      newBox.firstChild.textContent = `New project “${input.value.trim()}”. Pick its colour:`;
+      if (!newBox.hidden && !swatches.childNodes.length) drawSwatches();
+    }
+    function choose(it) { input.value = it.p ? it.p.name : it.create; active = -1; update(false); if (!it.p) drawSwatches(); }
+    input.addEventListener('input', () => { active = -1; update(); });
+    input.addEventListener('focus', () => update());
+    input.addEventListener('blur', () => setTimeout(() => update(false), 120));
+    input.addEventListener('keydown', (e) => {
+      if (list.hidden) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(items.length - 1, active + 1); update(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(0, active - 1); update(); }
+      else if (e.key === 'Enter' && active >= 0) { e.preventDefault(); choose(items[active]); }
+      else if (e.key === 'Escape') { e.stopPropagation(); update(false); }
+    });
+    update(false);
+    return {
+      el,
+      // returns a project id, creating the project if the name is new
+      resolve() {
+        const name = input.value.trim();
+        if (!name) { input.focus(); return null; }
+        const p = TCL.findProject(name);
+        return p ? p.id : TCL.addProject(name, color).id;
+      },
+    };
+  };
+
   TCL.toast = (msg) => { const t = TCL.h('div', { class: 'tcl-toast' }, msg); document.body.append(t); setTimeout(() => t.remove(), 2600); };
 
   /* ---------- DOM helpers ---------- */
@@ -269,7 +368,7 @@
     const body = h('div', { class: 'tcl-detail' },
       h('div', { class: 'tcl-detail-title' }, h('span', { class: 'tcl-dot', style: { background: o.color } }), o.title),
       h('dl', null,
-        h('dt', null, 'Project'), h('dd', null, TCL.PROJECTS[o.project].name),
+        h('dt', null, 'Project'), h('dd', null, TCL.project(o.project).name),
         h('dt', null, o.recurring ? 'This one' : 'Deadline'), h('dd', null, `${TCL.fmtDay(o.due)}${o.hasTime ? ' · ' + TCL.fmtTime(o.due) : ''} (${TCL.relDue(o)})`),
         h('dt', null, 'Takes'), h('dd', null, TCL.fmtDur(o.dur)),
         h('dt', null, 'Scheduled'), h('dd', null, o.start ? `${TCL.fmtDay(o.start)} · ${TCL.fmtTime(o.start)}` : 'Not yet'),
@@ -294,17 +393,18 @@
     const f = h('form', { class: 'tcl-form' });
     const field = (label, input) => h('label', null, h('span', null, label), input);
     const title = h('input', { name: 'title', required: true, placeholder: 'What needs doing?', autocomplete: 'off', value: ex.title || '' });
-    const project = h('select', { name: 'project' }, Object.entries(TCL.PROJECTS).map(([k, p]) => h('option', { value: k, selected: k === ex.project }, p.name)));
+    const project = TCL.projectPicker(ex.project);
     const note = h('textarea', { name: 'note', rows: 2, placeholder: 'Notes (optional)' }); note.value = ex.note || '';
     const due = h('input', { type: 'date', name: 'due', value: r ? r.from : ex.due ? ex.due.slice(0, 10) : defaults.due || today, required: true });
     const dueTime = h('input', { type: 'time', name: 'dueTime', value: !r && ex.due && ex.due.length > 10 ? ex.due.slice(11, 16) : '' });
-    const dur = h('select', { name: 'dur' }, [15, 30, 45, 60, 90, 120, 180, 240].map((m) => h('option', { value: m, selected: m === (ex.dur || 60) }, TCL.fmtDur(m))));
+    const dur = h('select', { name: 'dur' }, [5, 15, 30, 45, 60, 90, 120, 180, 240].map((m) => h('option', { value: m, selected: m === (ex.dur || 60) }, TCL.fmtDur(m))));
     const repeat = h('select', { name: 'repeat' },
       [['', 'Does not repeat'], ['daily', 'Every day'], ['weekdays', 'Weekdays'], ['weekly', 'Weekly (same weekday)'], ['monthly', 'Monthly (same date)']].map(([v, l]) => h('option', { value: v, selected: v === repeatOf(r) }, l)));
     const start = h('input', { type: 'datetime-local', name: 'start', value: r && r.at ? r.from + 'T' + r.at : ex.start || (defaults.start ? stamp(defaults.start) : '') });
     f.append(
       field('Task', title),
-      h('div', { class: 'tcl-row' }, field('Project', project), field('Takes', dur)),
+      field('Project', project.el),
+      field('Takes', dur),
       h('div', { class: 'tcl-row' }, field('Deadline', due), field('by (optional)', dueTime)),
       field('Repeats', repeat),
       field('Block time at (optional)', start),
@@ -312,8 +412,10 @@
       h('div', { class: 'tcl-actions' }, h('button', { class: 'tcl-btn primary', type: 'submit' }, existing ? 'Save' : 'Add task')));
     f.addEventListener('submit', (e) => {
       e.preventDefault();
-      const t = { title: title.value.trim(), project: project.value, dur: +dur.value, done: !!ex.done };
-      if (!t.title) return;
+      if (!title.value.trim()) return;
+      const pid = project.resolve();
+      if (!pid) return;
+      const t = { title: title.value.trim(), project: pid, dur: +dur.value, done: !!ex.done };
       if (note.value.trim()) t.note = note.value.trim();
       if (repeat.value) {
         const d0 = parse(due.value);

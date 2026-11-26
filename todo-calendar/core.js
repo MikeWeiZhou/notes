@@ -117,7 +117,7 @@
   }
 
   /* ---------- storage ---------- */
-  const KEY = 'todocal.v1';
+  const KEY = window.TODOCAL_KEY || 'todocal.v1'; // prototypes use their own copy
   let db = null; // {version, tasks, deleted: {id: time}}
   const listeners = [];
   function load() {
@@ -337,12 +337,12 @@
       const v = attrs[k];
       if (v == null || v === false) continue;
       if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
-      else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+      else if (k === 'style' && typeof v === 'object') { for (const sk in v) { if (sk.startsWith('--')) el.style.setProperty(sk, v[sk]); else el.style[sk] = v[sk]; } }
       else if (k === 'class') el.className = v;
       else if (k === 'html') el.innerHTML = v;
       else el.setAttribute(k, v === true ? '' : v);
     }
-    for (const c of kids.flat()) if (c != null && c !== false) el.append(c.nodeType ? c : document.createTextNode(c));
+    for (const c of kids.flat(Infinity)) if (c != null && c !== false) el.append(c.nodeType ? c : document.createTextNode(c));
     return el;
   };
   const h = TCL.h;

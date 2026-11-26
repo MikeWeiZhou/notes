@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Heat Month · Month view prototype 2</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../../shared.css">
+<link rel="stylesheet" href="../month.css">
+<style>
+main{max-width:1180px;margin:0 auto;padding:12px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+@media (min-width:900px){main{grid-template-columns:minmax(0,1fr) 340px;align-items:start}}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px;scrollbar-width:none}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) 46px;gap:4px}
+.cell{position:relative;aspect-ratio:1/1.05;border-radius:10px;border:1px solid var(--line);padding:5px 6px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.cell.out{opacity:.38}
+.cell.today .num{background:var(--ink);color:var(--paper);border-radius:999px;padding:0 6px}
+.cell.sel{outline:2.5px solid var(--ink);outline-offset:1px}
+.cell.over{box-shadow:inset 0 0 0 2.5px var(--danger)}
+.num{font-weight:600;font-size:.9rem;align-self:flex-start;line-height:1.4}
+.dots{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+.dots i{width:8px;height:8px;border-radius:50%;box-shadow:0 0 0 1.5px var(--surface)}
+.dots em{font-size:.65rem;font-style:normal;opacity:.8}
+.hrs{font-size:.7rem;font-variant-numeric:tabular-nums;opacity:.85;position:absolute;right:6px;top:6px}
+.wk{display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.72rem;color:var(--muted);border-radius:10px;background:var(--surface2)}
+.wk b{font-size:.9rem;color:var(--ink)}
+@media (max-width:520px){.cell{padding:3px 4px;border-radius:8px}.hrs{display:none}.num{font-size:.8rem}.dots i{width:6px;height:6px}.grid{gap:3px;grid-template-columns:repeat(7,minmax(0,1fr)) 34px}}
+.legend{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+.legend .scale{display:flex;gap:2px}.legend .scale i{width:20px;height:12px;border-radius:3px}
+.legend .ring{width:14px;height:14px;border-radius:4px;box-shadow:inset 0 0 0 2px var(--danger)}
+aside{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+@media (min-width:900px){aside{position:sticky;top:70px;max-height:calc(100vh - 90px);overflow:auto}}
+aside h3{font:600 1.15rem Georgia,serif;margin:0}
+.meter{height:10px;border-radius:6px;background:var(--surface2);overflow:hidden;display:flex;margin:8px 0 10px}
+</style>
+</head>
+<body>
+<main><section id="left"></section><aside id="day"></aside></main>
+<script>window.TODOCAL_KEY='todocal.monthproto';try{if(!localStorage.getItem('todocal.monthproto')){var r=localStorage.getItem('todocal.v1');if(r&&JSON.parse(r).tasks.length){localStorage.setItem('todocal.monthproto',r);localStorage.setItem('todocal.monthproto.src','app');}}}catch(e){}</script>
+<script src="../../../todo-calendar/core.js"></script>
+<script src="../month.js"></script>
+<script>
+(function(){
+  const {h} = TCL;
+  TCL.mount('heat');
+  const CAP = TCL.CAP, hidden = new Set();
+  let sel = TCL.key(new Date());
+  const left = document.getElementById('left'), side = document.getElementById('day');
+  const nav = TCL.monthNav(render);
+  const chips = h('div', {class: 'chips'}), grid = h('div', {class: 'grid'});
+  const heat = (m) => `color-mix(in oklab, var(--heat) ${Math.round(Math.min(1, m / CAP) * 85)}%, var(--surface))`;
+  left.append(nav.el, chips, grid, h('div', {class: 'legend'}, 'Free', h('span', {class: 'scale'}, [0, .25, .5, .75, 1].map((x) => h('i', {style: {background: heat(x * CAP)}}))), 'Packed', h('span', {class: 'ring', style: {marginLeft: '10px'}}), 'over 6h', h('span', {style: {marginLeft: '10px'}}, '● deadline')), TCL.srcNote());
+  function render() {
+    chips.textContent = '';
+    TCL.projects().forEach((p) => chips.append(h('button', {class: 'tcl-chip' + (hidden.has(p.id) ? ' off' : ''), onclick: () => { hidden.has(p.id) ? hidden.delete(p.id) : hidden.add(p.id); render(); }}, h('span', {class: 'tcl-dot', style: {background: p.color}}), p.name)));
+    const m = nav.month(), days = TCL.monthDays(m), now = new Date(), tk = TCL.key(now);
+    const occs = TCL.expand(days[0], TCL.addDays(days[41], 1)).filter((o) => !hidden.has(o.project));
+    const mins = TCL.minutesByDay(occs.filter((o) => !o.done));
+    const dueBy = {};
+    occs.forEach((o) => { if (!o.recurring) (dueBy[TCL.key(o.due)] = dueBy[TCL.key(o.due)] || []).push(o); });
+    grid.textContent = '';
+    ['Mon','Tue','Wed','Thu','Fri','Sat','Sun','Week'].forEach((d) => grid.append(h('div', {class: 'm-dow'}, d)));
+    for (let w = 0; w < 6; w++) {
+      let wk = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = days[w * 7 + i], k = TCL.key(d), mm = mins[k] || 0, dl = dueBy[k] || []; wk += mm;
+        grid.append(h('div', {class: 'cell' + (d.getMonth() !== m.getMonth() ? ' out' : '') + (k === tk ? ' today' : '') + (k === sel ? ' sel' : '') + (mm > CAP ? ' over' : ''), style: {background: heat(mm), color: mm / CAP > .55 ? 'var(--paper)' : 'var(--ink)'}, onclick: () => { sel = k; render(); if (innerWidth < 900) side.scrollIntoView({behavior: 'smooth'}); }},
+          h('span', {class: 'num'}, d.getDate()), mm ? h('span', {class: 'hrs'}, TCL.fmtHours(mm)) : null,
+          h('div', {class: 'dots'}, dl.slice(0, 4).map((o) => h('i', {style: {background: o.color, opacity: o.done ? .35 : 1}})), dl.length > 4 ? h('em', null, '+' + (dl.length - 4)) : null)));
+      }
+      grid.append(h('div', {class: 'wk'}, h('b', null, Math.round(wk / 60)), 'h'));
+    }
+    const d = TCL.parse(sel);
+    const list = TCL.expand(TCL.addDays(d, -60), TCL.addDays(d, 60)).filter((o) => !hidden.has(o.project) && (o.planDay === sel || (!o.recurring && TCL.key(o.due) === sel))).sort((a, b) => a.done - b.done || (a.start || a.due) - (b.start || b.due));
+    const open = list.filter((o) => !o.done && o.planDay === sel), L = open.reduce((s, o) => s + o.dur, 0);
+    side.textContent = '';
+    side.append(h('h3', null, TCL.fmtDay(d)), h('div', {class: 'tcl-muted'}, `${TCL.fmtHours(L)} of ${TCL.fmtHours(CAP)}`),
+      h('div', {class: 'meter'}, open.map((o) => h('span', {style: {width: o.dur / Math.max(CAP, L) * 100 + '%', background: o.color}}))),
+      h('div', null, list.length ? list.map((o) => TCL.itemRow(o, now)) : h('p', {class: 'tcl-muted'}, 'A free day.')));
+  }
+  TCL.onChange(render);
+  render();
+})();
+</script>
+</body>
+</html>

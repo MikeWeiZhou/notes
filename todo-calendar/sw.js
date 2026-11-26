@@ -1,0 +1,39 @@
+/* Offline support for Todo Calendar. Tasks already live in localStorage; this keeps the
+   app's own files on the phone. Network first, so a new version shows up on the next
+   open; if the network fails or takes over 3 s, the cached copy is served instead. */
+const CACHE = 'todocal-v1';
+const FILES = ['./', 'index.html', 'app.css', 'core.js', 'app.js', 'manifest.webmanifest',
+  'icon.svg', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
+
+self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES.map((f) => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting()));
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+});
+
+self.addEventListener('fetch', (e) => {
+  const req = e.request;
+  if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
+  e.respondWith((async () => {
+    const cache = await caches.open(CACHE);
+    const net = fetch(req, { cache: 'no-cache' }).then((res) => {
+      if (res.ok) cache.put(req, res.clone());
+      return res;
+    });
+    const cached = () => cache.match(req, { ignoreSearch: true })
+      .then((r) => r || (req.mode === 'navigate' ? cache.match('./') : undefined));
+    const timeout = new Promise((ok) => setTimeout(ok, 3000));
+    try {
+      const res = await Promise.race([net, timeout]);
+      if (res) return res;
+      const c = await cached();
+      return c || await net;
+    } catch (err) {
+      const c = await cached();
+      if (c) return c;
+      throw err;
+    }
+  })());
+});
